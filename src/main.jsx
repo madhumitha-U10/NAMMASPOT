@@ -820,19 +820,28 @@ function PublicTools({ seller, go }) {
 
 function AdminPage({ go }) {
   const [allowed,setAllowed]=useState(null);
+  const [adminProfile,setAdminProfile]=useState(null);
   const [sellers,setSellers]=useState([]);
   const [categories,setCategories]=useState([]);
   const [tab,setTab]=useState("sellers");
+  const [statusFilter,setStatusFilter]=useState("all");
   const [error,setError]=useState("");
   const [busy,setBusy]=useState(false);
+  const [loading,setLoading]=useState(true);
   const [storageUsage,setStorageUsage]=useState(null);
 
   const load=async()=>{
+    setLoading(true);
+    setError("");
     try {
-      const ok=await isCurrentUserAdmin();
-      if (!ok) { go("/login"); return; }
+      const [ok,current] = await Promise.all([isCurrentUserAdmin(), getCurrentProfile()]);
+      if (!ok) { setAllowed(false); setError("This account is not an approved NammaSpot admin."); return; }
       const [s,c,u]=await Promise.all([adminListSellers(),adminListCategories(),adminStorageUsage()]);
-      setAllowed(true); setSellers(s); setCategories(c); setStorageUsage(u); setError("");
+      setAllowed(true);
+      setAdminProfile(current);
+      setSellers(s);
+      setCategories(c);
+      setStorageUsage(u);
       if (u && u.status !== "ok") {
         const key = "nammaspot-storage-alert-" + u.status;
         if (!window.sessionStorage.getItem(key)) {
@@ -844,15 +853,23 @@ function AdminPage({ go }) {
           ), 0);
         }
       }
-    } catch(error) { setAllowed(false); setError(friendlyError(error)); }
+    } catch(error) {
+      setAllowed(false);
+      setError(friendlyError(error));
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(()=>{load(); const timer=window.setInterval(load,300000); return ()=>window.clearInterval(timer);},[]);
 
   const status=async(id,next)=>{
     setBusy(true);
-    try { await adminUpdateSellerStatus(id,next); setSellers((items)=>items.map((item)=>item.id===id?{...item,verification_status:next,verified:next==="approved"}:item)); }
-    catch(error){setError(friendlyError(error));}
+    setError("");
+    try {
+      await adminUpdateSellerStatus(id,next);
+      await load();
+    } catch(error){setError(friendlyError(error));}
     finally{setBusy(false);}
   };
 
@@ -873,14 +890,40 @@ function AdminPage({ go }) {
     try { await adminDeleteCategory(item.id); setCategories(await adminListCategories()); } catch(error){setError(friendlyError(error));}
   };
 
-  if (allowed === null && !error) return <main className="page"><div className="page-title"><div className="eyebrow">ADMIN</div><h1>Loading moderation…</h1></div><CardSkeletonRow detailed/></main>;
+  const counts = sellers.reduce((acc,item) => {
+    const value = item.verification_status || "pending";
+    acc[value] = (acc[value] || 0) + 1;
+    return acc;
+  }, {});
+  const visibleSellers = statusFilter === "all"
+    ? sellers
+    : sellers.filter((item) => (item.verification_status || "pending") === statusFilter);
+
+  if (loading && allowed === null) return <main className="page"><div className="page-title"><div className="eyebrow">ADMIN</div><h1>Loading moderation…</h1></div><CardSkeletonRow detailed/></main>;
   if (!allowed) return <main className="page"><ErrorState message={error || "Admin access is restricted."} retry={load}/></main>;
 
   return (
     <main className="page admin-page">
-      <div className="dashboard-head"><div><div className="eyebrow">ADMIN</div><h1>Keep NammaSpot trustworthy.</h1><p>Approve sellers and manage platform categories.</p></div><ShieldCheck size={34} color="#7e2424"/></div>
-      <div className="dashboard-tabs"><button className={tab==="sellers"?"active":""} onClick={()=>setTab("sellers")}>Sellers</button><button className={tab==="categories"?"active":""} onClick={()=>setTab("categories")}>Categories</button></div>
+      <div className="dashboard-head">
+        <div>
+          <div className="eyebrow">ADMIN</div>
+          <h1>Keep NammaSpot trustworthy.</h1>
+          <p>Approve sellers and manage platform categories.</p>
+          {adminProfile?.email && <small>Signed in as {adminProfile.email}</small>}
+        </div>
+        <div className="button-row">
+          <button className="secondary-button" onClick={load} disabled={loading}>↻ {loading ? "Refreshing…" : "Refresh"}</button>
+          <ShieldCheck size={34} color="#7e2424"/>
+        </div>
+      </div>
+
+      <div className="dashboard-tabs">
+        <button className={tab==="sellers"?"active":""} onClick={()=>setTab("sellers")}>Sellers</button>
+        <button className={tab==="categories"?"active":""} onClick={()=>setTab("categories")}>Categories</button>
+      </div>
+
       {error && <div className="inline-error"><AlertCircle size={17}/>{error}</div>}
+
       {storageUsage && (
         <div className="dashboard-item" role="status" aria-live="polite">
           <div>
@@ -896,15 +939,47 @@ function AdminPage({ go }) {
           <span className={"status-pill status-" + storageUsage.status}>{storageUsage.status}</span>
         </div>
       )}
+
       {tab==="sellers" &&
-        <div className="dashboard-list">
-          {sellers.length ? sellers.map((seller)=>
-            <article className="dashboard-item" key={seller.id}>
-              <div><strong>{seller.business_name}</strong><p>{seller.category?.name || "Uncategorised"} · {seller.location || "Chennai"}</p><small>{seller.contact || "No phone"} · {seller.verification_status}</small></div>
-              <div className="button-row">{["approved","rejected","suspended"].map((statusValue)=><button key={statusValue} disabled={busy} className={statusValue==="approved"?"primary-button":"secondary-button"} onClick={()=>status(seller.id,statusValue)}>{statusValue}</button>)}</div>
-            </article>
-          ) : <Empty title="No sellers yet" text="New registrations will appear here."/>}
-        </div>}
+        <>
+          <div className="category-row" aria-label="Seller status filters">
+            {[
+              ["all","All",sellers.length],
+              ["pending","Pending",counts.pending || 0],
+              ["approved","Approved",counts.approved || 0],
+              ["rejected","Rejected",counts.rejected || 0],
+              ["suspended","Suspended",counts.suspended || 0],
+            ].map(([value,label,count]) => (
+              <button key={value} className={statusFilter===value ? "active" : ""} onClick={()=>setStatusFilter(value)}>
+                {label} ({count})
+              </button>
+            ))}
+          </div>
+
+          <div className="dashboard-list">
+            {loading ? <CardSkeletonRow detailed/> :
+              visibleSellers.length ? visibleSellers.map((seller)=>
+                <article className="dashboard-item" key={seller.id}>
+                  <div>
+                    <strong>{seller.business_name}</strong>
+                    <p>{seller.category?.name || "Uncategorised"} · {seller.location || "Chennai"}</p>
+                    <small>{seller.contact || "No phone"} · <strong>{seller.verification_status || "pending"}</strong></small>
+                  </div>
+                  <div className="button-row">
+                    {seller.verification_status !== "approved" && <button disabled={busy} className="primary-button" onClick={()=>status(seller.id,"approved")}>approve</button>}
+                    {seller.verification_status !== "rejected" && <button disabled={busy} className="secondary-button" onClick={()=>status(seller.id,"rejected")}>reject</button>}
+                    {seller.verification_status !== "suspended" && <button disabled={busy} className="secondary-button" onClick={()=>status(seller.id,"suspended")}>suspend</button>}
+                  </div>
+                </article>
+              ) : <Empty
+                title={statusFilter === "all" ? "No sellers found" : "No " + statusFilter + " sellers"}
+                text={statusFilter === "all"
+                  ? "The admin query returned zero seller rows. Use Refresh and check the signed-in admin account."
+                  : "There are no sellers in this status right now."}
+              />}
+          </div>
+        </>}
+
       {tab==="categories" &&
         <div className="dashboard-list">
           <button className="primary-button" onClick={addCategory}><Plus size={16}/> Add category</button>
@@ -915,7 +990,6 @@ function AdminPage({ go }) {
     </main>
   );
 }
-
 function CardSkeletonRow({ detailed=false }) {
   return <div className={detailed ? "seller-list" : "seller-preview-grid"}>{[1,2,3].map((item)=><div className="skeleton-card" key={item}><div className="skeleton-cover"/><div className="skeleton-body"><span/><span/><span/></div></div>)}</div>;
 }

@@ -342,6 +342,14 @@ export async function isCurrentUserAdmin() {
   const client=needBackend(); const session=await getSession(); if(!session?.user)return false; const {data,error}=await client.from("admins").select("id").eq("user_id",session.user.id).maybeSingle(); if(error)throw error; return Boolean(data);
 }
 
+export async function adminStorageUsage() {
+  if (!supabase) return null;
+  const client = needBackend();
+  const { data, error } = await client.rpc("admin_storage_usage");
+  if (error) throw error;
+  return Array.isArray(data) ? data[0] ?? null : data;
+}
+
 export async function adminListSellers() {
   if (!supabase) return demoState().sellers.map((s)=>({id:s.id,slug:s.slug,business_name:s.business_name,owner_name:s.owner_name,contact:s.contact||s.phone,verification_status:s.verification_status,verified:s.verified,created_at:s.created_at||"",location:s.location,category:{name:s.category}}));
   const client=needBackend(); const {data,error}=await client.from("sellers").select("id,slug,business_name,owner_name,contact,verification_status,verified,created_at,location,category:categories(name)").order("created_at",{ascending:false}).limit(100); if(error)throw error; return data||[];

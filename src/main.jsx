@@ -482,10 +482,6 @@ function EnquiryModal({ seller, product, onClose }) {
 
   const submit = async (event) => {
     event.preventDefault();
-    if (!isSupabaseConfigured) {
-      setState({loading:false,error:"Enquiries are not live in preview mode. Connect Supabase first.",success:false});
-      return;
-    }
     setState({loading:true,error:"",success:false});
     try {
       await createEnquiry({seller_id:seller.id,product_id:product.id,customer_name:data.name,customer_contact:data.contact,message:data.message});
@@ -532,20 +528,19 @@ function RegisterPage({ go }) {
 
   const submit = async (event) => {
     event.preventDefault();
-    if (!isSupabaseConfigured) {
-      setState({loading:false,error:"Seller registration is disabled in preview mode. Connect Supabase to accept real sellers.",success:""});
-      return;
-    }
     setState({loading:true,error:"",success:""});
     try {
       const result = await signUpSeller(data);
       setState({
         loading:false,
         error:"",
-        success:result.session
-          ? "Registration submitted. Your seller profile is pending admin approval."
-          : "Account created. Check your email if confirmation is required. Your seller profile is pending admin approval."
+        success:result.demo
+          ? "Account created. Your seller catalogue is ready in demo mode."
+          : result.session
+            ? "Registration submitted. Your seller profile is pending admin approval."
+            : "Account created. Check your email if confirmation is required. Your seller profile is pending admin approval."
       });
+      if (result.demo) setTimeout(() => go("/dashboard"), 500);
     } catch (error) {
       setState({loading:false,error:friendlyError(error),success:""});
     }
@@ -583,10 +578,6 @@ function LoginPage({ go, onSignedIn }) {
 
   const submit = async (event) => {
     event.preventDefault();
-    if (!isSupabaseConfigured) {
-      setState({loading:false,error:"Seller login is disabled in preview mode. Connect Supabase first."});
-      return;
-    }
     setState({loading:true,error:""});
     try {
       await signIn(data.email,data.password);
@@ -622,10 +613,6 @@ function DashboardPage({ go }) {
   const [state,setState] = useState({loading:true,error:""});
 
   const load = async () => {
-    if (!isSupabaseConfigured) {
-      setState({loading:false,error:"Seller dashboard needs a connected Supabase project."});
-      return;
-    }
     try {
       const profile = await getCurrentProfile();
       if (!profile || profile.role !== "seller") { go("/login"); return; }
@@ -836,7 +823,6 @@ function AdminPage({ go }) {
   const [busy,setBusy]=useState(false);
 
   const load=async()=>{
-    if (!isSupabaseConfigured) { setAllowed(false); setError("Admin tools require a connected Supabase project."); return; }
     try {
       const ok=await isCurrentUserAdmin();
       if (!ok) { go("/login"); return; }

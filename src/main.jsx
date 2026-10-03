@@ -845,7 +845,7 @@ function AdminPage({ go }) {
     } catch(error) { setAllowed(false); setError(friendlyError(error)); }
   };
 
-  useEffect(()=>{load();},[]);
+  useEffect(()=>{load(); const timer=window.setInterval(load,300000); return ()=>window.clearInterval(timer);},[]);
 
   const status=async(id,next)=>{
     setBusy(true);

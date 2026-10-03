@@ -20,7 +20,8 @@ export default [
         URL: "readonly",
         alert: "readonly",
         confirm: "readonly",
-        prompt: "readonly"
+        prompt: "readonly",
+        URLSearchParams: "readonly"
       }
     },
     plugins: {

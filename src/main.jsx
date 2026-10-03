@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { QRCodeSVG } from "qrcode.react";
 import {
   Search, MapPin, Heart, Share2, Phone, Instagram, MessageCircle, Plus,
   ArrowLeft, Menu, X, Store, ChevronRight, Home, Compass, Grid2X2,
   Sparkles, CheckCircle, LogIn, LogOut, LayoutDashboard, ShieldCheck,
-  Trash2, Pencil, QrCode, ExternalLink, Clock, Send, AlertCircle
+  Trash2, Pencil, ExternalLink, Clock, Send, AlertCircle
 } from "lucide-react";
 import "./styles.css";
 import {
@@ -53,8 +53,8 @@ function App() {
 
   useEffect(() => {
     const onPop = () => setPath(location.pathname + location.search);
-    addEventListener("popstate", onPop);
-    return () => removeEventListener("popstate", onPop);
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
   }, []);
 
   useEffect(() => {

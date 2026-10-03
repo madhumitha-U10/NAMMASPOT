@@ -29,4 +29,4 @@ jobs:
       - name: Deploy to Vercel
         run: |
           npm install --global vercel@latest
-          vercel deploy --prod --yes --token="${{ secrets.VERCEL_TOKEN }}" --scope="${{ secrets.VERCEL_TEAM_SLUG }}"
+          vercel deploy --prod --yes --token="${{ secrets.VERCEL_TOKEN }}" --scope="madhumithau10-5925s-projects"

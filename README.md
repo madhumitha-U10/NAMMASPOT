@@ -65,7 +65,7 @@ It also adds:
 - seller media storage policies
 - role-escalation protection
 
-**Important:** no Supabase project is currently connected to the available environment, so the application deliberately shows **preview mode** and does not pretend that registration, login, dashboard, enquiries or admin moderation are live.
+**Demo mode:** when Supabase is not configured, NammaSpot now runs as a fully interactive single-device MVP. Seller registration/login, seller dashboard, product CRUD, saved sellers, enquiries and demo admin moderation persist in browser localStorage. This mode is intentionally device-local and is not a substitute for multi-user production authentication/database infrastructure.
 
 ## Frontend safety
 
@@ -93,4 +93,4 @@ npm run build
 npm run dev
 ```
 
-The production backend still needs a real Supabase project and Vercel environment variables before the complete multi-user MVP can be called live.
+For production multi-user operation, connect a real Supabase project and set the two Vercel environment variables above. The frontend remains usable without them in local demo mode.

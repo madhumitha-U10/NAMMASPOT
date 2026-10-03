@@ -33,6 +33,7 @@ import {
   isCurrentUserAdmin,
   adminListSellers,
   adminUpdateSellerStatus,
+  adminDeleteSuspendedSeller,
   adminListCategories,
   adminAddCategory,
   adminRenameCategory,
@@ -873,6 +874,21 @@ function AdminPage() {
     finally{setBusy(false);}
   };
 
+  const permanentlyDelete=async(seller)=>{
+    if (seller.verification_status !== "suspended") return;
+    const confirmed=window.confirm(
+      "Permanently delete " + seller.business_name + "? This removes the seller account, products, enquiries, favourites, profile data, uploaded media and login account. This cannot be undone."
+    );
+    if (!confirmed) return;
+    setBusy(true);
+    setError("");
+    try {
+      await adminDeleteSuspendedSeller(seller.id);
+      await load();
+    } catch(error){setError(friendlyError(error));}
+    finally{setBusy(false);}
+  };
+
   const addCategory=async()=>{
     const name=window.prompt("Category name");
     if(!name) return;
@@ -969,6 +985,7 @@ function AdminPage() {
                     {seller.verification_status !== "approved" && <button disabled={busy} className="primary-button" onClick={()=>status(seller.id,"approved")}>approve</button>}
                     {seller.verification_status !== "rejected" && <button disabled={busy} className="secondary-button" onClick={()=>status(seller.id,"rejected")}>reject</button>}
                     {seller.verification_status !== "suspended" && <button disabled={busy} className="secondary-button" onClick={()=>status(seller.id,"suspended")}>suspend</button>}
+                    {seller.verification_status === "suspended" && <button disabled={busy} className="danger-button" onClick={()=>permanentlyDelete(seller)}><Trash2 size={15}/> Delete permanently</button>}
                   </div>
                 </article>
               ) : <Empty

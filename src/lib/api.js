@@ -383,7 +383,7 @@ export async function adminDeleteSuspendedSeller(sellerId) {
     body: { seller_id: sellerId },
   });
   if (error) {
-    if (error.context instanceof Response) {
+    if (error.context && typeof error.context.json === "function") {
       try {
         const body = await error.context.clone().json();
         throw new Error(body?.error || body?.message || error.message);

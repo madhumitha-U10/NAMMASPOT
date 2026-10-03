@@ -1,0 +1,1 @@
+import{X as e,q as t}from"./tslib.es6-CFE2rU8F.js";import{d as n,h as r}from"./api-BF6W9Lc8.js";var i=e(t(),1),a=!1;function o(e){let[t,o]=(0,i.useState)(null),s=(0,i.useCallback)(()=>{r().then(()=>o(e()))},[]);return(0,i.useEffect)(()=>{let t=!0;return a||(a=!0,n()),r().then(()=>{t&&o(e())},()=>{t&&o(e())}),()=>{t=!1}},[]),{data:t,refresh:s}}export{o as t};

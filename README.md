@@ -48,10 +48,10 @@ Environment variables:
 Database schema + policies:
 - `supabase/migrations/0001_nammaspot_mvp.sql`
 
-The migration contains the core relational model:
+The production database contains the core relational model:
 Users, Sellers, Categories, Products, Enquiries, Admins, and Favourites.
 
-It also adds:
+It also uses:
 - primary/foreign keys
 - unique constraints
 - check constraints
@@ -65,7 +65,9 @@ It also adds:
 - seller media storage policies
 - role-escalation protection
 
-**Demo mode:** when Supabase is not configured, NammaSpot now runs as a fully interactive single-device MVP. Seller registration/login, seller dashboard, product CRUD, saved sellers, enquiries and demo admin moderation persist in browser localStorage. This mode is intentionally device-local and is not a substitute for multi-user production authentication/database infrastructure.
+The unused legacy `seller_accounts` table and unused public SECURITY DEFINER slug-check function were removed during production hardening.
+
+**Demo mode:** when Supabase is not configured, NammaSpot runs as a device-local interactive MVP. This mode is intentionally separate from production authentication/database infrastructure.
 
 ## Frontend safety
 
@@ -79,10 +81,11 @@ It also adds:
 
 Vercel SPA routing and security headers are configured in `vercel.json`.
 
-GitHub Actions CI is configured in `.github/workflows/ci.yml` to run:
+GitHub Actions CI is configured in `.github/workflows/ci.yml` and the production deployment workflow runs:
 - npm install
 - npm run lint
 - npm run build
+- Vercel production deployment
 
 ## Local checks
 
@@ -93,4 +96,4 @@ npm run build
 npm run dev
 ```
 
-For production multi-user operation, connect a real Supabase project and set the two Vercel environment variables above. The frontend remains usable without them in local demo mode.
+For production multi-user operation, connect the production Supabase project and set the two Vercel environment variables above.

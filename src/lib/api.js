@@ -225,7 +225,12 @@ export async function signUpSeller(values) {
   const client = needBackend();
   const metadata = { role:"seller", name:text(values.owner,120), phone:text(values.phone,40), business_name:text(values.business,160), category_name:text(values.category,80), location:text(values.location,240), location_url:text(values.locationUrl,500), description:text(values.description,300), whatsapp_phone:text(values.whatsapp,40), instagram_url:text(values.instagram,500) };
   const { data,error } = await client.auth.signUp({ email:text(values.email,320).toLowerCase(), password:values.password, options:{ data:metadata } });
-  if (error) throw error;
+  if (error) {
+    if (error.code === "23505" || /users_phone_unique_nonempty|duplicate key.*phone/i.test(error.message || "")) {
+      throw new Error("That phone number is already registered.");
+    }
+    throw error;
+  }
   return data;
 }
 

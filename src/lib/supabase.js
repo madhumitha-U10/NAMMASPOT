@@ -1,10 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 
-const url = import.meta.env.VITE_SUPABASE_URL || "https://byxqdletlfglujymhovw.supabase.co";
+const url = import.meta.env.VITE_SUPABASE_URL || "https://ahncpjthmaxapawjzcwt.supabase.co";
 const key =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
   import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  "sb_publishable_dKej76176ynBW0v56D56ig_z-WQN5m6";
+  "sb_publishable_tjoHCwVR3UVDOl4cc5EDUQ_vF2LWM27";
 
 export const isSupabaseConfigured = Boolean(url && key);
 

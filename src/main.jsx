@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { QRCodeSVG } from "qrcode.react";
 import {
-  Search, MapPin, Heart, Share2, Phone, Instagram, MessageCircle, Plus,
+  Search, MapPin, Heart, Share2, Phone, MessageCircle, Plus,
   ArrowLeft, Menu, X, Store, ChevronRight, Home, Compass, Grid2X2,
   Sparkles, CheckCircle, LogIn, LogOut, LayoutDashboard, ShieldCheck,
   Trash2, Pencil, ExternalLink, Clock, Send, AlertCircle
@@ -439,7 +439,7 @@ function SellerPage({ go, slug, saved, toggleSave }) {
               {seller.whatsapp_phone && <a className="secondary-button" href={"https://wa.me/" + seller.whatsapp_phone.replace(/\D/g,"")} target="_blank" rel="noreferrer"><MessageCircle size={17}/> WhatsApp</a>}
               <button className="secondary-button" onClick={() => shareSeller(seller)}><Share2 size={17}/> Share</button>
               <button className={saved.includes(seller.id) ? "secondary-button saved-action" : "secondary-button"} onClick={() => toggleSave(seller.id)}><Heart size={17} fill={saved.includes(seller.id) ? "currentColor" : "none"}/>{saved.includes(seller.id) ? "Saved" : "Save"}</button>
-              {seller.instagram_url && <a className="secondary-button" href={seller.instagram_url} target="_blank" rel="noreferrer"><Instagram size={17}/> Instagram</a>}
+              {seller.instagram_url && <a className="secondary-button" href={seller.instagram_url} target="_blank" rel="noreferrer"><ExternalLink size={17}/> Instagram</a>}
               {seller.location_url && <a className="secondary-button" href={seller.location_url} target="_blank" rel="noreferrer"><MapPin size={17}/> Location</a>}
             </div>
           </div>

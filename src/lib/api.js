@@ -217,7 +217,7 @@ export async function signUpSeller(values) {
       location:text(values.location,240) || "Chennai", city:"Chennai", location_url:text(values.locationUrl,500),
       description:text(values.description,600), phone:text(values.phone,40), contact:text(values.phone,40),
       whatsapp_phone:text(values.whatsapp,40), instagram_url:text(values.instagram,500),
-      opening_time:"", closing_time:"", featured:false, verified:false, verification_status:"approved"
+      opening_time:"", closing_time:"", featured:false, verified:false, verification_status:"pending"
     };
     state.users.push(user); state.sellers.push(seller); saveDemo(state); setCurrentDemoUser(user);
     return { session:{user}, demo:true };

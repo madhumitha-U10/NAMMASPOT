@@ -724,7 +724,7 @@ function ProductManager({ seller, products, categories, onChange }) {
       const next=editing ? await updateProduct(editing,form) : await createProduct({...form,seller_id:seller.id});
       onChange(editing ? products.map((p)=>p.id===editing?next:p) : [next,...products]);
       setForm(blank); setEditing(null); setState({loading:false,error:""});
-    } catch(error) {
+    } catch {
       setState({loading:false,error:friendlyError(error)});
     }
   };

@@ -599,6 +599,7 @@ function LoginPage({ go, onSignedIn }) {
         {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
         <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Signing in…" : <><LogIn size={17}/> Sign in</>}</button>
         <button type="button" className="secondary-button full-button" onClick={()=>go("/register")}>Create seller account</button>
+        {!isSupabaseConfigured && <button type="button" className="secondary-button full-button" onClick={async()=>{await signIn("admin@nammaspot.local","nammaspot-demo"); const profile=await getCurrentProfile(); onSignedIn(profile); go("/admin");}}>Open demo admin</button>}
       </form>
     </main>
   );

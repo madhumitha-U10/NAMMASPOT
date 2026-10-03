@@ -818,7 +818,7 @@ function PublicTools({ seller, go }) {
   );
 }
 
-function AdminPage({ go }) {
+function AdminPage() {
   const [allowed,setAllowed]=useState(null);
   const [adminProfile,setAdminProfile]=useState(null);
   const [sellers,setSellers]=useState([]);

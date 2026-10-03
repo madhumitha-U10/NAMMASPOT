@@ -339,7 +339,7 @@ export async function removeFavourite(sellerId) {
 
 export async function isCurrentUserAdmin() {
   if (!supabase) return currentDemoUser()?.role === "admin";
-  const client=needBackend(); const session=await getSession(); if(!session?.user)return false; const {data,error}=await client.from("admins").select("id").eq("user_id",session.user.id).maybeSingle(); if(error)throw error; return Boolean(data);
+  const client=needBackend(); const session=await getSession(); if(!session?.user)return false; const {data,error}=await client.from("admins").select("user_id").eq("user_id",session.user.id).maybeSingle(); if(error)throw error; return Boolean(data);
 }
 
 export async function changeCurrentUserPassword(newPassword) {

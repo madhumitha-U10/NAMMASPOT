@@ -37,6 +37,7 @@ import {
   adminAddCategory,
   adminRenameCategory,
   adminDeleteCategory,
+  adminStorageUsage,
   uploadSellerMedia
 } from "./lib/api";
 import { categoryNames } from "./lib/seed";
@@ -630,7 +631,7 @@ function DashboardPage({ go }) {
     }
   };
 
-  useEffect(()=>{load();},[]);
+  useEffect(()=>{load(); const timer=window.setInterval(load,300000); return ()=>window.clearInterval(timer);},[]);
 
   if (state.loading) return <main className="page"><div className="page-title"><div className="eyebrow">SELLER DASHBOARD</div><h1>Loading your spot…</h1></div><CardSkeletonRow detailed/></main>;
   if (state.error) return <main className="page"><ErrorState message={state.error} retry={load}/></main>;
@@ -822,13 +823,25 @@ function AdminPage({ go }) {
   const [tab,setTab]=useState("sellers");
   const [error,setError]=useState("");
   const [busy,setBusy]=useState(false);
+  const [storageUsage,setStorageUsage]=useState(null);
 
   const load=async()=>{
     try {
       const ok=await isCurrentUserAdmin();
       if (!ok) { go("/login"); return; }
-      const [s,c]=await Promise.all([adminListSellers(),adminListCategories()]);
-      setAllowed(true); setSellers(s); setCategories(c); setError("");
+      const [s,c,u]=await Promise.all([adminListSellers(),adminListCategories(),adminStorageUsage()]);
+      setAllowed(true); setSellers(s); setCategories(c); setStorageUsage(u); setError("");
+      if (u && u.status !== "ok") {
+        const key = "nammaspot-storage-alert-" + u.status;
+        if (!sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, "1");
+          window.setTimeout(() => window.alert(
+            u.status === "blocked"
+              ? "NammaSpot storage safety cutoff reached. New image uploads are paused."
+              : "NammaSpot storage warning: " + u.used_percent + "% of the 1 GB safety quota is used."
+          ), 0);
+        }
+      }
     } catch(error) { setAllowed(false); setError(friendlyError(error)); }
   };
 
@@ -866,6 +879,21 @@ function AdminPage({ go }) {
       <div className="dashboard-head"><div><div className="eyebrow">ADMIN</div><h1>Keep NammaSpot trustworthy.</h1><p>Approve sellers and manage platform categories.</p></div><ShieldCheck size={34} color="#7e2424"/></div>
       <div className="dashboard-tabs"><button className={tab==="sellers"?"active":""} onClick={()=>setTab("sellers")}>Sellers</button><button className={tab==="categories"?"active":""} onClick={()=>setTab("categories")}>Categories</button></div>
       {error && <div className="inline-error"><AlertCircle size={17}/>{error}</div>}
+      {storageUsage && (
+        <div className="dashboard-item" role="status" aria-live="polite">
+          <div>
+            <div className="eyebrow">STORAGE SAFETY</div>
+            <strong>{storageUsage.used_percent}% of 1 GB used</strong>
+            <p>
+              {storageUsage.status === "ok" && "Everything is within the safe range."}
+              {storageUsage.status === "warning" && "Warning: storage has crossed 80%. Review unused images soon."}
+              {storageUsage.status === "critical" && "Critical: storage has crossed 90%. New uploads will be blocked at the safety cutoff."}
+              {storageUsage.status === "blocked" && "Safety cutoff reached. New image uploads are paused to protect the Free-plan quota."}
+            </p>
+          </div>
+          <span className={"status-pill status-" + storageUsage.status}>{storageUsage.status}</span>
+        </div>
+      )}
       {tab==="sellers" &&
         <div className="dashboard-list">
           {sellers.length ? sellers.map((seller)=>

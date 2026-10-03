@@ -91,13 +91,4 @@ The production deployment workflow runs:
 
 The production branch is `main`. A release is considered complete only after the deployment for the released commit reports **Ready** and the production URL is checked.
 
-## Local checks
-
-```bash
-npm install
-npm run lint
-npm run build
-npm run dev
-```
-
-For production multi-user operation, connect the production Supabase project and set the two Vercel environment variables above.
+Release verification is part of the deployment checklist; do not treat a GitHub commit alone as proof of production release.

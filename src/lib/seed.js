@@ -1,13 +1,12 @@
 export const categoryNames = [
   "Handmade",
   "Food",
-  "Fashion",
   "Accessories",
-  "Gifts",
-  "Home Decor",
-  "Jewellery",
+  "Fashion",
+  "Home & Decor",
   "Beauty",
   "Services",
+  "Other",
 ];
 
 export const seedSellers = [

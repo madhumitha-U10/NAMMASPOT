@@ -782,7 +782,7 @@ function EnquiryManager({ enquiries,onChange }) {
       {enquiries.length ? enquiries.map((item)=>
         <article className="dashboard-item" key={item.id}>
           <div><strong>{item.customer_name} · {item.product?.product_name || "General enquiry"}</strong><p>{item.customer_contact}</p><small>{item.message}</small></div>
-          <select value={item.status} onChange={(event)=>update(item.id,event.target.value)}><option value="pending">Pending</option><option value="viewed">Viewed</option><option value="responded">Responded</option><option value="closed">Closed</option></select>
+          <select value={item.status} onChange={(event)=>update(item.id,event.target.value)}><option value="pending">Pending</option><option value="read">Read</option><option value="replied">Replied</option><option value="closed">Closed</option></select>
         </article>
       ) : <Empty title="No enquiries yet" text="Customer enquiries will appear here."/>}
     </div>

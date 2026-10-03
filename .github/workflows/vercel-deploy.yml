@@ -29,6 +29,6 @@ jobs:
       - name: Deploy prebuilt output to Vercel
         run: |
           npm install --global vercel@latest
-          vercel pull --yes --environment=production --token="${{ secrets.VERCEL_TOKEN }}" --scope="madhumithaut10-5925s-projects"
-          vercel build --prod --token="${{ secrets.VERCEL_TOKEN }}" --scope="madhumithaut10-5925s-projects"
-          vercel deploy --prebuilt --prod --yes --token="${{ secrets.VERCEL_TOKEN }}" --scope="madhumithaut10-5925s-projects"
+          vercel pull --yes --environment=production --token="${{ secrets.VERCEL_TOKEN }}" --scope="madhumithau10-5925s-projects"
+          vercel build --prod --token="${{ secrets.VERCEL_TOKEN }}" --scope="madhumithau10-5925s-projects"
+          vercel deploy --prebuilt --prod --yes --token="${{ secrets.VERCEL_TOKEN }}" --scope="madhumithau10-5925s-projects"

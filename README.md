@@ -1,26 +1,96 @@
 # NammaSpot
 
-NammaSpot is a mobile-first local seller discovery and digital catalogue MVP.
+**Namma Ooru. Namma People. Namma Spot.**
 
-## Current implementation
-- Customer homepage, search, categories and saved sellers
-- Public seller catalogue pages
-- Shareable seller URLs using hash routes
-- Seller registration form with local draft persistence
-- Responsive mobile/tablet/desktop UI
-- Accessible labels, clear loading/error/empty-friendly states
+NammaSpot is a mobile-first **local seller discovery + digital catalogue platform**. It helps local sellers get a simple digital presence and lets customers discover, save, share and enquire without turning the MVP into a large e-commerce marketplace.
 
-## Important backend note
-This repository currently has no connected Supabase/Google Sheets project in the available environment. Seller registration and saved sellers therefore use browser-local storage only and are **not a production multi-user backend**. Do not treat local registration as real seller onboarding until a production database/auth service is connected.
+## Product flows
 
-## Run
+### Customer
+- Chennai-local homepage with search and category discovery
+- Explore/search sellers and products
+- Category pages
+- Featured sellers
+- Nearby/Chennai filter
+- Public seller catalogue at `/s/:sellerId`
+- Save/unsave sellers
+- Call, WhatsApp, Instagram and seller-provided location link
+- Product enquiry form
+- Seller-specific metadata, canonical URL and LocalBusiness JSON-LD
+
+### Seller
+- Email/password seller registration
+- New accounts enter **pending** verification state
+- Seller login
+- Seller dashboard
+- Edit seller profile, contact, location and opening hours
+- Product create/read/update/delete
+- Availability toggle
+- Product image URL or Supabase Storage upload
+- Enquiry inbox and status updates
+- Shareable public seller URL
+- QR code generated from the real public seller URL
+
+### Admin
+- Authenticated admin route
+- Seller approval / rejection / suspension
+- Category add / rename / delete
+- Database-side authorization through Supabase RLS
+
+## Backend
+
+The repository is prepared for Supabase.
+
+Environment variables:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+
+Database schema + policies:
+- `supabase/migrations/0001_nammaspot_mvp.sql`
+
+The migration contains the core relational model:
+Users, Sellers, Categories, Products, Enquiries, Admins, and Favourites.
+
+It also adds:
+- primary/foreign keys
+- unique constraints
+- check constraints
+- indexes
+- timestamps
+- seller verification states
+- seller/product ownership RLS
+- enquiry access controls
+- favourite ownership
+- protected admin operations
+- seller media storage policies
+- role-escalation protection
+
+**Important:** no Supabase project is currently connected to the available environment, so the application deliberately shows **preview mode** and does not pretend that registration, login, dashboard, enquiries or admin moderation are live.
+
+## Frontend safety
+
+- No real secrets are stored in the repository.
+- `.env`, local environment files, `.vercel` and build output are ignored.
+- Public seller data is restricted to approved sellers when Supabase is active.
+- The client only uses the Supabase publishable/anonymous key.
+- Admin and ownership rules are enforced by database RLS, not hidden UI buttons.
+
+## Deployment
+
+Vercel SPA routing and security headers are configured in `vercel.json`.
+
+GitHub Actions CI is configured in `.github/workflows/ci.yml` to run:
+- npm install
+- npm run lint
+- npm run build
+
+## Local checks
+
+```bash
 npm install
+npm run lint
 npm run build
 npm run dev
+```
 
-## Production integration checklist
-1. Connect Supabase or the existing server backend.
-2. Add server-side authentication and ownership checks.
-3. Persist sellers/products/enquiries in the database with RLS/authorization.
-4. Configure production environment variables in Vercel.
-5. Add real image storage and QR generation after backend connection.
+The production backend still needs a real Supabase project and Vercel environment variables before the complete multi-user MVP can be called live.

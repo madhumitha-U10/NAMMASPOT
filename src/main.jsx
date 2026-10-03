@@ -230,7 +230,7 @@ function HomePage({ go, query, setQuery }) {
           <button className="hero-search-button" onClick={() => go("/explore")}>Search</button>
           <div className="quick-chips">
             {popularCategories.map((category) => (
-              <button key={category} onClick={() => go("/explore?cat=" + encodeURIComponent(category))}>{category}</button>
+              <button key={category} onClick={() => go("/explore?search=" + encodeURIComponent(category))}>{category}</button>
             ))}
           </div>
         </div>
@@ -268,6 +268,8 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
   const params = new URLSearchParams(location.search);
   const category = params.get("cat") || "All";
   const near = params.get("near") || "";
+  const urlQuery = params.get("search") || "";
+  useEffect(() => { setQuery(urlQuery); }, [urlQuery, setQuery]);
   const options = useMemo(() => ({ query, category, near }), [query, category, near]);
   const state = useAsync(() => getPublicSellers(options), [options]);
 
@@ -317,7 +319,7 @@ function CategoriesPage({ go }) {
       {state.loading ? <CardSkeletonRow detailed/> :
         <div className="category-grid-large">
           {categories.map((category,index) => (
-            <button key={category} onClick={() => go("/explore?cat=" + encodeURIComponent(category))}>
+            <button key={category} onClick={() => go("/explore?search=" + encodeURIComponent(category))}>
               <span>{String(index + 1).padStart(2,"0")}</span>
               <strong>{category}</strong>
               <ChevronRight size={19}/>
@@ -558,7 +560,7 @@ function RegisterPage({ go }) {
           <label>Email *<input type="email" value={data.email} onChange={(e)=>update("email",e.target.value)} required/></label>
           <label>Password *<input type="password" minLength={8} value={data.password} onChange={(e)=>update("password",e.target.value)} required/></label>
           <label>Phone *<input type="tel" value={data.phone} onChange={(e)=>update("phone",e.target.value)} required/></label>
-          <label>Category<select value={data.category} onChange={(e)=>update("category",e.target.value)}>{Array.from(new Set([...categoryNames,...popularCategories])).map((c)=><option key={c}>{c}</option>)}</select></label>
+          <label>Category<select value={data.category} onChange={(e)=>update("category",e.target.value)}>{categoryNames.map((c)=><option key={c}>{c}</option>)}</select></label>
           <label>Location<input value={data.location} onChange={(e)=>update("location",e.target.value)} placeholder="Anna Nagar, Chennai"/></label>
           <label>Location URL<input type="url" value={data.locationUrl} onChange={(e)=>update("locationUrl",e.target.value)} placeholder="Google Maps URL (optional)"/></label>
           <label>WhatsApp<input type="tel" value={data.whatsapp} onChange={(e)=>update("whatsapp",e.target.value)} placeholder="+91…"/></label>

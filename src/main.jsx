@@ -750,7 +750,7 @@ function ProductManager({ seller, products, categories, onChange }) {
       const session = await getCurrentProfile();
       const url = await uploadSellerMedia(file, session.id);
       if (url) setForm((current)=>({...current,image_url:url}));
-    } catch(error) {
+    } catch {
       setState({loading:false,error:"Image upload failed. Use an image URL or try again."});
     }
   };

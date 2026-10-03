@@ -376,3 +376,45 @@ using (
   bucket_id = 'seller-media'
   and (storage.foldername(name))[1] = auth.uid()::text
 );
+
+create or replace function public.prevent_role_escalation()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+begin
+  if new.role <> old.role and not public.is_admin() then
+    raise exception 'Role changes are restricted';
+  end if;
+  return new;
+end;
+$fn$;
+
+drop trigger if exists prevent_user_role_escalation on public.users;
+create trigger prevent_user_role_escalation
+before update of role on public.users
+for each row execute function public.prevent_role_escalation();
+
+create or replace function public.prevent_seller_privilege_changes()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+begin
+  if not public.is_admin() then
+    if new.verification_status <> old.verification_status
+       or new.verified <> old.verified
+       or new.featured <> old.featured then
+      raise exception 'Seller moderation fields are restricted';
+    end if;
+  end if;
+  return new;
+end;
+$fn$;
+
+drop trigger if exists prevent_seller_privilege_changes on public.sellers;
+create trigger prevent_seller_privilege_changes
+before update on public.sellers
+for each row execute function public.prevent_seller_privilege_changes();

@@ -50,6 +50,15 @@ async function compressImage(file) {
 export async function uploadSellerMedia(file, userId, bucket = "seller-media") {
   if (!supabase || !file || !userId) return null;
   const compressed = await compressImage(file);
+
+  if (bucket === "seller-media") {
+    const { data, error } = await supabase.rpc("storage_upload_allowed", { p_bytes: compressed.size });
+    if (error) throw error;
+    if (data !== true) {
+      throw new Error("NammaSpot image storage is at its safety limit. New image uploads are temporarily paused.");
+    }
+  }
+
   const path = `${userId}/${crypto.randomUUID()}.webp`;
 
   const { error } = await supabase.storage

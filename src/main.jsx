@@ -833,8 +833,8 @@ function AdminPage({ go }) {
       setAllowed(true); setSellers(s); setCategories(c); setStorageUsage(u); setError("");
       if (u && u.status !== "ok") {
         const key = "nammaspot-storage-alert-" + u.status;
-        if (!sessionStorage.getItem(key)) {
-          sessionStorage.setItem(key, "1");
+        if (!window.sessionStorage.getItem(key)) {
+          window.sessionStorage.setItem(key, "1");
           window.setTimeout(() => window.alert(
             u.status === "blocked"
               ? "NammaSpot storage safety cutoff reached. New image uploads are paused."

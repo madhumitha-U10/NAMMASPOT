@@ -37,7 +37,7 @@ async function postToSheet(
 }
 
 export const adminSetSellerStatus = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         token: z.string(),
@@ -56,7 +56,7 @@ export const adminSetSellerStatus = createServerFn({ method: "POST" })
   });
 
 export const adminSetReviewApproval = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         token: z.string(),

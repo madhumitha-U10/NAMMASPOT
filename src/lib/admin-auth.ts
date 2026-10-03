@@ -62,7 +62,7 @@ export async function verifyAdminToken(token: string | null | undefined): Promis
 
 /** Server function: validates the admin password and returns a signed token. */
 export const verifyAdminPassword = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => z.object({ password: z.string() }).parse(data))
+  .validator((data: unknown) => z.object({ password: z.string() }).parse(data))
   .handler(async ({ data }): Promise<{ ok: boolean; token?: string; error?: string }> => {
     const expected = getAdminPassword();
     if (!expected) {
@@ -78,7 +78,7 @@ export const verifyAdminPassword = createServerFn({ method: "POST" })
 
 /** Server function: checks whether a token is still valid. */
 export const checkAdminSession = createServerFn({ method: "GET" })
-  .inputValidator((data: unknown) => z.object({ token: z.string() }).parse(data))
+  .validator((data: unknown) => z.object({ token: z.string() }).parse(data))
   .handler(async ({ data }): Promise<{ ok: boolean }> => {
     return { ok: await verifyAdminToken(data.token) };
   });

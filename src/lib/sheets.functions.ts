@@ -20,7 +20,7 @@ export type { SheetCell, SheetRow, SheetTable } from "@/lib/sheets-shared";
  * walks the tables sequentially on the server instead.
  */
 export const fetchSheetBundle = createServerFn({ method: "GET" })
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ tables: z.array(z.enum(SHEET_TABLES)).min(1).max(6) }).parse(data),
   )
   .handler(async ({ data }): Promise<{ rows: Record<string, SheetRow[]>; error?: string | undefined }> => {
@@ -29,7 +29,7 @@ export const fetchSheetBundle = createServerFn({ method: "GET" })
   });
 
 export const appendSheetRow = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         action: z.enum(["addSeller", "addProduct", "addCustomer", "addEnquiry", "addReview"]),

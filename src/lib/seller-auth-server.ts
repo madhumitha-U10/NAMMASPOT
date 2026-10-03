@@ -13,7 +13,7 @@ import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 
 export const getAuthorizedSellerId = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => z.object({ sellerId: z.string() }).parse(data))
+  .validator((data: unknown) => z.object({ sellerId: z.string() }).parse(data))
   .handler(async ({ data }): Promise<{ ok: boolean; sellerId?: string | undefined }> => {
     const SUPABASE_URL = process.env["SUPABASE_URL"];
     const SUPABASE_SERVICE_ROLE_KEY = process.env["SUPABASE_SERVICE_ROLE_KEY"];

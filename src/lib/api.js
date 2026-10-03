@@ -382,7 +382,17 @@ export async function adminDeleteSuspendedSeller(sellerId) {
   const { data, error } = await client.functions.invoke("admin-delete-suspended-seller", {
     body: { seller_id: sellerId },
   });
-  if (error) throw error;
+  if (error) {
+    if (error.context instanceof Response) {
+      try {
+        const body = await error.context.clone().json();
+        throw new Error(body?.error || body?.message || error.message);
+      } catch (responseError) {
+        if (responseError instanceof Error && responseError.message) throw responseError;
+      }
+    }
+    throw error;
+  }
   if (!data?.success) throw new Error(data?.error || "Permanent deletion failed.");
   return data;
 }

@@ -362,6 +362,31 @@ export async function adminListSellers() {
   const client=needBackend(); const {data,error}=await client.from("sellers").select("id,slug,business_name,owner_name,contact,verification_status,verified,created_at,location,category:categories(name)").order("created_at",{ascending:false}).limit(100); if(error)throw error; return data||[];
 }
 
+export async function adminDeleteSuspendedSeller(sellerId) {
+  if (!supabase) {
+    const state = demoState();
+    const seller = state.sellers.find((item) => item.id === sellerId);
+    if (!seller) throw new Error("Seller not found.");
+    if (seller.verification_status !== "suspended") throw new Error("Only suspended seller accounts can be permanently deleted.");
+    const userId = seller.user_id;
+    state.favourites = state.favourites.filter((item) => item.seller_id !== sellerId);
+    state.enquiries = state.enquiries.filter((item) => item.seller_id !== sellerId);
+    state.products = state.products.filter((item) => item.seller_id !== sellerId);
+    state.sellers = state.sellers.filter((item) => item.id !== sellerId);
+    if (userId) state.users = state.users.filter((item) => item.id !== userId);
+    if (currentDemoUser()?.id === userId) setCurrentDemoUser(null);
+    saveDemo(state);
+    return { success: true, seller_id: sellerId };
+  }
+  const client = needBackend();
+  const { data, error } = await client.functions.invoke("admin-delete-suspended-seller", {
+    body: { seller_id: sellerId },
+  });
+  if (error) throw error;
+  if (!data?.success) throw new Error(data?.error || "Permanent deletion failed.");
+  return data;
+}
+
 export async function adminUpdateSellerStatus(id,status) {
   if (!supabase) { const state=demoState(); const item=state.sellers.find((s)=>s.id===id); if(item){item.verification_status=status;item.verified=status==="approved";} saveDemo(state); return; }
   const client=needBackend(); const {error}=await client.from("sellers").update({verification_status:status,verified:status==="approved"}).eq("id",id); if(error)throw error;

@@ -176,11 +176,17 @@ export async function getSession() {
 
 export async function signIn(email,password) {
   if (!supabase) {
+    const normalizedEmail = text(email,320).toLowerCase();
+    if (normalizedEmail === "admin@nammaspot.local" && password === "nammaspot-demo") {
+      const user = { id:"demo-admin", name:"NammaSpot Admin", email:normalizedEmail, phone:"", role:"admin" };
+      setCurrentDemoUser(user);
+      return { session: { user }, demo:true };
+    }
     const state = demoState();
-    const user = state.users.find((item) => item.email === text(email,320).toLowerCase() && item.password === password);
+    const user = state.users.find((item) => item.email === normalizedEmail && item.password === password);
     if (!user) throw new Error("Invalid login");
     setCurrentDemoUser(user);
-    return { session: { user } };
+    return { session: { user }, demo:true };
   }
   const client = needBackend();
   const { data,error } = await client.auth.signInWithPassword({ email:text(email,320).toLowerCase(), password });

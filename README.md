@@ -81,11 +81,15 @@ The unused legacy `seller_accounts` table and unused public SECURITY DEFINER slu
 
 Vercel SPA routing and security headers are configured in `vercel.json`.
 
-GitHub Actions CI is configured in `.github/workflows/ci.yml` and the production deployment workflow runs:
+GitHub Actions CI is configured in `.github/workflows/ci.yml` and the production deployment workflow is `.github/workflows/vercel-deploy.yml`.
+
+The production deployment workflow runs:
 - npm install
 - npm run lint
 - npm run build
 - Vercel production deployment
+
+The production branch is `main`. A release is considered complete only after the deployment for the released commit reports **Ready** and the production URL is checked.
 
 ## Local checks
 

@@ -540,7 +540,7 @@ function RegisterPage({ go }) {
             ? "Registration submitted. Your seller profile is pending admin approval."
             : "Account created. Check your email if confirmation is required. Your seller profile is pending admin approval."
       });
-      if (result.demo) setTimeout(() => go("/dashboard"), 500);
+      if (result.demo) window.setTimeout(() => go("/dashboard"), 500);
     } catch (error) {
       setState({loading:false,error:friendlyError(error),success:""});
     }

@@ -25,7 +25,7 @@ async function compressImage(file) {
   if (!file || !file.type.startsWith("image/")) throw new Error("Please select an image file.");
   if (file.size <= MAX_IMAGE_BYTES && file.type === "image/webp") return file;
 
-  const bitmap = await createImageBitmap(file);
+  const bitmap = await window.createImageBitmap(file);
   const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(bitmap.width * scale));
@@ -44,7 +44,7 @@ async function compressImage(file) {
   if (!blob || blob.size > MAX_IMAGE_BYTES) {
     throw new Error("Image is too large after compression. Please choose a smaller image.");
   }
-  return new File([blob], "image.webp", { type: "image/webp" });
+  return new window.File([blob], "image.webp", { type: "image/webp" });
 }
 
 export async function uploadSellerMedia(file, userId, bucket = "seller-media") {

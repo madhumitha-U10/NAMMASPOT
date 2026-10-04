@@ -17,8 +17,8 @@ import {
   getCurrentProfile,
   getMySeller,
   getMyEnquiries,
-  sendSellerLoginOtp,
-  verifySellerLoginOtp,
+  signInSeller,
+  setSellerPassword,
   startSellerRegistration,
   verifySellerRegistrationOtp,
   signOut,
@@ -533,12 +533,20 @@ function EnquiryModal({ seller, product, onClose }) {
 }
 
 function RegisterPage({ go }) {
-  const [data,setData] = useState({business:"",owner:"",phone:"",category:"Handmade",location:"",locationUrl:"",description:"",whatsapp:"",instagram:""});
+  const [data,setData] = useState({business:"",owner:"",phone:"",password:"",confirmPassword:"",category:"Handmade",location:"",locationUrl:"",description:"",whatsapp:"",instagram:""});
   const [otpStep,setOtpStep] = useState(false);
   const [state,setState] = useState({loading:false,error:"",success:"",nammaspotId:""});
 
   const submit = async (event) => {
     event.preventDefault();
+    if (data.password.length < 8) {
+      setState({loading:false,error:"Password must be at least 8 characters.",success:"",nammaspotId:""});
+      return;
+    }
+    if (data.password !== data.confirmPassword) {
+      setState({loading:false,error:"Passwords do not match.",success:"",nammaspotId:""});
+      return;
+    }
     setState({loading:true,error:"",success:"",nammaspotId:""});
     try {
       await startSellerRegistration(data);
@@ -555,6 +563,7 @@ function RegisterPage({ go }) {
     try {
       await verifySellerRegistrationOtp(data.phone, data.otp);
       const seller = await getMySeller();
+      await setSellerPassword(data.password);
       await signOut();
       setState({loading:false,error:"",success:"Registration verified. Your NammaSpot ID is " + (seller?.nammaspot_id || "being assigned") + ". Your profile is now pending admin approval.",nammaspotId:seller?.nammaspot_id || ""});
       setOtpStep(false);
@@ -573,6 +582,8 @@ function RegisterPage({ go }) {
             <label>Business name *<input value={data.business} onChange={(e)=>setData({...data,business:e.target.value})} maxLength={160} required/></label>
             <label>Your name *<input value={data.owner} onChange={(e)=>setData({...data,owner:e.target.value})} maxLength={120} required/></label>
             <label>Phone *<input type="tel" value={data.phone} onChange={(e)=>setData({...data,phone:e.target.value})} placeholder="10-digit mobile number" required/></label>
+            <label>Password *<input type="password" autoComplete="new-password" value={data.password} onChange={(e)=>setData({...data,password:e.target.value})} placeholder="At least 8 characters" minLength={8} required/></label>
+            <label>Confirm password *<input type="password" autoComplete="new-password" value={data.confirmPassword} onChange={(e)=>setData({...data,confirmPassword:e.target.value})} placeholder="Re-enter password" minLength={8} required/></label>
             <label>Category<select value={data.category} onChange={(e)=>setData({...data,category:e.target.value})}>{categoryNames.map((c)=><option key={c}>{c}</option>)}</select></label>
             <label>Location<input value={data.location} onChange={(e)=>setData({...data,location:e.target.value})} placeholder="Anna Nagar, Chennai"/></label>
             <label>Location URL<input type="url" value={data.locationUrl} onChange={(e)=>setData({...data,locationUrl:e.target.value})} placeholder="Google Maps URL (optional)"/></label>
@@ -600,27 +611,14 @@ function RegisterPage({ go }) {
 }
 
 function LoginPage({ go, onSignedIn }) {
-  const [data,setData] = useState({nammaspotId:"",phone:"",otp:""});
-  const [otpStep,setOtpStep] = useState(false);
-  const [state,setState] = useState({loading:false,error:"",success:""});
+  const [data,setData] = useState({nammaspotId:"",password:""});
+  const [state,setState] = useState({loading:false,error:""});
 
-  const send = async (event) => {
+  const submit = async (event) => {
     event.preventDefault();
-    setState({loading:true,error:"",success:""});
+    setState({loading:true,error:""});
     try {
-      await sendSellerLoginOtp(data.nammaspotId, data.phone);
-      setState({loading:false,error:"",success:"OTP sent to your phone."});
-      setOtpStep(true);
-    } catch (error) {
-      setState({loading:false,error:friendlyError(error),success:""});
-    }
-  };
-
-  const verify = async (event) => {
-    event.preventDefault();
-    setState({loading:true,error:"",success:""});
-    try {
-      await verifySellerLoginOtp(data.phone, data.otp);
+      const result = await signInSeller(data.nammaspotId, data.password);
       const profile = await getCurrentProfile();
       if (!profile || profile.role !== "seller") throw new Error("Seller profile not found.");
       const seller = await getMySeller();
@@ -630,35 +628,23 @@ function LoginPage({ go, onSignedIn }) {
       }
       onSignedIn(profile);
       go("/dashboard");
+      return result;
     } catch (error) {
-      setState({loading:false,error:friendlyError(error),success:""});
+      setState({loading:false,error:friendlyError(error)});
     }
   };
 
   return (
     <main className="page form-page narrow">
       <button className="back-button" onClick={()=>go("/")}><ArrowLeft size={17}/> Home</button>
-      <div className="page-title"><div className="eyebrow">SELLER ACCESS</div><h1>Welcome back.</h1><p>Use your NammaSpot ID and verified phone number.</p></div>
-      {!otpStep ? (
-        <form className="seller-form" onSubmit={send}>
-          <label>NammaSpot ID<input value={data.nammaspotId} onChange={(e)=>setData({...data,nammaspotId:e.target.value.toUpperCase()})} placeholder="NS-000001" required/></label>
-          <label>Phone number<input type="tel" value={data.phone} onChange={(e)=>setData({...data,phone:e.target.value})} placeholder="10-digit mobile number" required/></label>
-          {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
-          <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Sending OTP…" : <><LogIn size={17}/> Send OTP</>}</button>
-          <button type="button" className="secondary-button full-button" onClick={()=>go("/register")}>Create seller account</button>
-        </form>
-      ) : (
-        <form className="seller-form" onSubmit={verify}>
-          <div className="eyebrow">VERIFY PHONE</div>
-          <h2>Enter the 6-digit code</h2>
-          <p>Check your phone and enter the OTP to continue.</p>
-          <label>OTP<input inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={data.otp} onChange={(e)=>setData({...data,otp:e.target.value.replace(/\D/g,"").slice(0,6)})} required/></label>
-          {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
-          {state.success && <div className="form-status"><CheckCircle size={18}/>{state.success}</div>}
-          <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Verifying…" : "Verify & sign in"}</button>
-          <button type="button" className="secondary-button full-button" onClick={()=>setOtpStep(false)}>Change details</button>
-        </form>
-      )}
+      <div className="page-title"><div className="eyebrow">SELLER ACCESS</div><h1>Welcome back.</h1><p>Sign in with your NammaSpot ID and password.</p></div>
+      <form className="seller-form" onSubmit={submit}>
+        <label>NammaSpot ID<input value={data.nammaspotId} onChange={(e)=>setData({...data,nammaspotId:e.target.value.toUpperCase()})} placeholder="NS-000001" required/></label>
+        <label>Password<input type="password" autoComplete="current-password" value={data.password} onChange={(e)=>setData({...data,password:e.target.value})} placeholder="Your password" required/></label>
+        {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
+        <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Signing in…" : <><LogIn size={17}/> Sign in</>}</button>
+        <button type="button" className="secondary-button full-button" onClick={()=>go("/register")}>Create seller account</button>
+      </form>
     </main>
   );
 }

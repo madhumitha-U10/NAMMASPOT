@@ -18,6 +18,7 @@ import {
   getMySeller,
   getMyEnquiries,
   signInSeller,
+  signInAdmin,
   setSellerPassword,
   startSellerPasswordSetup,
   verifySellerPasswordSetupOtp,
@@ -137,7 +138,7 @@ function App() {
   const route = getRoute(path);
 
   useEffect(() => {
-    const privateRoutes = new Set(["login", "register", "dashboard", "admin", "saved", "not-found"]);
+    const privateRoutes = new Set(["login", "register", "dashboard", "admin-login", "admin-dashboard", "admin", "saved", "not-found"]);
     setMeta("robots", privateRoutes.has(route) ? "noindex,nofollow,noarchive" : "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1");
   }, [route]);
 
@@ -158,7 +159,6 @@ function App() {
           <button onClick={() => go("/categories")}>Categories</button>
           <button onClick={() => go("/saved")}>Saved</button>
           {profile?.role === "seller" && <button onClick={() => go("/dashboard")}><LayoutDashboard size={15}/> Dashboard</button>}
-          {profile?.role === "admin" && <button onClick={() => go("/admin")}><ShieldCheck size={15}/> Admin</button>}
           {profile ? (
             <button onClick={onSignOut}><LogOut size={15}/> Sign out</button>
           ) : (
@@ -185,7 +185,8 @@ function App() {
       {route === "login" && <LoginPage go={go} onSignedIn={(next) => setProfile(next)} />}
       {route === "register" && <RegisterPage go={go}/>}
       {route === "dashboard" && <DashboardPage go={go} profile={profile}/>}
-      {route === "admin" && <AdminPage go={go}/>}
+      {route === "admin-login" && <AdminLoginPage go={go} onSignedIn={(next) => setProfile(next)} />}
+      {route === "admin-dashboard" && <AdminPage go={go}/>}
       {route === "seller" && <SellerPage go={go} slug={getSellerSlug(path)} saved={saved} toggleSave={toggleSave}/>}
       {route === "not-found" && <main className="page"><Empty title="Page not found" text="That NammaSpot page does not exist." actionLabel="Back home" onAction={() => go("/")}/></main>}
 
@@ -203,7 +204,9 @@ function getRoute(path) {
   if (path.startsWith("/login")) return "login";
   if (path === "/register") return "register";
   if (path.startsWith("/dashboard")) return "dashboard";
-  if (path.startsWith("/admin")) return "admin";
+  if (path.startsWith("/nammaspot-control-panel/login")) return "admin-login";
+  if (path.startsWith("/nammaspot-control-panel/dashboard")) return "admin-dashboard";
+  if (path.startsWith("/admin")) return "not-found";
   if (path.startsWith("/s/")) return "seller";
   return "not-found";
 }
@@ -948,6 +951,47 @@ function PublicTools({ seller, go }) {
         <p className="muted-note">NFC is optional: point the tag to the same URL.</p>
       </div>
     </div>
+  );
+}
+
+function AdminLoginPage({ go, onSignedIn }) {
+  const [data,setData] = useState({email:"",password:""});
+  const [state,setState] = useState({loading:false,error:""});
+
+  const submit = async (event) => {
+    event.preventDefault();
+    setState({loading:true,error:""});
+    try {
+      await signInAdmin(data.email, data.password);
+      const profile = await getCurrentProfile();
+      const allowed = await isCurrentUserAdmin();
+      if (!allowed || profile?.role !== "admin") {
+        await signOut();
+        throw new Error("This account is not an authorized NammaSpot admin.");
+      }
+      onSignedIn(profile);
+      go("/nammaspot-control-panel/dashboard");
+    } catch (error) {
+      setState({loading:false,error:friendlyError(error)});
+    }
+  };
+
+  return (
+    <main className="page form-page narrow">
+      <button className="back-button" onClick={()=>go("/")}><ArrowLeft size={17}/> Home</button>
+      <div className="page-title">
+        <div className="eyebrow">PRIVATE CONTROL PANEL</div>
+        <h1>NammaSpot admin.</h1>
+        <p>Authorized administrators only. This portal is not linked from the public website.</p>
+      </div>
+      <form className="seller-form" onSubmit={submit}>
+        <label>Admin email<input type="email" autoComplete="username" value={data.email} onChange={(e)=>setData({...data,email:e.target.value})} placeholder="Admin email" required/></label>
+        <label>Password<input type="password" autoComplete="current-password" value={data.password} onChange={(e)=>setData({...data,password:e.target.value})} placeholder="Admin password" required/></label>
+        {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
+        <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Signing in…" : <><ShieldCheck size={17}/> Enter control panel</>}</button>
+        <button type="button" className="secondary-button full-button" onClick={()=>go("/")}>Back to NammaSpot</button>
+      </form>
+    </main>
   );
 }
 

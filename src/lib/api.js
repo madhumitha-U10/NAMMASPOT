@@ -492,40 +492,6 @@ export async function signIn(email,password) {
   return signInAdmin(email,password);
 }
 
-export async function signUpSeller(values) {
-  if (!supabase) {
-    const state = demoState();
-    const email = text(values.email,320).toLowerCase();
-    if (state.users.some((u) => u.email === email)) throw new Error("That email is already registered.");
-    if (state.users.some((u) => u.phone === text(values.phone,40))) throw new Error("That phone number is already registered.");
-    const userId = uid("user");
-    const sellerId = uid("seller");
-    let slug = slugify(values.business);
-    if (state.sellers.some((s) => s.slug === slug)) slug += "-" + Date.now().toString(36).slice(-4);
-    const user = { id:userId, name:text(values.owner,120), email, password:values.password, phone:text(values.phone,40), role:"seller" };
-    const seller = {
-      id:sellerId, user_id:userId, slug, name:text(values.business,160), business_name:text(values.business,160),
-      owner_name:text(values.owner,120), category:text(values.category,80) || "Local", category_id:text(values.category,80),
-      location:text(values.location,240) || "Chennai", city:"Chennai", location_url:text(values.locationUrl,500),
-      description:text(values.description,600), phone:text(values.phone,40), contact:text(values.phone,40),
-      whatsapp_phone:text(values.whatsapp,40), instagram_url:text(values.instagram,500),
-      opening_time:"", closing_time:"", featured:false, verified:false, verification_status:"pending"
-    };
-    state.users.push(user); state.sellers.push(seller); saveDemo(state); setCurrentDemoUser(user);
-    return { session:{user}, demo:true };
-  }
-  const client = needBackend();
-  const metadata = { role:"seller", name:text(values.owner,120), phone:text(values.phone,40), business_name:text(values.business,160), category_name:text(values.category,80), location:text(values.location,240), location_url:text(values.locationUrl,500), description:text(values.description,300), whatsapp_phone:text(values.whatsapp,40), instagram_url:text(values.instagram,500) };
-  const { data,error } = await client.auth.signUp({ email:text(values.email,320).toLowerCase(), password:values.password, options:{ data:metadata } });
-  if (error) {
-    if (error.code === "23505" || /users_phone_unique_nonempty|duplicate key.*phone/i.test(error.message || "")) {
-      throw new Error("That phone number is already registered.");
-    }
-    throw error;
-  }
-  return data;
-}
-
 export async function getCurrentProfile() {
   if (!supabase) {
     const user = currentDemoUser();

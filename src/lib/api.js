@@ -459,7 +459,28 @@ export async function adminRenameCategory(id,name) {
 export async function adminDeleteCategory(id) {
   if (!supabase) { const state=demoState(); state.categories=state.categories.filter((x)=>x!==id); saveDemo(state); return; }
   const client=needBackend(); const {error}=await client.from("categories").delete().eq("id",id); if(error)throw error;
-}export async function signIn(email,password) {
+}export async function signInAdmin(email,password) {
+  if (!supabase) {
+    if (text(email,320).toLowerCase() === "admin@nammaspot.local" && password === "nammaspot-demo") {
+      const user = { id:"demo-admin", name:"NammaSpot Admin", email:text(email,320).toLowerCase(), phone:"", role:"admin" };
+      setCurrentDemoUser(user);
+      return { session:{user}, demo:true };
+    }
+    throw new Error("Invalid admin login.");
+  }
+  const client=needBackend();
+  const {data,error}=await client.auth.signInWithPassword({email:text(email,320).toLowerCase(),password});
+  if(error) throw error;
+  const {data:admin,error:adminError}=await client.from("admins").select("user_id").eq("user_id",data.user.id).maybeSingle();
+  if(adminError) throw adminError;
+  if(!admin) {
+    await client.auth.signOut();
+    throw new Error("This account is not a NammaSpot admin.");
+  }
+  return data;
+}
+
+export async function signIn(email,password) {
   if (!supabase) {
     const normalizedEmail = text(email,320).toLowerCase();
     if (normalizedEmail === "admin@nammaspot.local" && password === "nammaspot-demo") {

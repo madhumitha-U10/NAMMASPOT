@@ -9,4 +9,5 @@
   <url>
     <loc>https://nammaspot.vercel.app/categories</loc>
   </url>
+  <!-- public routes only -->
 </urlset>

@@ -482,15 +482,14 @@ export async function adminDeleteCategory(id) {
 
 export async function signIn(email,password) {
   if (!supabase) {
-    const normalizedEmail = text(email,320).toLowerCase();
-    if (normalizedEmail === "admin@nammaspot.local" && password === "nammaspot-demo") {
-      const user = { id:"demo-admin", name:"NammaSpot Admin", email:normalizedEmail, phone:"", role:"admin" };
+    if (text(email,320).toLowerCase() === "admin@nammaspot.local" && password === "nammaspot-demo") {
+      const user = { id:"demo-admin", name:"NammaSpot Admin", email:text(email,320).toLowerCase(), phone:"", role:"admin" };
       setCurrentDemoUser(user);
-      return { session: { user }, demo:true };
+      return { session:{user}, demo:true };
     }
-    throw new Error("Demo seller login is not available in this authentication mode.");
+    throw new Error("Seller login now uses NammaSpot ID and phone OTP.");
   }
-  throw new Error("Seller login now uses NammaSpot ID and phone OTP.");
+  return signInAdmin(email,password);
 }
 
 export async function signUpSeller(values) {

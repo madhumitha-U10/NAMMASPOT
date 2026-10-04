@@ -626,7 +626,7 @@ function RegisterPage({ go }) {
           <label>About your business *<textarea value={data.description} onChange={(e)=>setData({...data,description:e.target.value})} maxLength={300} required/></label>
           {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
           {state.success && <div className="form-status"><CheckCircle size={18}/>{state.success}</div>}
-          <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Sending OTP…" : <><Plus size={18}/> Continue with phone</>}</button>
+          <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Sending OTP…" : <><Plus size={18}/> Continue with email</>}</button>
         </form>
       ) : (
         <form className="seller-form narrow-card" onSubmit={verify}>

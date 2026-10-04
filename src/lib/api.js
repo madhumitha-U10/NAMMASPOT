@@ -97,6 +97,7 @@ function productsOf(rows = []) {
 function sellerOf(row) {
   return {
     id: row.id,
+    nammaspot_id: row.nammaspot_id ?? "",
     slug: row.slug,
     name: row.business_name || row.name,
     business_name: row.business_name || row.name,
@@ -121,7 +122,7 @@ function sellerOf(row) {
   };
 }
 
-const sellerSelect = "id,slug,business_name,owner_name,location,location_url,city,description,contact,whatsapp_phone,instagram_url,profile_image_url,cover_image_url,opening_time,closing_time,featured,verified,verification_status,category:categories(id,name),products(id,seller_id,product_name,description,price,availability,image_url,category_id,created_at)";
+const sellerSelect = "id,nammaspot_id,slug,business_name,owner_name,location,location_url,city,description,contact,whatsapp_phone,instagram_url,profile_image_url,cover_image_url,opening_time,closing_time,featured,verified,verification_status,category:categories(id,name),products(id,seller_id,product_name,description,price,availability,image_url,category_id,created_at)";
 
 export async function getCategories() {
   if (!supabase) return demoState().categories.map((name) => ({ id: name, name }));

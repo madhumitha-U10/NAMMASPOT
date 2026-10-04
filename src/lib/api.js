@@ -409,6 +409,14 @@ export async function changeCurrentUserPassword(newPassword) {
   if (error) throw error;
 }
 
+export async function adminOtpUsageAlerts() {
+  if (!supabase) return [];
+  const client = needBackend();
+  const { data, error } = await client.rpc("admin_otp_usage_alerts");
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function adminStorageUsage() {
   if (!supabase) return null;
   const client = needBackend();

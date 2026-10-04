@@ -18,6 +18,7 @@ import {
   getMySeller,
   getMyEnquiries,
   signIn,
+  resendSellerConfirmation,
   signOut,
   signUpSeller,
   updateMySeller,
@@ -578,7 +579,7 @@ function RegisterPage({ go }) {
 
 function LoginPage({ go, onSignedIn }) {
   const [data,setData] = useState({email:"",password:""});
-  const [state,setState] = useState({loading:false,error:""});
+  const [state,setState] = useState({loading:false,error:"",resent:false});
 
   const submit = async (event) => {
     event.preventDefault();
@@ -589,7 +590,21 @@ function LoginPage({ go, onSignedIn }) {
       onSignedIn(profile);
       go(profile?.role === "seller" ? "/dashboard" : profile?.role === "admin" ? "/admin" : "/");
     } catch (error) {
-      setState({loading:false,error:friendlyError(error)});
+      setState({loading:false,error:friendlyError(error),resent:false});
+    }
+  };
+
+  const resend = async () => {
+    if (!data.email) {
+      setState((current) => ({...current,error:"Enter your email address first.",resent:false}));
+      return;
+    }
+    setState((current) => ({...current,loading:true,error:"",resent:false}));
+    try {
+      await resendSellerConfirmation(data.email);
+      setState({loading:false,error:"",resent:true});
+    } catch (error) {
+      setState({loading:false,error:friendlyError(error),resent:false});
     }
   };
 
@@ -601,6 +616,8 @@ function LoginPage({ go, onSignedIn }) {
         <label>Email<input type="email" value={data.email} onChange={(e)=>setData({...data,email:e.target.value})} required/></label>
         <label>Password<input type="password" value={data.password} onChange={(e)=>setData({...data,password:e.target.value})} required/></label>
         {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
+        {state.resent && <div className="form-status"><CheckCircle size={18}/>Confirmation email sent. Check your inbox.</div>}
+        {state.error?.toLowerCase().includes("confirm") && <button type="button" className="secondary-button full-button" onClick={resend} disabled={state.loading}>Resend confirmation email</button>}
         <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Signing in…" : <><LogIn size={17}/> Sign in</>}</button>
         <button type="button" className="secondary-button full-button" onClick={()=>go("/register")}>Create seller account</button>
         {!isSupabaseConfigured && <button type="button" className="secondary-button full-button" onClick={async()=>{await signIn("admin@nammaspot.local","nammaspot-demo"); const profile=await getCurrentProfile(); onSignedIn(profile); go("/admin");}}>Open demo admin</button>}
@@ -1052,6 +1069,7 @@ function setCanonical(url) {
 function friendlyError(error) {
   if (error instanceof BackendNotConfiguredError) return "This feature needs the production backend to be connected.";
   if (error?.code === "23505") return "That value is already in use. Please try another one.";
+  if (error?.code === "email_not_confirmed" || error?.message?.toLowerCase().includes("email not confirmed")) return "Please confirm your email, then try signing in.";
   if (error?.message?.toLowerCase().includes("invalid login")) return "Email or password is incorrect.";
   if (error?.message?.toLowerCase().includes("confirm")) return "Please confirm your email, then try signing in.";
   return "Something went wrong. Please try again.";

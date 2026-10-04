@@ -114,6 +114,11 @@ function App() {
 
   const route = getRoute(path);
 
+  useEffect(() => {
+    const privateRoutes = new Set(["login", "register", "dashboard", "admin", "saved", "not-found"]);
+    setMeta("robots", privateRoutes.has(route) ? "noindex,nofollow,noarchive" : "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1");
+  }, [route]);
+
   return (
     <div className="app-shell">
       {!isSupabaseConfigured && (

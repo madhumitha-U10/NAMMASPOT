@@ -190,6 +190,37 @@ export async function signInSeller(nammaspotId, password) {
   return data;
 }
 
+export async function startSellerPasswordSetup(nammaspotId, phone) {
+  if (!supabase) throw new BackendNotConfiguredError();
+  const client = needBackend();
+  const normalized = normalizePhone(phone);
+  const { data, error } = await client.rpc("lookup_seller_login", {
+    p_nammaspot_id: text(nammaspotId, 40),
+    p_phone: normalized,
+  });
+  if (error) throw error;
+  const seller = data?.[0];
+  if (!seller) throw new Error("NammaSpot ID and phone number do not match.");
+  if (!["pending","approved"].includes(seller.verification_status)) throw new Error("This seller account cannot set a password right now.");
+  const { error: otpError } = await client.auth.signInWithOtp({
+    phone: normalized,
+    options: { shouldCreateUser: false },
+  });
+  if (otpError) throw otpError;
+  return normalized;
+}
+
+export async function verifySellerPasswordSetupOtp(phone, token) {
+  if (!supabase) throw new BackendNotConfiguredError();
+  const { data, error } = await needBackend().auth.verifyOtp({
+    phone: normalizePhone(phone),
+    token: text(token, 10),
+    type: "sms",
+  });
+  if (error) throw error;
+  return data;
+}
+
 export async function setSellerPassword(password) {
   if (!supabase) throw new BackendNotConfiguredError();
   if (String(password || "").length < 8) throw new Error("Password must be at least 8 characters.");

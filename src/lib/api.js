@@ -202,11 +202,14 @@ export async function startSellerPasswordSetup(nammaspotId, phone) {
   const seller = data?.[0];
   if (!seller) throw new Error("NammaSpot ID and phone number do not match.");
   if (!["pending","approved"].includes(seller.verification_status)) throw new Error("This seller account cannot set a password right now.");
+  const { data: otpGuard, error: otpGuardError } = await client.rpc("register_otp_request", { p_phone: normalized });
+  if (otpGuardError) throw otpGuardError;
   const { error: otpError } = await client.auth.signInWithOtp({
     phone: normalized,
     options: { shouldCreateUser: false },
   });
   if (otpError) throw otpError;
+  if (otpGuard?.warning) console.warn("NammaSpot OTP usage warning:", otpGuard.sms_count, "SMS requests in the current hour.");
   return normalized;
 }
 
@@ -252,11 +255,14 @@ export async function startSellerRegistration(values) {
     whatsapp_phone: normalizePhone(values.whatsapp || values.phone),
     instagram_url: text(values.instagram,500),
   };
+  const { data: otpGuard, error: otpGuardError } = await client.rpc("register_otp_request", { p_phone: normalized });
+  if (otpGuardError) throw otpGuardError;
   const { error } = await client.auth.signInWithOtp({
     phone: normalized,
     options: { shouldCreateUser: true, data: metadata },
   });
   if (error) throw error;
+  if (otpGuard?.warning) console.warn("NammaSpot OTP usage warning:", otpGuard.sms_count, "SMS requests in the current hour.");
   return { phone: normalized };
 }
 

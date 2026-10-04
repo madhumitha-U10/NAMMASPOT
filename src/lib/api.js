@@ -171,6 +171,10 @@ export async function getSession() {
   return data.session ?? null;
 }
 
+export function normalizeEmail(value) {
+  return String(value ?? "").trim().toLowerCase().slice(0,320);
+}
+
 export function normalizePhone(value) {
   const digits = String(value ?? "").replace(/[^0-9]/g, "");
   if (digits.length === 10) return "+91" + digits;
@@ -190,35 +194,35 @@ export async function signInSeller(nammaspotId, password) {
   return data;
 }
 
-export async function startSellerPasswordSetup(nammaspotId, phone) {
+export async function startSellerPasswordSetup(nammaspotId, email) {
   if (!supabase) throw new BackendNotConfiguredError();
   const client = needBackend();
-  const normalized = normalizePhone(phone);
-  const { data, error } = await client.rpc("lookup_seller_login", {
+  const normalized = normalizeEmail(email);
+  const { data, error } = await client.rpc("lookup_seller_email", {
     p_nammaspot_id: text(nammaspotId, 40),
-    p_phone: normalized,
+    p_email: normalized,
   });
   if (error) throw error;
   const seller = data?.[0];
-  if (!seller) throw new Error("NammaSpot ID and phone number do not match.");
+  if (!seller) throw new Error("NammaSpot ID and email address do not match.");
   if (!["pending","approved"].includes(seller.verification_status)) throw new Error("This seller account cannot set a password right now.");
-  const { data: otpGuard, error: otpGuardError } = await client.rpc("register_otp_request", { p_phone: normalized });
+  const { data: otpGuard, error: otpGuardError } = await client.rpc("register_email_otp_request", { p_email: normalized });
   if (otpGuardError) throw otpGuardError;
   const { error: otpError } = await client.auth.signInWithOtp({
-    phone: normalized,
+    email: normalized,
     options: { shouldCreateUser: false },
   });
   if (otpError) throw otpError;
-  if (otpGuard?.warning) console.warn("NammaSpot OTP usage warning:", otpGuard.sms_count, "SMS requests in the current hour.");
+  if (otpGuard?.warning) console.warn("NammaSpot email OTP usage warning:", otpGuard.email_count, "emails in the current hour.");
   return normalized;
 }
 
-export async function verifySellerPasswordSetupOtp(phone, token) {
+export async function verifySellerPasswordSetupOtp(email, token) {
   if (!supabase) throw new BackendNotConfiguredError();
   const { data, error } = await needBackend().auth.verifyOtp({
-    phone: normalizePhone(phone),
+    email: normalizeEmail(email),
     token: text(token, 10),
-    type: "sms",
+    type: "email",
   });
   if (error) throw error;
   return data;
@@ -239,14 +243,16 @@ export async function startSellerRegistration(values) {
   if (!supabase) throw new BackendNotConfiguredError();
   if (String(values.password || "").length < 8) throw new Error("Password must be at least 8 characters.");
   const client = needBackend();
-  const normalized = normalizePhone(values.phone);
-  const { data: used, error: usedError } = await client.rpc("phone_in_use", { p_phone: normalized });
+  const email = normalizeEmail(values.email);
+  if (!email || !email.includes("@")) throw new Error("Enter a valid email address.");
+  const { data: used, error: usedError } = await client.rpc("email_in_use", { p_email: email });
   if (usedError) throw usedError;
-  if (used) throw new Error("That phone number is already registered. Use your NammaSpot ID to log in.");
+  if (used) throw new Error("That email address is already registered. Use your NammaSpot ID to log in.");
   const metadata = {
     role: "seller",
     name: text(values.owner,120),
-    phone: normalized,
+    email,
+    phone: normalizePhone(values.phone),
     business_name: text(values.business,160),
     category_name: text(values.category,80),
     location: text(values.location,240),
@@ -255,24 +261,24 @@ export async function startSellerRegistration(values) {
     whatsapp_phone: normalizePhone(values.whatsapp || values.phone),
     instagram_url: text(values.instagram,500),
   };
-  const { data: otpGuard, error: otpGuardError } = await client.rpc("register_otp_request", { p_phone: normalized });
+  const { data: otpGuard, error: otpGuardError } = await client.rpc("register_email_otp_request", { p_email: email });
   if (otpGuardError) throw otpGuardError;
   const { error } = await client.auth.signInWithOtp({
-    phone: normalized,
+    email,
     options: { shouldCreateUser: true, data: metadata },
   });
   if (error) throw error;
-  if (otpGuard?.warning) console.warn("NammaSpot OTP usage warning:", otpGuard.sms_count, "SMS requests in the current hour.");
-  return { phone: normalized };
+  if (otpGuard?.warning) console.warn("NammaSpot email OTP usage warning:", otpGuard.email_count, "emails in the current hour.");
+  return { email };
 }
 
-export async function verifySellerRegistrationOtp(phone, token) {
+export async function verifySellerRegistrationOtp(email, token) {
   if (!supabase) throw new BackendNotConfiguredError();
   const client = needBackend();
   const { data, error } = await client.auth.verifyOtp({
-    phone: normalizePhone(phone),
+    email: normalizeEmail(email),
     token: text(token, 10),
-    type: "sms",
+    type: "email",
   });
   if (error) throw error;
   return data;

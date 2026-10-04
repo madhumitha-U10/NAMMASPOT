@@ -492,19 +492,6 @@ export async function signIn(email,password) {
   return signInAdmin(email,password);
 }
 
-export async function getCurrentProfile() {
-  if (!supabase) {
-    const user = currentDemoUser();
-    return user ? { id:user.id,name:user.name,email:user.email,phone:user.phone,role:user.role } : null;
-  }
-  const client = needBackend();
-  const session = await getSession();
-  if (!session?.user) return null;
-  const { data,error } = await client.from("users").select("id,name,email,phone,role").eq("id",session.user.id).maybeSingle();
-  if (error) throw error;
-  return data ?? null;
-}
-
 export async function getMySeller() {
   if (!supabase) {
     const user = currentDemoUser();

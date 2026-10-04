@@ -1105,10 +1105,27 @@ function setCanonical(url) {
 
 function friendlyError(error) {
   if (error instanceof BackendNotConfiguredError) return "This feature needs the production backend to be connected.";
-  if (error?.code === "23505") return "That value is already in use. Please try another one.";
-  if (error?.code === "email_not_confirmed" || error?.message?.toLowerCase().includes("email not confirmed")) return "Please confirm your email, then try signing in.";
-  if (error?.message?.toLowerCase().includes("invalid login")) return "Email or password is incorrect.";
-  if (error?.message?.toLowerCase().includes("confirm")) return "Please confirm your email, then try signing in.";
+  const code = String(error?.code || error?.error_code || "").toLowerCase();
+  const message = String(error?.message || error?.error_description || "").trim();
+  const lower = message.toLowerCase();
+
+  if (code === "23505") return "That value is already in use. Please try another one.";
+  if (code === "over_sms_send_rate_limit" || lower.includes("sms send rate limit")) return "Too many OTP requests. Please wait a minute and try again.";
+  if (code === "over_request_rate_limit") return "Too many requests. Please wait a few minutes and try again.";
+  if (code === "phone_provider_disabled") return "Phone OTP is not enabled in the production backend.";
+  if (code === "sms_send_failed") return "The SMS provider could not send the OTP. Please try again shortly.";
+  if (code === "phone_not_confirmed") return "This phone number is not confirmed. Please complete phone verification first.";
+  if (code === "phone_exists" || code === "user_already_exists") return "That phone number is already registered. Use your NammaSpot ID to log in.";
+  if (code === "otp_expired") return "That OTP has expired. Request a new OTP.";
+  if (code === "invalid_otp" || code === "otp_invalid") return "The OTP is incorrect. Please check it and try again.";
+  if (code === "validation_failed") return message || "Please check the details and try again.";
+  if (code === "not_admin" || code === "unauthorized") return "You are not authorized to perform this action.";
+  if (code === "email_not_confirmed" || lower.includes("email not confirmed")) return "Please confirm your email, then try signing in.";
+  if (lower.includes("invalid login")) return "The login details are incorrect.";
+  if (lower.includes("nammaspot id and phone number do not match")) return "NammaSpot ID and phone number do not match.";
+  if (lower.includes("pending admin approval")) return "Your seller account is still pending admin approval.";
+  if (lower.includes("suspended")) return "Your seller account is suspended.";
+  if (message) return message.slice(0, 240);
   return "Something went wrong. Please try again.";
 }
 

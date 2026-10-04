@@ -565,7 +565,7 @@ function EnquiryModal({ seller, product, onClose }) {
 }
 
 function RegisterPage({ go }) {
-  const [data,setData] = useState({business:"",owner:"",phone:"",password:"",confirmPassword:"",category:"Handmade",location:"",locationUrl:"",description:"",whatsapp:"",instagram:""});
+  const [data,setData] = useState({business:"",owner:"",email:"",phone:"",password:"",confirmPassword:"",category:"Handmade",location:"",locationUrl:"",description:"",whatsapp:"",instagram:""});
   const [otpStep,setOtpStep] = useState(false);
   const [state,setState] = useState({loading:false,error:"",success:"",nammaspotId:""});
 
@@ -582,7 +582,7 @@ function RegisterPage({ go }) {
     setState({loading:true,error:"",success:"",nammaspotId:""});
     try {
       await startSellerRegistration(data);
-      setState({loading:false,error:"",success:"OTP sent to your phone.",nammaspotId:""});
+      setState({loading:false,error:"",success:"OTP sent to your email address.",nammaspotId:""});
       setOtpStep(true);
     } catch (error) {
       setState({loading:false,error:friendlyError(error),success:"",nammaspotId:""});
@@ -607,13 +607,14 @@ function RegisterPage({ go }) {
   return (
     <main className="page form-page">
       <button className="back-button" onClick={()=>go("/")}><ArrowLeft size={17}/> Home</button>
-      <div className="page-title"><div className="eyebrow">FOR LOCAL MAKERS</div><h1>Get your NammaSpot ID.</h1><p>Simple signup. Verify your phone. Wait for admin approval.</p></div>
+      <div className="page-title"><div className="eyebrow">FOR LOCAL MAKERS</div><h1>Get your NammaSpot ID.</h1><p>Simple signup. Verify your email. Wait for admin approval.</p></div>
       {!otpStep ? (
         <form className="seller-form" onSubmit={submit}>
           <div className="form-grid">
             <label>Business name *<input value={data.business} onChange={(e)=>setData({...data,business:e.target.value})} maxLength={160} required/></label>
             <label>Your name *<input value={data.owner} onChange={(e)=>setData({...data,owner:e.target.value})} maxLength={120} required/></label>
-            <label>Phone *<input type="tel" value={data.phone} onChange={(e)=>setData({...data,phone:e.target.value})} placeholder="10-digit mobile number" required/></label>
+            <label>Email address *<input type="email" value={data.email} onChange={(e)=>setData({...data,email:e.target.value})} placeholder="you@gmail.com" autoComplete="email" required/></label>
+            <label>Business phone (optional)<input type="tel" value={data.phone} onChange={(e)=>setData({...data,phone:e.target.value})} placeholder="For customer contact / WhatsApp"/></label>
             <label>Password *<input type="password" autoComplete="new-password" value={data.password} onChange={(e)=>setData({...data,password:e.target.value})} placeholder="At least 8 characters" minLength={8} required/></label>
             <label>Confirm password *<input type="password" autoComplete="new-password" value={data.confirmPassword} onChange={(e)=>setData({...data,confirmPassword:e.target.value})} placeholder="Re-enter password" minLength={8} required/></label>
             <label>Category<select value={data.category} onChange={(e)=>setData({...data,category:e.target.value})}>{categoryNames.map((c)=><option key={c}>{c}</option>)}</select></label>
@@ -629,13 +630,13 @@ function RegisterPage({ go }) {
         </form>
       ) : (
         <form className="seller-form narrow-card" onSubmit={verify}>
-          <div className="eyebrow">VERIFY PHONE</div>
+          <div className="eyebrow">VERIFY EMAIL</div>
           <h2>Enter the 6-digit code</h2>
-          <p>We sent a verification code to your phone.</p>
+          <p>We sent a 6-digit verification code to your email address.</p>
           <label>OTP<input inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={data.otp || ""} onChange={(e)=>setData({...data,otp:e.target.value.replace(/\D/g,"").slice(0,6)})} required/></label>
           {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
           <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Verifying…" : "Verify & submit"}</button>
-          <button type="button" className="secondary-button full-button" onClick={()=>setOtpStep(false)}>Change phone</button>
+          <button type="button" className="secondary-button full-button" onClick={()=>setOtpStep(false)}>Change email</button>
         </form>
       )}
     </main>
@@ -646,7 +647,7 @@ function LoginPage({ go, onSignedIn }) {
   const [data,setData] = useState({nammaspotId:"",password:""});
   const [setup,setSetup] = useState(false);
   const [setupStep,setSetupStep] = useState(false);
-  const [setupData,setSetupData] = useState({nammaspotId:"",phone:"",otp:"",password:"",confirmPassword:""});
+  const [setupData,setSetupData] = useState({nammaspotId:"",email:"",otp:"",password:"",confirmPassword:""});
   const [state,setState] = useState({loading:false,error:""});
 
   const submit = async (event) => {
@@ -672,7 +673,7 @@ function LoginPage({ go, onSignedIn }) {
     event.preventDefault();
     setState({loading:true,error:""});
     try {
-      await startSellerPasswordSetup(setupData.nammaspotId, setupData.phone);
+      await startSellerPasswordSetup(setupData.nammaspotId, setupData.email);
       setSetupStep(true);
       setState({loading:false,error:""});
     } catch (error) {
@@ -692,7 +693,7 @@ function LoginPage({ go, onSignedIn }) {
     }
     setState({loading:true,error:""});
     try {
-      await verifySellerPasswordSetupOtp(setupData.phone, setupData.otp);
+      await verifySellerPasswordSetupOtp(setupData.email, setupData.otp);
       await setSellerPassword(setupData.password);
       await signOut();
       setSetup(false);
@@ -708,13 +709,13 @@ function LoginPage({ go, onSignedIn }) {
     return (
       <main className="page form-page narrow">
         <button className="back-button" onClick={()=>{setSetup(false);setSetupStep(false);setState({loading:false,error:""});}}><ArrowLeft size={17}/> Back to login</button>
-        <div className="page-title"><div className="eyebrow">FIRST-TIME SETUP</div><h1>Create your password.</h1><p>Only existing sellers who do not yet have a password need this one-time phone verification.</p></div>
+        <div className="page-title"><div className="eyebrow">FIRST-TIME SETUP</div><h1>Create your password.</h1><p>Only existing sellers who do not yet have a password need this one-time email verification.</p></div>
         {!setupStep ? (
           <form className="seller-form" onSubmit={sendSetupOtp}>
             <label>NammaSpot ID<input value={setupData.nammaspotId} onChange={(e)=>setSetupData({...setupData,nammaspotId:e.target.value.toUpperCase()})} placeholder="NS-000001" required/></label>
-            <label>Verified phone number<input type="tel" value={setupData.phone} onChange={(e)=>setSetupData({...setupData,phone:e.target.value})} placeholder="10-digit mobile number" required/></label>
+            <label>Verified email address<input type="email" value={setupData.email} onChange={(e)=>setSetupData({...setupData,email:e.target.value})} placeholder="you@gmail.com" autoComplete="email" required/></label>
             {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
-            <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Sending OTP…" : "Verify phone"}</button>
+            <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Sending OTP…" : "Verify email"}</button>
           </form>
         ) : (
           <form className="seller-form" onSubmit={finishSetup}>
@@ -1132,10 +1133,10 @@ function AdminPage() {
         <div className="dashboard-item" role="alert" aria-live="polite">
           <div>
             <div className="eyebrow">OTP USAGE ALERT</div>
-            <strong>SMS usage crossed 20 requests in an hour.</strong>
-            <p>The latest warning recorded {otpAlerts[0].sms_count} OTP SMS requests in the current hourly window. Check SMS activity before usage grows further.</p>
+            <strong>Email OTP usage crossed 20 requests in an hour.</strong>
+            <p>The latest warning recorded {otpAlerts[0].sms_count} email OTP requests in the current hourly window. Check email activity before usage grows further.</p>
           </div>
-          <span className="status-pill status-warning">20+ SMS</span>
+          <span className="status-pill status-warning">20+ EMAILS</span>
         </div>
       )}
 

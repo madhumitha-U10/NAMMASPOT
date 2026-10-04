@@ -22,7 +22,6 @@ import {
   startSellerRegistration,
   verifySellerRegistrationOtp,
   signOut,
-  signUpSeller,
   updateMySeller,
   listMyProducts,
   createProduct,
@@ -537,7 +536,7 @@ function RegisterPage({ go }) {
     event.preventDefault();
     setState({loading:true,error:"",success:"",nammaspotId:""});
     try {
-      const result = await startSellerRegistration(data);
+      await startSellerRegistration(data);
       setState({loading:false,error:"",success:"OTP sent to your phone.",nammaspotId:""});
       setOtpStep(true);
     } catch (error) {
@@ -642,7 +641,6 @@ function LoginPage({ go, onSignedIn }) {
           {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
           <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Sending OTP…" : <><LogIn size={17}/> Send OTP</>}</button>
           <button type="button" className="secondary-button full-button" onClick={()=>go("/register")}>Create seller account</button>
-            <button type="button" className="text-link centered-link" onClick={async()=>{const email=window.prompt("Admin email"); const credential=window.prompt("Admin credential"); if(!email || !credential) return; try { await signInAdmin(email,credential); const profile=await getCurrentProfile(); onSignedIn(profile); go("/admin"); } catch(error) { setState({loading:false,error:friendlyError(error),success:""}); }}}>Admin access</button>
         </form>
       ) : (
         <form className="seller-form" onSubmit={verify}>

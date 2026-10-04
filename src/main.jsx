@@ -19,6 +19,8 @@ import {
   getMyEnquiries,
   signInSeller,
   setSellerPassword,
+  startSellerPasswordSetup,
+  verifySellerPasswordSetupOtp,
   startSellerRegistration,
   verifySellerRegistrationOtp,
   signOut,
@@ -612,13 +614,16 @@ function RegisterPage({ go }) {
 
 function LoginPage({ go, onSignedIn }) {
   const [data,setData] = useState({nammaspotId:"",password:""});
+  const [setup,setSetup] = useState(false);
+  const [setupStep,setSetupStep] = useState(false);
+  const [setupData,setSetupData] = useState({nammaspotId:"",phone:"",otp:"",password:"",confirmPassword:""});
   const [state,setState] = useState({loading:false,error:""});
 
   const submit = async (event) => {
     event.preventDefault();
     setState({loading:true,error:""});
     try {
-      const result = await signInSeller(data.nammaspotId, data.password);
+      await signInSeller(data.nammaspotId, data.password);
       const profile = await getCurrentProfile();
       if (!profile || profile.role !== "seller") throw new Error("Seller profile not found.");
       const seller = await getMySeller();
@@ -628,22 +633,84 @@ function LoginPage({ go, onSignedIn }) {
       }
       onSignedIn(profile);
       go("/dashboard");
-      return result;
     } catch (error) {
       setState({loading:false,error:friendlyError(error)});
     }
   };
 
+  const sendSetupOtp = async (event) => {
+    event.preventDefault();
+    setState({loading:true,error:""});
+    try {
+      await startSellerPasswordSetup(setupData.nammaspotId, setupData.phone);
+      setSetupStep(true);
+      setState({loading:false,error:""});
+    } catch (error) {
+      setState({loading:false,error:friendlyError(error)});
+    }
+  };
+
+  const finishSetup = async (event) => {
+    event.preventDefault();
+    if (setupData.password.length < 8) {
+      setState({loading:false,error:"Password must be at least 8 characters."});
+      return;
+    }
+    if (setupData.password !== setupData.confirmPassword) {
+      setState({loading:false,error:"Passwords do not match."});
+      return;
+    }
+    setState({loading:true,error:""});
+    try {
+      await verifySellerPasswordSetupOtp(setupData.phone, setupData.otp);
+      await setSellerPassword(setupData.password);
+      await signOut();
+      setSetup(false);
+      setSetupStep(false);
+      setState({loading:false,error:""});
+      window.alert("Password created. You can now sign in with only your NammaSpot ID and password.");
+    } catch (error) {
+      setState({loading:false,error:friendlyError(error)});
+    }
+  };
+
+  if (setup) {
+    return (
+      <main className="page form-page narrow">
+        <button className="back-button" onClick={()=>{setSetup(false);setSetupStep(false);setState({loading:false,error:""});}}><ArrowLeft size={17}/> Back to login</button>
+        <div className="page-title"><div className="eyebrow">FIRST-TIME SETUP</div><h1>Create your password.</h1><p>Only existing sellers who do not yet have a password need this one-time phone verification.</p></div>
+        {!setupStep ? (
+          <form className="seller-form" onSubmit={sendSetupOtp}>
+            <label>NammaSpot ID<input value={setupData.nammaspotId} onChange={(e)=>setSetupData({...setupData,nammaspotId:e.target.value.toUpperCase()})} placeholder="NS-000001" required/></label>
+            <label>Verified phone number<input type="tel" value={setupData.phone} onChange={(e)=>setSetupData({...setupData,phone:e.target.value})} placeholder="10-digit mobile number" required/></label>
+            {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
+            <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Sending OTP…" : "Verify phone"}</button>
+          </form>
+        ) : (
+          <form className="seller-form" onSubmit={finishSetup}>
+            <div className="eyebrow">VERIFY & CREATE PASSWORD</div>
+            <label>OTP<input inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={setupData.otp} onChange={(e)=>setSetupData({...setupData,otp:e.target.value.replace(/\D/g,"").slice(0,6)})} required/></label>
+            <label>New password<input type="password" autoComplete="new-password" minLength={8} value={setupData.password} onChange={(e)=>setSetupData({...setupData,password:e.target.value})} required/></label>
+            <label>Confirm password<input type="password" autoComplete="new-password" minLength={8} value={setupData.confirmPassword} onChange={(e)=>setSetupData({...setupData,confirmPassword:e.target.value})} required/></label>
+            {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
+            <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Creating…" : "Create password"}</button>
+          </form>
+        )}
+      </main>
+    );
+  }
+
   return (
     <main className="page form-page narrow">
       <button className="back-button" onClick={()=>go("/")}><ArrowLeft size={17}/> Home</button>
-      <div className="page-title"><div className="eyebrow">SELLER ACCESS</div><h1>Welcome back.</h1><p>Sign in with your NammaSpot ID and password.</p></div>
+      <div className="page-title"><div className="eyebrow">SELLER ACCESS</div><h1>Welcome back.</h1><p>Login uses only your NammaSpot ID and password.</p></div>
       <form className="seller-form" onSubmit={submit}>
         <label>NammaSpot ID<input value={data.nammaspotId} onChange={(e)=>setData({...data,nammaspotId:e.target.value.toUpperCase()})} placeholder="NS-000001" required/></label>
         <label>Password<input type="password" autoComplete="current-password" value={data.password} onChange={(e)=>setData({...data,password:e.target.value})} placeholder="Your password" required/></label>
         {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
         <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Signing in…" : <><LogIn size={17}/> Sign in</>}</button>
         <button type="button" className="secondary-button full-button" onClick={()=>go("/register")}>Create seller account</button>
+        <button type="button" className="secondary-button full-button" onClick={()=>{setSetup(true);setState({loading:false,error:""});}}>First-time / forgot password</button>
       </form>
     </main>
   );

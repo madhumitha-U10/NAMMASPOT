@@ -17,8 +17,10 @@ import {
   getCurrentProfile,
   getMySeller,
   getMyEnquiries,
-  signIn,
-  resendSellerConfirmation,
+  sendSellerLoginOtp,
+  verifySellerLoginOtp,
+  startSellerRegistration,
+  verifySellerRegistrationOtp,
   signOut,
   signUpSeller,
   updateMySeller,
@@ -527,101 +529,132 @@ function EnquiryModal({ seller, product, onClose }) {
 }
 
 function RegisterPage({ go }) {
-  const [data,setData] = useState({business:"",owner:"",email:"",password:"",phone:"",category:"Handmade",location:"",locationUrl:"",description:"",whatsapp:"",instagram:""});
-  const [state,setState] = useState({loading:false,error:"",success:""});
-  const update=(key,value)=>setData((current)=>({...current,[key]:value}));
+  const [data,setData] = useState({business:"",owner:"",phone:"",category:"Handmade",location:"",locationUrl:"",description:"",whatsapp:"",instagram:""});
+  const [otpStep,setOtpStep] = useState(false);
+  const [state,setState] = useState({loading:false,error:"",success:"",nammaspotId:""});
 
   const submit = async (event) => {
     event.preventDefault();
-    setState({loading:true,error:"",success:""});
+    setState({loading:true,error:"",success:"",nammaspotId:""});
     try {
-      const result = await signUpSeller(data);
-      setState({
-        loading:false,
-        error:"",
-        success:result.demo
-          ? "Account created. Your seller catalogue is ready in demo mode."
-          : result.session
-            ? "Registration submitted. Your seller profile is pending admin approval."
-            : "Account created. Check your email if confirmation is required. Your seller profile is pending admin approval."
-      });
-      if (result.demo) window.setTimeout(() => go("/dashboard"), 500);
+      const result = await startSellerRegistration(data);
+      setState({loading:false,error:"",success:"OTP sent to your phone.",nammaspotId:""});
+      setOtpStep(true);
     } catch (error) {
-      setState({loading:false,error:friendlyError(error),success:""});
+      setState({loading:false,error:friendlyError(error),success:"",nammaspotId:""});
+    }
+  };
+
+  const verify = async (event) => {
+    event.preventDefault();
+    setState((current)=>({...current,loading:true,error:"",success:""}));
+    try {
+      await verifySellerRegistrationOtp(data.phone, data.otp);
+      const seller = await getMySeller();
+      await signOut();
+      setState({loading:false,error:"",success:"Registration verified. Your NammaSpot ID is " + (seller?.nammaspot_id || "being assigned") + ". Your profile is now pending admin approval.",nammaspotId:seller?.nammaspot_id || ""});
+      setOtpStep(false);
+    } catch (error) {
+      setState({loading:false,error:friendlyError(error),success:"",nammaspotId:""});
     }
   };
 
   return (
     <main className="page form-page">
       <button className="back-button" onClick={()=>go("/")}><ArrowLeft size={17}/> Home</button>
-      <div className="page-title"><div className="eyebrow">FOR LOCAL MAKERS</div><h1>Let your local story have a page.</h1><p>Minimal signup. Simple catalogue. One shareable seller page.</p></div>
-      <form className="seller-form" onSubmit={submit}>
-        <div className="form-grid">
-          <label>Business name *<input value={data.business} onChange={(e)=>update("business",e.target.value)} maxLength={160} required/></label>
-          <label>Your name *<input value={data.owner} onChange={(e)=>update("owner",e.target.value)} maxLength={120} required/></label>
-          <label>Email *<input type="email" value={data.email} onChange={(e)=>update("email",e.target.value)} required/></label>
-          <label>Password *<input type="password" minLength={8} value={data.password} onChange={(e)=>update("password",e.target.value)} required/></label>
-          <label>Phone *<input type="tel" value={data.phone} onChange={(e)=>update("phone",e.target.value)} required/></label>
-          <label>Category<select value={data.category} onChange={(e)=>update("category",e.target.value)}>{categoryNames.map((c)=><option key={c}>{c}</option>)}</select></label>
-          <label>Location<input value={data.location} onChange={(e)=>update("location",e.target.value)} placeholder="Anna Nagar, Chennai"/></label>
-          <label>Location URL<input type="url" value={data.locationUrl} onChange={(e)=>update("locationUrl",e.target.value)} placeholder="Google Maps URL (optional)"/></label>
-          <label>WhatsApp<input type="tel" value={data.whatsapp} onChange={(e)=>update("whatsapp",e.target.value)} placeholder="+91…"/></label>
-          <label>Instagram URL<input type="url" value={data.instagram} onChange={(e)=>update("instagram",e.target.value)} placeholder="https://instagram.com/…"/></label>
-        </div>
-        <label>About your business *<textarea value={data.description} onChange={(e)=>update("description",e.target.value)} maxLength={300} required/></label>
-        {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
-        {state.success && <div className="form-status"><CheckCircle size={18}/>{state.success}</div>}
-        <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Creating…" : <><Plus size={18}/> Submit for review</>}</button>
-      </form>
+      <div className="page-title"><div className="eyebrow">FOR LOCAL MAKERS</div><h1>Get your NammaSpot ID.</h1><p>Simple signup. Verify your phone. Wait for admin approval.</p></div>
+      {!otpStep ? (
+        <form className="seller-form" onSubmit={submit}>
+          <div className="form-grid">
+            <label>Business name *<input value={data.business} onChange={(e)=>setData({...data,business:e.target.value})} maxLength={160} required/></label>
+            <label>Your name *<input value={data.owner} onChange={(e)=>setData({...data,owner:e.target.value})} maxLength={120} required/></label>
+            <label>Phone *<input type="tel" value={data.phone} onChange={(e)=>setData({...data,phone:e.target.value})} placeholder="10-digit mobile number" required/></label>
+            <label>Category<select value={data.category} onChange={(e)=>setData({...data,category:e.target.value})}>{categoryNames.map((c)=><option key={c}>{c}</option>)}</select></label>
+            <label>Location<input value={data.location} onChange={(e)=>setData({...data,location:e.target.value})} placeholder="Anna Nagar, Chennai"/></label>
+            <label>Location URL<input type="url" value={data.locationUrl} onChange={(e)=>setData({...data,locationUrl:e.target.value})} placeholder="Google Maps URL (optional)"/></label>
+            <label>WhatsApp<input type="tel" value={data.whatsapp} onChange={(e)=>setData({...data,whatsapp:e.target.value})} placeholder="Optional"/></label>
+            <label>Instagram URL<input type="url" value={data.instagram} onChange={(e)=>setData({...data,instagram:e.target.value})} placeholder="https://instagram.com/…"/></label>
+          </div>
+          <label>About your business *<textarea value={data.description} onChange={(e)=>setData({...data,description:e.target.value})} maxLength={300} required/></label>
+          {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
+          {state.success && <div className="form-status"><CheckCircle size={18}/>{state.success}</div>}
+          <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Sending OTP…" : <><Plus size={18}/> Continue with phone</>}</button>
+        </form>
+      ) : (
+        <form className="seller-form narrow-card" onSubmit={verify}>
+          <div className="eyebrow">VERIFY PHONE</div>
+          <h2>Enter the 6-digit code</h2>
+          <p>We sent a verification code to your phone.</p>
+          <label>OTP<input inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={data.otp || ""} onChange={(e)=>setData({...data,otp:e.target.value.replace(/\D/g,"").slice(0,6)})} required/></label>
+          {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
+          <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Verifying…" : "Verify & submit"}</button>
+          <button type="button" className="secondary-button full-button" onClick={()=>setOtpStep(false)}>Change phone</button>
+        </form>
+      )}
     </main>
   );
 }
 
 function LoginPage({ go, onSignedIn }) {
-  const [data,setData] = useState({email:"",password:""});
-  const [state,setState] = useState({loading:false,error:"",resent:false});
+  const [data,setData] = useState({nammaspotId:"",phone:"",otp:""});
+  const [otpStep,setOtpStep] = useState(false);
+  const [state,setState] = useState({loading:false,error:"",success:""});
 
-  const submit = async (event) => {
+  const send = async (event) => {
     event.preventDefault();
-    setState({loading:true,error:""});
+    setState({loading:true,error:"",success:""});
     try {
-      await signIn(data.email,data.password);
-      const profile = await getCurrentProfile();
-      onSignedIn(profile);
-      go(profile?.role === "seller" ? "/dashboard" : profile?.role === "admin" ? "/admin" : "/");
+      await sendSellerLoginOtp(data.nammaspotId, data.phone);
+      setState({loading:false,error:"",success:"OTP sent to your phone."});
+      setOtpStep(true);
     } catch (error) {
-      setState({loading:false,error:friendlyError(error),resent:false});
+      setState({loading:false,error:friendlyError(error),success:""});
     }
   };
 
-  const resend = async () => {
-    if (!data.email) {
-      setState((current) => ({...current,error:"Enter your email address first.",resent:false}));
-      return;
-    }
-    setState((current) => ({...current,loading:true,error:"",resent:false}));
+  const verify = async (event) => {
+    event.preventDefault();
+    setState({loading:true,error:"",success:""});
     try {
-      await resendSellerConfirmation(data.email);
-      setState({loading:false,error:"",resent:true});
+      await verifySellerLoginOtp(data.phone, data.otp);
+      const profile = await getCurrentProfile();
+      if (!profile || profile.role !== "seller") throw new Error("Seller profile not found.");
+      const seller = await getMySeller();
+      if (seller?.verification_status !== "approved") {
+        await signOut();
+        throw new Error("Your seller account is not approved yet.");
+      }
+      onSignedIn(profile);
+      go("/dashboard");
     } catch (error) {
-      setState({loading:false,error:friendlyError(error),resent:false});
+      setState({loading:false,error:friendlyError(error),success:""});
     }
   };
 
   return (
     <main className="page form-page narrow">
       <button className="back-button" onClick={()=>go("/")}><ArrowLeft size={17}/> Home</button>
-      <div className="page-title"><div className="eyebrow">SELLER ACCESS</div><h1>Welcome back.</h1><p>Sign in to manage your catalogue and enquiries.</p></div>
-      <form className="seller-form" onSubmit={submit}>
-        <label>Email<input type="email" value={data.email} onChange={(e)=>setData({...data,email:e.target.value})} required/></label>
-        <label>Password<input type="password" value={data.password} onChange={(e)=>setData({...data,password:e.target.value})} required/></label>
-        {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
-        {state.resent && <div className="form-status"><CheckCircle size={18}/>Confirmation email sent. Check your inbox.</div>}
-        {state.error?.toLowerCase().includes("confirm") && <button type="button" className="secondary-button full-button" onClick={resend} disabled={state.loading}>Resend confirmation email</button>}
-        <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Signing in…" : <><LogIn size={17}/> Sign in</>}</button>
-        <button type="button" className="secondary-button full-button" onClick={()=>go("/register")}>Create seller account</button>
-        {!isSupabaseConfigured && <button type="button" className="secondary-button full-button" onClick={async()=>{await signIn("admin@nammaspot.local","nammaspot-demo"); const profile=await getCurrentProfile(); onSignedIn(profile); go("/admin");}}>Open demo admin</button>}
-      </form>
+      <div className="page-title"><div className="eyebrow">SELLER ACCESS</div><h1>Welcome back.</h1><p>Use your NammaSpot ID and verified phone number.</p></div>
+      {!otpStep ? (
+        <form className="seller-form" onSubmit={send}>
+          <label>NammaSpot ID<input value={data.nammaspotId} onChange={(e)=>setData({...data,nammaspotId:e.target.value.toUpperCase()})} placeholder="NS-000001" required/></label>
+          <label>Phone number<input type="tel" value={data.phone} onChange={(e)=>setData({...data,phone:e.target.value})} placeholder="10-digit mobile number" required/></label>
+          {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
+          <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Sending OTP…" : <><LogIn size={17}/> Send OTP</>}</button>
+          <button type="button" className="secondary-button full-button" onClick={()=>go("/register")}>Create seller account</button>
+        </form>
+      ) : (
+        <form className="seller-form" onSubmit={verify}>
+          <div className="eyebrow">VERIFY PHONE</div>
+          <h2>Enter the 6-digit code</h2>
+          <p>Check your phone and enter the OTP to continue.</p>
+          <label>OTP<input inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={data.otp} onChange={(e)=>setData({...data,otp:e.target.value.replace(/\D/g,"").slice(0,6)})} required/></label>
+          {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
+          {state.success && <div className="form-status"><CheckCircle size={18}/>{state.success}</div>}
+          <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Verifying…" : "Verify & sign in"}</button>
+          <button type="button" className="secondary-button full-button" onClick={()=>setOtpStep(false)}>Change details</button>
+        </form>
+      )}
     </main>
   );
 }

@@ -730,7 +730,7 @@ function LoginPage({ go, onSignedIn }) {
       <button className="back-button" onClick={()=>go("/")}><ArrowLeft size={17}/> Home</button>
       <div className="page-title"><div className="eyebrow">SELLER ACCESS</div><h1>Welcome back.</h1><p>Login uses only your NammaSpot ID and password.</p></div>
       <form className="seller-form" onSubmit={submit}>
-        <label>NammaSpot ID<input value={data.nammaspotId} onChange={(e)=>setData({...data,nammaspotId:e.target.value.toUpperCase()})} placeholder="NS-000001" required/></label>
+        <label>NammaSpot ID<input value={data.nammaspotId} onChange={(e)=>setData({...data,nammaspotId:e.target.value.toLowerCase()})} placeholder="ns-000001" required/></label>
         <label>Password<input type="password" autoComplete="current-password" value={data.password} onChange={(e)=>setData({...data,password:e.target.value})} placeholder="Your password" required/></label>
         {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
         <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Signing in…" : <><LogIn size={17}/> Sign in</>}</button>

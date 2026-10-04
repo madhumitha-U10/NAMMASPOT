@@ -182,34 +182,28 @@ export function normalizePhone(value) {
 export async function signInSeller(nammaspotId, password) {
   if (!supabase) throw new BackendNotConfiguredError();
   const client = needBackend();
-  const { data: rows, error: lookupError } = await client.rpc("lookup_seller_login", {
-    p_nammaspot_id: text(nammaspotId, 40),
-    p_phone: "",
-  });
-  if (lookupError) throw lookupError;
-  const seller = rows?.[0];
-  if (!seller) throw new Error("Invalid NammaSpot ID or password.");
-  if (seller.verification_status === "pending") throw new Error("Your seller account is still pending admin approval.");
-  if (seller.verification_status === "rejected") throw new Error("Your seller application was rejected.");
-  if (seller.verification_status === "suspended") throw new Error("Your seller account is suspended.");
-  if (seller.verification_status !== "approved") throw new Error("Your seller account is not ready for login.");
-  const phone = normalizePhone(seller.phone);
-  if (!phone) throw new Error("This seller account does not have a verified phone number.");
-  const { data, error } = await client.auth.signInWithPassword({ phone, password });
+  const cleanId = text(nammaspotId, 40).toLowerCase().replace(/[^a-z0-9_-]/g, "");
+  if (!cleanId) throw new Error("Enter your NammaSpot ID.");
+  const email = cleanId + "@accounts.nammaspot.internal";
+  const { data, error } = await client.auth.signInWithPassword({ email, password });
   if (error) throw error;
   return data;
 }
 
 export async function setSellerPassword(password) {
   if (!supabase) throw new BackendNotConfiguredError();
-  const client = needBackend();
-  const { error } = await client.auth.updateUser({ password });
+  if (String(password || "").length < 8) throw new Error("Password must be at least 8 characters.");
+  const { data, error } = await supabase.functions.invoke("set-seller-credentials", {
+    body: { password },
+  });
   if (error) throw error;
-  return true;
+  if (!data?.ok) throw new Error(data?.error || "Could not create your login password.");
+  return data;
 }
 
 export async function startSellerRegistration(values) {
   if (!supabase) throw new BackendNotConfiguredError();
+  if (String(values.password || "").length < 8) throw new Error("Password must be at least 8 characters.");
   const client = needBackend();
   const normalized = normalizePhone(values.phone);
   const { data: used, error: usedError } = await client.rpc("phone_in_use", { p_phone: normalized });

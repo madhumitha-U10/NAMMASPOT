@@ -159,6 +159,7 @@ function App() {
           <button onClick={() => go("/categories")}>Categories</button>
           <button onClick={() => go("/saved")}>Saved</button>
           {profile?.role === "seller" && <button onClick={() => go("/dashboard")}><LayoutDashboard size={15}/> Dashboard</button>}
+          {profile?.role === "admin" && <button onClick={() => go("/nammaspot-control-panel/dashboard")}><ShieldCheck size={15}/> Admin Console</button>}
           {profile ? (
             <button onClick={onSignOut}><LogOut size={15}/> Sign out</button>
           ) : (
@@ -205,7 +206,7 @@ function getRoute(path) {
   if (path === "/register") return "register";
   if (path.startsWith("/dashboard")) return "dashboard";
   if (path.startsWith("/nammaspot-control-panel/login")) return "admin-login";
-  if (path.startsWith("/nammaspot-control-panel/dashboard")) return "admin-dashboard";
+  if (path.startsWith("/nammaspot-control-panel/dashboard") || path.startsWith("/admin-console")) return "admin-dashboard";
   if (path.startsWith("/admin")) return "not-found";
   if (path.startsWith("/s/")) return "seller";
   return "not-found";
@@ -1095,7 +1096,20 @@ function AdminPage() {
   if (!allowed) return <main className="page"><ErrorState message={error || "Admin access is restricted."} retry={load}/></main>;
 
   return (
-    <main className="page admin-page">
+    <main className="page admin-page admin-console-page">
+      <div className="admin-console-shell">
+        <aside className="admin-console-sidebar" aria-label="Admin console navigation">
+          <div className="admin-console-brand"><ShieldCheck size={22}/><div><strong>NammaSpot</strong><span>Admin Console</span></div></div>
+          <div className="admin-console-nav">
+            <button className={tab==="sellers"?"active":""} onClick={()=>setTab("sellers")}><Store size={17}/> Seller approvals</button>
+            <button className={tab==="categories"?"active":""} onClick={()=>setTab("categories")}><Grid2X2 size={17}/> Categories</button>
+          </div>
+          <div className="admin-console-sidebar-bottom">
+            <button onClick={load} disabled={loading}>↻ Refresh data</button>
+            <button onClick={()=>{signOut().then(()=>location.href="/");}}><LogOut size={16}/> Sign out</button>
+          </div>
+        </aside>
+        <section className="admin-console-content">
       <div className="dashboard-head">
         <div>
           <div className="eyebrow">ADMIN</div>
@@ -1107,11 +1121,6 @@ function AdminPage() {
           <button className="secondary-button" onClick={load} disabled={loading}>↻ {loading ? "Refreshing…" : "Refresh"}</button>
           <ShieldCheck size={34} color="#7e2424"/>
         </div>
-      </div>
-
-      <div className="dashboard-tabs">
-        <button className={tab==="sellers"?"active":""} onClick={()=>setTab("sellers")}>Sellers</button>
-        <button className={tab==="categories"?"active":""} onClick={()=>setTab("categories")}>Categories</button>
       </div>
 
       {error && <div className="inline-error"><AlertCircle size={17}/>{error}</div>}
@@ -1180,6 +1189,8 @@ function AdminPage() {
             <article className="dashboard-item" key={item.id}><strong>{item.name}</strong><div className="button-row"><button className="secondary-button" onClick={()=>renameCategory(item)}><Pencil size={15}/> Rename</button><button className="danger-button" onClick={()=>removeCategory(item)}><Trash2 size={15}/> Delete</button></div></article>
           )}
         </div>}
+        </section>
+      </div>
     </main>
   );
 }

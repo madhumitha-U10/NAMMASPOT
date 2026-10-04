@@ -174,6 +174,17 @@ export async function getSession() {
   return data.session ?? null;
 }
 
+export async function resendSellerConfirmation(email) {
+  if (!supabase) throw new BackendNotConfiguredError();
+  const client = needBackend();
+  const { error } = await client.auth.resend({
+    type: "signup",
+    email: text(email,320).toLowerCase(),
+    options: { emailRedirectTo: window.location.origin + "/login" },
+  });
+  if (error) throw error;
+}
+
 export async function signIn(email,password) {
   if (!supabase) {
     const normalizedEmail = text(email,320).toLowerCase();

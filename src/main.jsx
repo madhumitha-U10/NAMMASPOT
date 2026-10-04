@@ -49,6 +49,26 @@ import { categoryNames } from "./lib/seed";
 
 const popularCategories = ["Bakery", "Mehendi", "Crochet", "Makeup", "Art"];
 
+const categoryVisuals = {
+  bakery: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=900&q=82",
+  mehendi: "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=900&q=82",
+  crochet: "https://images.unsplash.com/photo-1604881988758-f76ad2f7aac1?auto=format&fit=crop&w=900&q=82",
+  makeup: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&q=82",
+  art: "https://images.unsplash.com/photo-1549490349-8643362247b5?auto=format&fit=crop&w=900&q=82",
+  fashion: "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=900&q=82",
+  jewelry: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=900&q=82",
+  jewellery: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=900&q=82",
+  food: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=900&q=82",
+  gifts: "https://images.unsplash.com/photo-1513883049090-d0b7439799bf?auto=format&fit=crop&w=900&q=82",
+  crafts: "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=900&q=82",
+  photography: "https://images.unsplash.com/photo-1452780212940-6f5c0d14d848?auto=format&fit=crop&w=900&q=82"
+};
+
+function categoryImage(category) {
+  const key = String(category || "").trim().toLowerCase();
+  return categoryVisuals[key] || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=900&q=82";
+}
+
 function App() {
   const [path, setPath] = useState(() => location.pathname + location.search);
   const [query, setQuery] = useState("");
@@ -322,17 +342,22 @@ function CategoriesPage({ go }) {
   return (
     <main className="page">
       <div className="page-title">
-        <div className="eyebrow">BROWSE</div>
+        <div className="eyebrow">BROWSE LOCAL</div>
         <h1>Find your kind of local.</h1>
-        <p>From a box of murukku to a hand-painted gift, start with what you need.</p>
+        <p>Start with a category. See real local sellers, their catalogues and the people behind them.</p>
       </div>
       {state.loading ? <CardSkeletonRow detailed/> :
         <div className="category-grid-large">
           {categories.map((category,index) => (
-            <button key={category} onClick={() => go("/explore?search=" + encodeURIComponent(category))}>
-              <span>{String(index + 1).padStart(2,"0")}</span>
-              <strong>{category}</strong>
-              <ChevronRight size={19}/>
+            <button className="category-card-visual" key={category} onClick={() => go("/explore?cat=" + encodeURIComponent(category))} aria-label={"Explore " + category}>
+              <img src={categoryImage(category)} alt="" loading="lazy" />
+              <span className="category-card-shade" />
+              <span className="category-card-number">{String(index + 1).padStart(2,"0")}</span>
+              <span className="category-card-copy">
+                <strong>{category}</strong>
+                <small>Explore local {category.toLowerCase()}</small>
+              </span>
+              <span className="category-card-arrow"><ChevronRight size={19}/></span>
             </button>
           ))}
         </div>}

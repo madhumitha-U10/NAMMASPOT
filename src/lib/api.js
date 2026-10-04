@@ -179,39 +179,33 @@ export function normalizePhone(value) {
   return String(value ?? "").trim();
 }
 
-export async function sendSellerLoginOtp(nammaspotId, phone) {
+export async function signInSeller(nammaspotId, password) {
   if (!supabase) throw new BackendNotConfiguredError();
   const client = needBackend();
-  const normalized = normalizePhone(phone);
-  const { data, error } = await client.rpc("lookup_seller_login", {
+  const { data: rows, error: lookupError } = await client.rpc("lookup_seller_login", {
     p_nammaspot_id: text(nammaspotId, 40),
-    p_phone: normalized,
+    p_phone: "",
   });
-  if (error) throw error;
-  const seller = data?.[0];
-  if (!seller) throw new Error("NammaSpot ID and phone number do not match.");
+  if (lookupError) throw lookupError;
+  const seller = rows?.[0];
+  if (!seller) throw new Error("Invalid NammaSpot ID or password.");
   if (seller.verification_status === "pending") throw new Error("Your seller account is still pending admin approval.");
   if (seller.verification_status === "rejected") throw new Error("Your seller application was rejected.");
   if (seller.verification_status === "suspended") throw new Error("Your seller account is suspended.");
   if (seller.verification_status !== "approved") throw new Error("Your seller account is not ready for login.");
-  const { error: otpError } = await client.auth.signInWithOtp({
-    phone: normalized,
-    options: { shouldCreateUser: false },
-  });
-  if (otpError) throw otpError;
-  return normalized;
-}
-
-export async function verifySellerLoginOtp(phone, token) {
-  if (!supabase) throw new BackendNotConfiguredError();
-  const client = needBackend();
-  const { data, error } = await client.auth.verifyOtp({
-    phone: normalizePhone(phone),
-    token: text(token, 10),
-    type: "sms",
-  });
+  const phone = normalizePhone(seller.phone);
+  if (!phone) throw new Error("This seller account does not have a verified phone number.");
+  const { data, error } = await client.auth.signInWithPassword({ phone, password });
   if (error) throw error;
   return data;
+}
+
+export async function setSellerPassword(password) {
+  if (!supabase) throw new BackendNotConfiguredError();
+  const client = needBackend();
+  const { error } = await client.auth.updateUser({ password });
+  if (error) throw error;
+  return true;
 }
 
 export async function startSellerRegistration(values) {

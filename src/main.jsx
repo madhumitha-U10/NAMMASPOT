@@ -44,6 +44,7 @@ import {
   adminRenameCategory,
   adminDeleteCategory,
   adminStorageUsage,
+  adminOtpUsageAlerts,
   uploadSellerMedia
 } from "./lib/api";
 import { categoryNames } from "./lib/seed";
@@ -1007,6 +1008,7 @@ function AdminPage() {
   const [busy,setBusy]=useState(false);
   const [loading,setLoading]=useState(true);
   const [storageUsage,setStorageUsage]=useState(null);
+  const [otpAlerts,setOtpAlerts]=useState([]);
 
   const load=async()=>{
     setLoading(true);
@@ -1014,12 +1016,13 @@ function AdminPage() {
     try {
       const [ok,current] = await Promise.all([isCurrentUserAdmin(), getCurrentProfile()]);
       if (!ok) { setAllowed(false); setError("This account is not an approved NammaSpot admin."); return; }
-      const [s,c,u]=await Promise.all([adminListSellers(),adminListCategories(),adminStorageUsage()]);
+      const [s,c,u,otp]=await Promise.all([adminListSellers(),adminListCategories(),adminStorageUsage(),adminOtpUsageAlerts()]);
       setAllowed(true);
       setAdminProfile(current);
       setSellers(s);
       setCategories(c);
       setStorageUsage(u);
+      setOtpAlerts(otp);
       if (u && u.status !== "ok") {
         const key = "nammaspot-storage-alert-" + u.status;
         if (!window.sessionStorage.getItem(key)) {
@@ -1124,6 +1127,17 @@ function AdminPage() {
       </div>
 
       {error && <div className="inline-error"><AlertCircle size={17}/>{error}</div>}
+
+      {otpAlerts.length > 0 && (
+        <div className="dashboard-item" role="alert" aria-live="polite">
+          <div>
+            <div className="eyebrow">OTP USAGE ALERT</div>
+            <strong>SMS usage crossed 20 requests in an hour.</strong>
+            <p>The latest warning recorded {otpAlerts[0].sms_count} OTP SMS requests in the current hourly window. Check SMS activity before usage grows further.</p>
+          </div>
+          <span className="status-pill status-warning">20+ SMS</span>
+        </div>
+      )}
 
       {storageUsage && (
         <div className="dashboard-item" role="status" aria-live="polite">

@@ -174,33 +174,84 @@ export async function getSession() {
   return data.session ?? null;
 }
 
-export async function resendSellerConfirmation(email) {
-  if (!supabase) throw new BackendNotConfiguredError();
-  const client = needBackend();
-  const { error } = await client.auth.resend({
-    type: "signup",
-    email: text(email,320).toLowerCase(),
-    options: { emailRedirectTo: window.location.origin + "/login" },
-  });
-  if (error) throw error;
+export function normalizePhone(value) {
+  const digits = String(value ?? "").replace(/[^0-9]/g, "");
+  if (digits.length === 10) return "+91" + digits;
+  if (digits.length === 11 && digits.startsWith("0")) return "+91" + digits.slice(1);
+  if (digits.length === 12 && digits.startsWith("91")) return "+" + digits;
+  return String(value ?? "").trim();
 }
 
-export async function signIn(email,password) {
-  if (!supabase) {
-    const normalizedEmail = text(email,320).toLowerCase();
-    if (normalizedEmail === "admin@nammaspot.local" && password === "nammaspot-demo") {
-      const user = { id:"demo-admin", name:"NammaSpot Admin", email:normalizedEmail, phone:"", role:"admin" };
-      setCurrentDemoUser(user);
-      return { session: { user }, demo:true };
-    }
-    const state = demoState();
-    const user = state.users.find((item) => item.email === normalizedEmail && item.password === password);
-    if (!user) throw new Error("Invalid login");
-    setCurrentDemoUser(user);
-    return { session: { user }, demo:true };
-  }
+export async function sendSellerLoginOtp(nammaspotId, phone) {
+  if (!supabase) throw new BackendNotConfiguredError();
   const client = needBackend();
-  const { data,error } = await client.auth.signInWithPassword({ email:text(email,320).toLowerCase(), password });
+  const normalized = normalizePhone(phone);
+  const { data, error } = await client.rpc("lookup_seller_login", {
+    p_nammaspot_id: text(nammaspotId, 40),
+    p_phone: normalized,
+  });
+  if (error) throw error;
+  const seller = data?.[0];
+  if (!seller) throw new Error("NammaSpot ID and phone number do not match.");
+  if (seller.verification_status === "pending") throw new Error("Your seller account is still pending admin approval.");
+  if (seller.verification_status === "rejected") throw new Error("Your seller application was rejected.");
+  if (seller.verification_status === "suspended") throw new Error("Your seller account is suspended.");
+  if (seller.verification_status !== "approved") throw new Error("Your seller account is not ready for login.");
+  const { error: otpError } = await client.auth.signInWithOtp({
+    phone: normalized,
+    options: { shouldCreateUser: false },
+  });
+  if (otpError) throw otpError;
+  return normalized;
+}
+
+export async function verifySellerLoginOtp(phone, token) {
+  if (!supabase) throw new BackendNotConfiguredError();
+  const client = needBackend();
+  const { data, error } = await client.auth.verifyOtp({
+    phone: normalizePhone(phone),
+    token: text(token, 10),
+    type: "sms",
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function startSellerRegistration(values) {
+  if (!supabase) throw new BackendNotConfiguredError();
+  const client = needBackend();
+  const normalized = normalizePhone(values.phone);
+  const { data: used, error: usedError } = await client.rpc("phone_in_use", { p_phone: normalized });
+  if (usedError) throw usedError;
+  if (used) throw new Error("That phone number is already registered. Use your NammaSpot ID to log in.");
+  const metadata = {
+    role: "seller",
+    name: text(values.owner,120),
+    phone: normalized,
+    business_name: text(values.business,160),
+    category_name: text(values.category,80),
+    location: text(values.location,240),
+    location_url: text(values.locationUrl,500),
+    description: text(values.description,300),
+    whatsapp_phone: normalizePhone(values.whatsapp || values.phone),
+    instagram_url: text(values.instagram,500),
+  };
+  const { error } = await client.auth.signInWithOtp({
+    phone: normalized,
+    options: { shouldCreateUser: true, data: metadata },
+  });
+  if (error) throw error;
+  return { phone: normalized };
+}
+
+export async function verifySellerRegistrationOtp(phone, token) {
+  if (!supabase) throw new BackendNotConfiguredError();
+  const client = needBackend();
+  const { data, error } = await client.auth.verifyOtp({
+    phone: normalizePhone(phone),
+    token: text(token, 10),
+    type: "sms",
+  });
   if (error) throw error;
   return data;
 }
@@ -209,6 +260,215 @@ export async function signOut() {
   if (!supabase) { setCurrentDemoUser(null); return; }
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
+}
+
+export async function signUpSeller(values) {
+  if (!supabase) throw new BackendNotConfiguredError();
+  return startSellerRegistration(values);
+}
+
+export async function getCurrentProfile() {
+  if (!supabase) {
+    const user = currentDemoUser();
+    return user ? { id:user.id,name:user.name,email:user.email,phone:user.phone,role:user.role } : null;
+  }
+  const client = needBackend();
+  const session = await getSession();
+  if (!session?.user) return null;
+  const { data,error } = await client.from("users").select("id,name,email,phone,role").eq("id",session.user.id).maybeSingle();
+  if (error) throw error;
+  return data ?? null;
+}
+
+export async function getMySeller() {
+  if (!supabase) {
+    const user = currentDemoUser();
+    if (!user) throw new Error("Please sign in.");
+    const row = demoState().sellers.find((s) => s.user_id === user.id);
+    return row ? { ...row, products: demoState().products.filter((p) => p.seller_id === row.id) } : null;
+  }
+  const client = needBackend();
+  const session = await getSession();
+  if (!session?.user) throw new Error("Please sign in.");
+  const { data,error } = await client.from("sellers").select(sellerSelect).eq("user_id",session.user.id).maybeSingle();
+  if (error) throw error;
+  return data ? sellerOf(data) : null;
+}
+
+export async function updateMySeller(sellerId, values) {
+  if (!supabase) {
+    const state = demoState(); const index = state.sellers.findIndex((s) => s.id === sellerId);
+    if (index < 0) throw new Error("Seller profile not found.");
+    state.sellers[index] = { ...state.sellers[index], business_name:text(values.business_name,160), name:text(values.business_name,160), owner_name:text(values.owner_name,120), category:text(values.category_id,80) || state.sellers[index].category, category_id:text(values.category_id,80), location:text(values.location,240), location_url:text(values.location_url,500), city:text(values.city,80) || "Chennai", description:text(values.description,600), phone:text(values.contact,40), contact:text(values.contact,40), whatsapp_phone:text(values.whatsapp_phone,40), instagram_url:text(values.instagram_url,500), opening_time:values.opening_time || "", closing_time:values.closing_time || "" };
+    saveDemo(state); return { ...state.sellers[index], products:state.products.filter((p) => p.seller_id === sellerId) };
+  }
+  const client = needBackend();
+  const { data,error } = await client.from("sellers").update({ business_name:text(values.business_name,160), owner_name:text(values.owner_name,120), category_id:values.category_id || null, location:text(values.location,240), location_url:text(values.location_url,500), city:text(values.city,80), description:text(values.description,600), contact:text(values.contact,40), whatsapp_phone:text(values.whatsapp_phone,40), instagram_url:text(values.instagram_url,500), opening_time:values.opening_time || null, closing_time:values.closing_time || null }).eq("id",sellerId).select("*,category:categories(id,name)").single();
+  if (error) throw error;
+  return data;
+}
+
+export async function listMyProducts(sellerId) {
+  if (!supabase) return productsOf(demoState().products.filter((p) => p.seller_id === sellerId));
+  const client = needBackend();
+  const { data,error } = await client.from("products").select("id,seller_id,product_name,description,price,availability,image_url,category_id,created_at").eq("seller_id",sellerId).order("created_at",{ascending:false});
+  if (error) throw error; return productsOf(data ?? []);
+}
+
+export async function createProduct(values) {
+  if (!supabase) {
+    const state=demoState(); const product={id:uid("product"),seller_id:values.seller_id,product_name:text(values.product_name,160),name:text(values.product_name,160),description:text(values.description,1000),price:Number(values.price),availability:Boolean(values.availability),available:Boolean(values.availability),image_url:text(values.image_url,800),category_id:values.category_id || null,created_at:new Date().toISOString()};
+    state.products.unshift(product); saveDemo(state); return productsOf([product])[0];
+  }
+  const client = needBackend();
+  const { data,error } = await client.from("products").insert({ seller_id:values.seller_id, product_name:text(values.product_name,160), description:text(values.description,1000), price:Number(values.price), availability:Boolean(values.availability), image_url:text(values.image_url,800) || null, category_id:values.category_id || null }).select("id,seller_id,product_name,description,price,availability,image_url,category_id,created_at").single();
+  if (error) throw error; return productsOf([data])[0];
+}
+
+export async function updateProduct(productId,values) {
+  if (!supabase) {
+    const state=demoState(); const index=state.products.findIndex((p)=>p.id===productId);
+    if(index<0) throw new Error("Product not found.");
+    state.products[index]={...state.products[index],product_name:text(values.product_name,160),name:text(values.product_name,160),description:text(values.description,1000),price:Number(values.price),availability:Boolean(values.availability),available:Boolean(values.availability),image_url:text(values.image_url,800),category_id:values.category_id || null};
+    saveDemo(state); return productsOf([state.products[index]])[0];
+  }
+  const client=needBackend(); const {data,error}=await client.from("products").update({product_name:text(values.product_name,160),description:text(values.description,1000),price:Number(values.price),availability:Boolean(values.availability),image_url:text(values.image_url,800)||null,category_id:values.category_id||null}).eq("id",productId).select("id,seller_id,product_name,description,price,availability,image_url,category_id,created_at").single();
+  if(error) throw error; return productsOf([data])[0];
+}
+
+export async function deleteProduct(productId) {
+  if (!supabase) { const state=demoState(); state.products=state.products.filter((p)=>p.id!==productId); saveDemo(state); return; }
+  const client=needBackend(); const {error}=await client.from("products").delete().eq("id",productId); if(error) throw error;
+}
+
+export async function createEnquiry(values) {
+  if (!supabase) {
+    const state=demoState();
+    state.enquiries.unshift({id:uid("enquiry"),user_id:currentDemoUser()?.id||null,seller_id:values.seller_id,product_id:values.product_id||null,customer_name:text(values.customer_name,120),customer_contact:text(values.customer_contact,160),message:text(values.message,1000),status:"pending",enquiry_date:new Date().toISOString(),product:{product_name:demoState().products.find((p)=>p.id===values.product_id)?.name||""}});
+    saveDemo(state); return {id:state.enquiries[0].id,status:"pending"};
+  }
+  const client=needBackend(); const session=await getSession(); const {data,error}=await client.from("enquiries").insert({user_id:session?.user?.id||null,seller_id:values.seller_id,product_id:values.product_id||null,customer_name:text(values.customer_name,120),customer_contact:text(values.customer_contact,160),message:text(values.message,1000),status:"pending"}).select("id,status").single(); if(error) throw error; return data;
+}
+
+export async function getMyEnquiries(sellerId) {
+  if (!supabase) return demoState().enquiries.filter((e)=>e.seller_id===sellerId);
+  const client=needBackend(); const {data,error}=await client.from("enquiries").select("id,customer_name,customer_contact,message,status,enquiry_date,product:products(product_name)").eq("seller_id",sellerId).order("enquiry_date",{ascending:false}); if(error) throw error; return data||[];
+}
+
+export async function updateEnquiryStatus(id,status) {
+  if (!supabase) { const state=demoState(); const item=state.enquiries.find((e)=>e.id===id); if(item)item.status=status; saveDemo(state); return; }
+  const client=needBackend(); const {error}=await client.from("enquiries").update({status}).eq("id",id); if(error) throw error;
+}
+
+export async function listMyFavourites() {
+  if (!supabase) { const user=currentDemoUser(); return user ? demoState().favourites.filter((x)=>x.user_id===user.id).map((x)=>x.seller_id) : []; }
+  const client=needBackend(); const session=await getSession(); if(!session?.user)return []; const {data,error}=await client.from("favourites").select("seller_id").eq("user_id",session.user.id); if(error)throw error; return (data||[]).map((x)=>x.seller_id);
+}
+
+export async function saveFavourite(sellerId) {
+  if (!supabase) { const state=demoState(); const user=currentDemoUser(); if(!user) return; if(!state.favourites.some((x)=>x.user_id===user.id&&x.seller_id===sellerId))state.favourites.push({user_id:user.id,seller_id:sellerId}); saveDemo(state); return; }
+  const client=needBackend(); const session=await getSession(); if(!session?.user)throw new Error("Please sign in to sync saved sellers."); const {error}=await client.from("favourites").insert({user_id:session.user.id,seller_id:sellerId}); if(error&&error.code!=="23505")throw error;
+}
+
+export async function removeFavourite(sellerId) {
+  if (!supabase) { const state=demoState(); const user=currentDemoUser(); state.favourites=state.favourites.filter((x)=>x.user_id!==user?.id||x.seller_id!==sellerId); saveDemo(state); return; }
+  const client=needBackend(); const session=await getSession(); if(!session?.user)return; const {error}=await client.from("favourites").delete().eq("user_id",session.user.id).eq("seller_id",sellerId); if(error)throw error;
+}
+
+export async function isCurrentUserAdmin() {
+  if (!supabase) return currentDemoUser()?.role === "admin";
+  const client=needBackend(); const session=await getSession(); if(!session?.user)return false; const {data,error}=await client.from("admins").select("user_id").eq("user_id",session.user.id).maybeSingle(); if(error)throw error; return Boolean(data);
+}
+
+export async function changeCurrentUserPassword(newPassword) {
+  if (!supabase) throw new BackendNotConfiguredError();
+  const client = needBackend();
+  const { error } = await client.auth.updateUser({ password: newPassword });
+  if (error) throw error;
+}
+
+export async function adminStorageUsage() {
+  if (!supabase) return null;
+  const client = needBackend();
+  const { data, error } = await client.rpc("admin_storage_usage");
+  if (error) throw error;
+  return Array.isArray(data) ? data[0] ?? null : data;
+}
+
+export async function adminListSellers() {
+  if (!supabase) return demoState().sellers.map((s)=>({id:s.id,slug:s.slug,business_name:s.business_name,owner_name:s.owner_name,contact:s.contact||s.phone,verification_status:s.verification_status,verified:s.verified,created_at:s.created_at||"",location:s.location,category:{name:s.category}}));
+  const client=needBackend(); const {data,error}=await client.from("sellers").select("id,slug,business_name,owner_name,contact,verification_status,verified,created_at,location,category:categories(name)").order("created_at",{ascending:false}).limit(100); if(error)throw error; return data||[];
+}
+
+export async function adminDeleteSuspendedSeller(sellerId) {
+  if (!supabase) {
+    const state = demoState();
+    const seller = state.sellers.find((item) => item.id === sellerId);
+    if (!seller) throw new Error("Seller not found.");
+    if (seller.verification_status !== "suspended") throw new Error("Only suspended seller accounts can be permanently deleted.");
+    const userId = seller.user_id;
+    state.favourites = state.favourites.filter((item) => item.seller_id !== sellerId);
+    state.enquiries = state.enquiries.filter((item) => item.seller_id !== sellerId);
+    state.products = state.products.filter((item) => item.seller_id !== sellerId);
+    state.sellers = state.sellers.filter((item) => item.id !== sellerId);
+    if (userId) state.users = state.users.filter((item) => item.id !== userId);
+    if (currentDemoUser()?.id === userId) setCurrentDemoUser(null);
+    saveDemo(state);
+    return { success: true, seller_id: sellerId };
+  }
+  const client = needBackend();
+  const { data, error } = await client.functions.invoke("admin-delete-suspended-seller", {
+    body: { seller_id: sellerId },
+  });
+  if (error) {
+    if (error.context && typeof error.context.json === "function") {
+      try {
+        const body = await error.context.clone().json();
+        throw new Error(body?.error || body?.message || error.message);
+      } catch (responseError) {
+        if (responseError instanceof Error && responseError.message) throw responseError;
+      }
+    }
+    throw error;
+  }
+  if (!data?.success) throw new Error(data?.error || "Permanent deletion failed.");
+  return data;
+}
+
+export async function adminUpdateSellerStatus(id,status) {
+  if (!supabase) { const state=demoState(); const item=state.sellers.find((s)=>s.id===id); if(item){item.verification_status=status;item.verified=status==="approved";} saveDemo(state); return; }
+  const client=needBackend(); const {error}=await client.from("sellers").update({verification_status:status,verified:status==="approved"}).eq("id",id); if(error)throw error;
+}
+
+export async function adminListCategories() {
+  if (!supabase) return demoState().categories.map((name)=>({id:name,name}));
+  const client=needBackend(); const {data,error}=await client.from("categories").select("id,name").order("name"); if(error)throw error; return data||[];
+}
+
+export async function adminAddCategory(name) {
+  if (!supabase) { const state=demoState(); const value=text(name,80); if(value&&!state.categories.includes(value))state.categories.push(value); saveDemo(state); return; }
+  const client=needBackend(); const {error}=await client.from("categories").insert({name:text(name,80)}); if(error)throw error;
+}
+
+export async function adminRenameCategory(id,name) {
+  if (!supabase) { const state=demoState(); const index=state.categories.findIndex((x)=>x===id); if(index>=0)state.categories[index]=text(name,80); saveDemo(state); return; }
+  const client=needBackend(); const {error}=await client.from("categories").update({name:text(name,80)}).eq("id",id); if(error)throw error;
+}
+
+export async function adminDeleteCategory(id) {
+  if (!supabase) { const state=demoState(); state.categories=state.categories.filter((x)=>x!==id); saveDemo(state); return; }
+  const client=needBackend(); const {error}=await client.from("categories").delete().eq("id",id); if(error)throw error;
+}export async function signIn(email,password) {
+  if (!supabase) {
+    const normalizedEmail = text(email,320).toLowerCase();
+    if (normalizedEmail === "admin@nammaspot.local" && password === "nammaspot-demo") {
+      const user = { id:"demo-admin", name:"NammaSpot Admin", email:normalizedEmail, phone:"", role:"admin" };
+      setCurrentDemoUser(user);
+      return { session: { user }, demo:true };
+    }
+    throw new Error("Demo seller login is not available in this authentication mode.");
+  }
+  throw new Error("Seller login now uses NammaSpot ID and phone OTP.");
 }
 
 export async function signUpSeller(values) {

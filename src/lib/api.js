@@ -21,10 +21,6 @@ function uid(prefix = "demo") {
   return prefix + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
 }
 
-function slugify(value) {
-  return text(value, 160).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "local-seller";
-}
-
 function seedState() {
   const sellers = seedSellers.map((seller) => ({
     ...seller,

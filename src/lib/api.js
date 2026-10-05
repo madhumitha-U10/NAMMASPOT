@@ -522,7 +522,7 @@ export async function signIn(email,password) {
       setCurrentDemoUser(user);
       return { session:{user}, demo:true };
     }
-    throw new Error("Seller login now uses NammaSpot ID and phone OTP.");
+    throw new Error("Seller login uses your NammaSpot ID and password.");
   }
   return signInAdmin(email,password);
 }

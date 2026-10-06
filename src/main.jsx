@@ -812,14 +812,18 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
   const upload = async (event) => {
     const file=event.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) { setState({loading:false,error:"Please choose an image file."}); return; }
-    if (file.size > 4*1024*1024) { setState({loading:false,error:"Image must be under 4 MB."}); return; }
+    if (!["image/jpeg","image/png","image/webp"].includes(file.type)) { setState({loading:false,error:"Unsupported image format. Use JPG, PNG or WebP."}); return; }
+    if (file.size > 10*1024*1024) { setState({loading:false,error:"This image is over 10 MB. Please choose a smaller image."}); return; }
     try {
       const session = await getCurrentProfile();
       const url = await uploadSellerMedia(file, session.id);
-      if (url) setForm((current)=>({...current,image_url:url}));
-    } catch {
-      setState({loading:false,error:"Image upload failed. Use an image URL or try again."});
+      if (url) {
+        setForm((current)=>({...current,image_url:url}));
+        try { onStorageUsageChange(await getSellerStorageUsage()); } catch {}
+        setState({loading:false,error:""});
+      }
+    } catch (error) {
+      setState({loading:false,error:friendlyError(error)});
     }
   };
 
@@ -827,6 +831,11 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
     <div className="dashboard-content">
       <form className="seller-form compact-form" onSubmit={submit}>
         <div className="eyebrow">{editing ? "EDIT PRODUCT" : "ADD PRODUCT"}</div>
+        {storageUsage && <div className={"storage-usage-card storage-" + storageUsage.status}>
+          <div className="storage-usage-head"><strong>Image storage</strong><span>{formatBytes(storageUsage.used_bytes)} / {SELLER_STORAGE_QUOTA_LABEL}</span></div>
+          <div className="storage-usage-track" role="progressbar" aria-valuenow={Math.min(100, Number(storageUsage.used_percent) || 0)} aria-valuemin="0" aria-valuemax="100"><span style={{width: Math.min(100, Number(storageUsage.used_percent) || 0) + "%"}} /></div>
+          <small>{storageUsage.status === "blocked" ? "Storage is full. Delete an old image before uploading another." : storageUsage.status === "warning" ? "You have used more than " + SELLER_STORAGE_WARNING_LABEL + ". Consider deleting unused images." : "Each stored image is compressed to " + MAX_SELLER_IMAGE_LABEL + " or less. Supported: JPG, PNG, WebP."}</small>
+        </div>}
         <div className="form-grid">
           <label>Product name *<input value={form.product_name} onChange={(e)=>setForm({...form,product_name:e.target.value})} maxLength={160} required/></label>
           <label>Price ₹ *<input type="number" min="0" step="0.01" value={form.price} onChange={(e)=>setForm({...form,price:e.target.value})} required/></label>

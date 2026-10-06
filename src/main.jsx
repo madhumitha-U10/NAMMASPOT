@@ -688,6 +688,7 @@ function DashboardPage({ go }) {
   const [categories,setCategories] = useState([]);
   const [tab,setTab] = useState("profile");
   const [state,setState] = useState({loading:true,error:""});
+  const [storageUsage,setStorageUsage] = useState(null);
 
   const load = async () => {
     try {
@@ -700,6 +701,7 @@ function DashboardPage({ go }) {
       setProducts(myProducts);
       setEnquiries(myEnquiries);
       setCategories(cats);
+      try { setStorageUsage(await getSellerStorageUsage()); } catch {}
       setState({loading:false,error:""});
     } catch (error) {
       setState({loading:false,error:friendlyError(error)});

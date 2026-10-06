@@ -593,7 +593,13 @@ function RegisterPage({ go }) {
     noSpace: !/\s/.test(data.password),
   };
   const accountReady = /^NS-[A-Z0-9_-]{6,20}$/.test(idValue) && Object.values(passwordChecks).every(Boolean);
-  const businessReady = Boolean(data.business.trim());
+  const businessReady = Boolean(
+    data.business.trim() &&
+    data.owner.trim() &&
+    data.phone.trim() &&
+    data.whatsapp.trim() &&
+    data.location.trim()
+  );
 
   const submit = async (event) => {
     event.preventDefault();
@@ -604,7 +610,7 @@ function RegisterPage({ go }) {
     }
     if (!businessReady) {
       setStep(2);
-      setState({loading:false,error:"Enter your business name to continue.",success:"",nammaspotId:""});
+      setState({loading:false,error:"Complete all required business details: business name, your name, business phone, WhatsApp number and business location.",success:"",nammaspotId:""});
       return;
     }
     setState({loading:true,error:"",success:"",nammaspotId:""});
@@ -625,7 +631,7 @@ function RegisterPage({ go }) {
       <div className="page-title">
         <div className="eyebrow">BECOME A NAMMASPOT SELLER</div>
         <h1>Create your seller account</h1>
-        <p className="signup-intro">Create your login first, then add your business details. No email or OTP is required.</p>
+        <p className="signup-intro">Create your login first, then add the required business details. No email or OTP is required.</p>
       </div>
 
       <div className="signup-how-it-works" aria-label="How seller signup works">
@@ -638,7 +644,7 @@ function RegisterPage({ go }) {
 
       <div className="signup-before-card">
         <ShieldCheck size={20}/>
-        <div><strong>What you need</strong><ul><li>A business name</li><li>A NammaSpot ID you will remember</li><li>A strong password</li><li>Business phone is recommended for customer contact</li></ul><span>You can add or change your website, location, hours and catalogue later from your dashboard.</span></div>
+        <div><strong>What you need</strong><ul><li>A business name</li><li>A NammaSpot ID you will remember</li><li>A strong password</li><li>Your name, business phone, WhatsApp number and business location</li></ul><span>You can add or change your website, location, hours and catalogue later from your dashboard.</span></div>
       </div>
 
       {state.success ? (
@@ -680,28 +686,28 @@ function RegisterPage({ go }) {
           </section>}
 
           {step===2 && <section className="signup-section">
-            <div className="signup-section-heading"><span className="signup-number">2</span><div><h2>Tell us about your business</h2><p>Only the basics are needed to create your seller profile. You can complete your mini website later.</p></div></div>
+            <div className="signup-section-heading"><span className="signup-number">2</span><div><h2>Tell us about your business</h2><p>These required details help NammaSpot verify your business before approval. You can build the rest of your mini website later.</p></div></div>
+            <div className="required-details-note"><CheckCircle size={17}/><span><strong>Required before approval:</strong> business name, your name, business phone, WhatsApp number and business location.</span></div>
             <label>Business name <span className="required">*</span>
               <input value={data.business} onChange={e=>setData({...data,business:e.target.value})} maxLength={160} autoComplete="organization" required/>
               <small>This is the name customers will see on your NammaSpot mini website.</small>
             </label>
             <div className="form-grid">
-              <label>Your name <span className="optional">(optional)</span><input value={data.owner} onChange={e=>setData({...data,owner:e.target.value})} maxLength={120} autoComplete="name"/></label>
-              <label>Business phone <span className="optional">(optional but recommended)</span><input type="tel" value={data.phone} onChange={e=>setData({...data,phone:e.target.value})} autoComplete="tel"/><small>Customers can use this to contact you if you enable it.</small></label>
+              <label>Your name <span className="required">*</span><input value={data.owner} onChange={e=>setData({...data,owner:e.target.value})} maxLength={120} autoComplete="name" required/><small>We need the owner/contact person's name for admin review.</small></label>
+              <label>Business phone <span className="required">*</span><input type="tel" value={data.phone} onChange={e=>setData({...data,phone:e.target.value})} autoComplete="tel" inputMode="tel" required/><small>Required for customer contact and seller verification.</small></label>
               <label>Business category <span className="optional">(recommended)</span><select value={data.category} onChange={e=>setData({...data,category:e.target.value})}>{categoryNames.map(c=><option key={c}>{c}</option>)}</select></label>
-              <label>Area / city <span className="optional">(optional)</span><input value={data.location} onChange={e=>setData({...data,location:e.target.value})} placeholder="Example: RS Puram, Coimbatore" autoComplete="address-level2"/></label>
+              <label>Business location <span className="required">*</span><input value={data.location} onChange={e=>setData({...data,location:e.target.value})} placeholder="Example: RS Puram, Coimbatore" autoComplete="street-address" required/><small>Enter the area, town or city where customers can find you.</small></label>
             </div>
             <details className="signup-more-details"><summary>Add more business details now <span>optional</span></summary><div className="form-grid">
               <label>Google Maps / location URL<input type="url" value={data.locationUrl} onChange={e=>setData({...data,locationUrl:e.target.value})} placeholder="Paste a Google Maps share link"/></label>
-              <label>WhatsApp number<input type="tel" value={data.whatsapp} onChange={e=>setData({...data,whatsapp:e.target.value})} autoComplete="tel"/></label>
               <label>Instagram URL<input type="url" value={data.instagram} onChange={e=>setData({...data,instagram:e.target.value})} placeholder="https://instagram.com/…"/></label>
             </div><label>Short business description<textarea value={data.description} onChange={e=>setData({...data,description:e.target.value})} maxLength={300} placeholder="What do you sell or offer?"/></label></details>
 
-            <div className="signup-approval-card"><CheckCircle size={18}/><div><strong>What happens after you submit?</strong><ol><li>Your account is created.</li><li>Your seller profile stays hidden while it is <b>pending approval</b>.</li><li>After NammaSpot admin approval, you can log in and build your public mini website.</li></ol></div></div>
+            <div className="signup-approval-card"><ShieldCheck size={18}/><div><strong>What happens after you submit?</strong><ol><li>Your account is created.</li><li>Your seller profile stays hidden while it is <b>pending approval</b>.</li><li>After NammaSpot admin approval, you can log in and build your public mini website.</li></ol></div></div>
 
             {state.error && <div className="inline-error" role="alert"><AlertCircle size={17}/>{state.error}</div>}
             <div className="button-row signup-actions"><button type="button" className="secondary-button" onClick={()=>setStep(1)}><ArrowLeft size={17}/> Back</button><button className="primary-button" disabled={state.loading||!businessReady}>{state.loading ? "Creating your seller account…" : <><Plus size={18}/> Create seller account</>}</button></div>
-            <p className="signup-footer-note">By creating a seller account, you agree to provide accurate business information. You can update your profile and catalogue after approval.</p>
+            <p className="signup-footer-note">Please enter accurate business information. These details are reviewed by the NammaSpot admin before your seller profile is approved and made public.</p>
           </section>}
         </form>
       )}
@@ -1201,8 +1207,11 @@ function AdminPage() {
                 <article className="dashboard-item" key={seller.id}>
                   <div>
                     <strong>{seller.business_name}</strong>
-                    <p>{seller.category?.name || "Uncategorised"} · {seller.location || "Chennai"}</p>
-                    <small>{seller.contact || "No phone"} · <strong>{seller.verification_status || "pending"}</strong></small>
+                    <p><b>Owner:</b> {seller.owner_name || "Not provided"}</p>
+                    <p><b>Business phone:</b> {seller.contact || "Not provided"}</p>
+                    <p><b>WhatsApp:</b> {seller.whatsapp_phone || seller.contact || "Not provided"}</p>
+                    <p><b>Location:</b> {seller.location || "Not provided"}</p>
+                    <small>{seller.category?.name || "Uncategorised"} · {seller.verification_status || "pending"}</small>
                   </div>
                   <div className="button-row">
                     {seller.verification_status !== "approved" && <button disabled={busy} className="primary-button" onClick={()=>status(seller.id,"approved")}>approve</button>}

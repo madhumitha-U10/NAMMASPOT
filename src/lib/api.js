@@ -109,6 +109,11 @@ function productsOf(rows = []) {
     price: Number(p.price ?? 0),
     available: Boolean(p.availability ?? p.available),
     image_url: p.image_url ?? "",
+    images: Array.isArray(p.product_images) ? p.product_images.map((x) => ({
+      id: x.id,
+      image_url: x.image_url,
+      sort_order: Number(x.sort_order || 0),
+    })) : [],
     category_id: p.category_id ?? null,
     created_at: p.created_at ?? null,
     seller_id: p.seller_id,
@@ -349,6 +354,31 @@ export async function getMySeller() {
   const { data,error } = await client.from("sellers").select(sellerSelect).eq("user_id",session.user.id).maybeSingle();
   if (error) throw error;
   return data ? sellerOf(data) : null;
+}
+
+export async function updateSellerImages(sellerId, values) {
+  if (!supabase) throw new BackendNotConfiguredError();
+  const client = needBackend();
+  const session = await getSession();
+  if (!session?.user) throw new Error("Please sign in.");
+  const { data: current, error: readError } = await client.from("sellers")
+    .select("profile_image_url,cover_image_url")
+    .eq("id", sellerId)
+    .eq("user_id", session.user.id)
+    .single();
+  if (readError) throw readError;
+  const payload = {
+    ...(values.profile_image_url !== undefined ? { profile_image_url: values.profile_image_url || null } : {}),
+    ...(values.cover_image_url !== undefined ? { cover_image_url: values.cover_image_url || null } : {}),
+  };
+  const { data, error } = await client.from("sellers").update(payload).eq("id", sellerId).eq("user_id", session.user.id).select("profile_image_url,cover_image_url").single();
+  if (error) throw error;
+  for (const oldUrl of [current?.profile_image_url, current?.cover_image_url]) {
+    if (oldUrl && !Object.values(payload).includes(oldUrl)) {
+      try { await removeOwnedSellerMedia(oldUrl); } catch {}
+    }
+  }
+  return data;
 }
 
 export async function updateMySeller(sellerId, values) {

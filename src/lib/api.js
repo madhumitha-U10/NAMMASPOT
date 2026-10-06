@@ -71,6 +71,31 @@ function setCurrentDemoUser(user) {
   else localStorage.removeItem(CURRENT_USER_KEY);
 }
 
+const COMMON_PASSWORDS = new Set([
+  "password","password123","password1234","12345678","123456789",
+  "qwerty123","qwertyui","admin123","welcome123","letmein123",
+  "nammaspot","nammaspot123"
+]);
+
+export function validatePassword(password, context = {}) {
+  const value = String(password || "");
+  if (value.length < 10) throw new Error("Password must be at least 10 characters.");
+  if (value.length > 128) throw new Error("Password must be 128 characters or fewer.");
+  if (/\s/.test(value)) throw new Error("Password cannot contain spaces.");
+  if (!/[a-z]/.test(value) || !/[A-Z]/.test(value) || !/[0-9]/.test(value) || !/[^A-Za-z0-9]/.test(value)) {
+    throw new Error("Use uppercase, lowercase, a number and a symbol in your password.");
+  }
+  const lowered = value.toLowerCase();
+  if (COMMON_PASSWORDS.has(lowered)) throw new Error("Choose a less common password.");
+  for (const candidate of [context.nammaspotId, context.email, context.name]) {
+    const part = String(candidate || "").trim().toLowerCase();
+    if (part.length >= 4 && lowered.includes(part)) {
+      throw new Error("Password must not contain your NammaSpot ID, email or name.");
+    }
+  }
+  return true;
+}
+
 function needBackend() {
   if (!supabase) throw new BackendNotConfiguredError();
   return supabase;
@@ -230,7 +255,7 @@ export async function verifySellerPasswordSetupOtp(email, token) {
 
 export async function setSellerPassword(password) {
   if (!supabase) throw new BackendNotConfiguredError();
-  if (String(password || "").length < 8) throw new Error("Password must be at least 8 characters.");
+  validatePassword(password);
   const { data, error } = await supabase.functions.invoke("set-seller-credentials", {
     body: { password },
   });
@@ -241,7 +266,7 @@ export async function setSellerPassword(password) {
 
 export async function startSellerRegistration(values) {
   if (!supabase) throw new BackendNotConfiguredError();
-  if (String(values.password || "").length < 8) throw new Error("Password must be at least 8 characters.");
+  validatePassword(values.password, { nammaspotId: values.nammaspotId, email: values.email, name: values.owner || values.business });
   const client = needBackend();
   const email = normalizeEmail(values.email);
   if (!email || !email.includes("@")) throw new Error("Enter a valid email address.");
@@ -410,6 +435,7 @@ export async function isCurrentUserAdmin() {
 
 export async function changeCurrentUserPassword(newPassword) {
   if (!supabase) throw new BackendNotConfiguredError();
+  validatePassword(newPassword);
   const client = needBackend();
   const { error } = await client.auth.updateUser({ password: newPassword });
   if (error) throw error;

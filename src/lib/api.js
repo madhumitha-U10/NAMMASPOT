@@ -386,9 +386,31 @@ export async function updateProduct(productId,values) {
   if(error) throw error; return productsOf([data])[0];
 }
 
+function sellerMediaPathFromUrl(url, userId) {
+  if (!url || !userId) return null;
+  const marker = "/storage/v1/object/public/seller-media/";
+  const index = String(url).indexOf(marker);
+  if (index < 0) return null;
+  const path = decodeURIComponent(String(url).slice(index + marker.length));
+  return path.startsWith(userId + "/") ? path : null;
+}
+
+async function removeOwnedSellerMedia(url) {
+  const session = await getSession();
+  const path = sellerMediaPathFromUrl(url, session?.user?.id);
+  if (!path) return;
+  const { error } = await supabase.storage.from("seller-media").remove([path]);
+  if (error) throw error;
+}
+
 export async function deleteProduct(productId) {
   if (!supabase) { const state=demoState(); state.products=state.products.filter((p)=>p.id!==productId); saveDemo(state); return; }
-  const client=needBackend(); const {error}=await client.from("products").delete().eq("id",productId); if(error) throw error;
+  const client=needBackend();
+  const { data: product, error: fetchError } = await client.from("products").select("id,image_url").eq("id",productId).single();
+  if (fetchError) throw fetchError;
+  if (product?.image_url) await removeOwnedSellerMedia(product.image_url);
+  const {error}=await client.from("products").delete().eq("id",productId);
+  if(error) throw error;
 }
 
 export async function createEnquiry(values) {

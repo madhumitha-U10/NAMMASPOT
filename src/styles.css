@@ -871,3 +871,43 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .dashboard-product-thumb{width:64px;height:64px;border-radius:12px;object-fit:cover;background:#f1eee7;flex:none}
 .placeholder-thumb{display:grid;place-items:center;color:#8a8279}
 @media(max-width:700px){.profile-media-grid{grid-template-columns:1fr}.profile-media-card{grid-template-columns:76px minmax(0,1fr)}.profile-media-preview{width:76px;height:76px}}
+
+
+/* NammaSpot seller profile — integrated marketplace presentation */
+.ns-seller-profile{max-width:1100px;margin:0 auto;padding:0 20px 80px;background:#faf8f2}
+.ns-profile-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0;border-bottom:1px solid #e5dfd5}
+.ns-profile-brand{font-weight:800;letter-spacing:-.02em;color:#7e2424;font-size:20px}
+.ns-profile-header{display:grid;grid-template-columns:auto 1fr auto;gap:22px;align-items:center;padding:34px 0 26px}
+.ns-profile-avatar{width:112px;height:112px;border-radius:50%;overflow:hidden;background:#eee8df;display:grid;place-items:center;font-size:40px;font-weight:800;color:#7e2424;border:4px solid #fff;box-shadow:0 5px 18px rgba(40,25,15,.08)}
+.ns-profile-avatar img{width:100%;height:100%;object-fit:cover}
+.ns-profile-heading h1{margin:5px 0 7px;font-size:clamp(28px,5vw,46px);letter-spacing:-.04em}
+.ns-profile-heading p{margin:0;color:#6e665f;max-width:680px;line-height:1.6}
+.ns-profile-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:9px}
+.ns-customer-message{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:18px 20px;border:1px solid #e1d7ca;border-radius:18px;background:#fffdf8;margin-bottom:16px}
+.ns-customer-message strong{display:block;font-size:17px;line-height:1.5;margin-top:3px}
+.ns-customer-message p{margin:5px 0 0;color:#756d66;font-size:12px}
+.ns-info-strip{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:34px}
+.ns-info-strip>div{display:flex;align-items:center;gap:8px;padding:11px 13px;border:1px solid #e5dfd5;border-radius:14px;background:#fff}
+.ns-info-strip a{font-size:12px;font-weight:700;color:#7e2424}
+.ns-profile-section{padding:30px 0;border-top:1px solid #e7e0d6}
+.ns-profile-section .section-heading{margin-bottom:18px}
+.ns-profile-section h2{margin:3px 0 6px}
+.ns-profile-section .section-heading p{margin:0;color:#756d66}
+.ns-hours-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ns-hours-grid>div{display:flex;justify-content:space-between;gap:15px;padding:12px 14px;border:1px solid #e6e0d8;border-radius:12px;background:#fff}
+.ns-hours-grid span{color:#665f59;text-align:right}
+.ns-special-dates{display:grid;gap:6px;margin-top:14px;padding:14px;border-radius:14px;background:#f4eee6}
+.ns-special-dates strong{color:#7e2424}
+.ns-special-dates span{font-size:13px;color:#5f5953}
+.ns-contact-section{padding-bottom:40px}
+.ns-contact-section p{color:#706860}
+.ns-profile .microsite-product-card{cursor:pointer}
+@media(max-width:760px){
+  .ns-profile-header{grid-template-columns:1fr;justify-items:start;padding-top:24px}
+  .ns-profile-avatar{width:88px;height:88px;font-size:32px}
+  .ns-profile-actions{justify-content:flex-start}
+  .ns-customer-message{align-items:flex-start;flex-direction:column}
+  .ns-hours-grid{grid-template-columns:1fr}
+  .ns-hours-grid>div{display:grid;gap:4px}
+  .ns-hours-grid span{text-align:left}
+}

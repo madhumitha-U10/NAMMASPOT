@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useState} from "react";
-import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,Clock,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send,Instagram,Heart} from "lucide-react";
+import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,Clock,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send ,Heart} from "lucide-react";
 import {createEnquiry} from "./lib/api";
 import {getMicrosite,sellerPublicUrl} from "./lib/microsite";
 
@@ -74,7 +74,7 @@ export default function SellerMicrositePage({go,slug}){
 
     <section id="catalogue" className="ns-profile-section"><div className="section-heading"><div><div className="eyebrow">NAMMASPOT CATALOGUE</div><h2>Products & services.</h2><p>Browse what this local seller offers and ask them directly.</p></div></div>{products.length?<div className="microsite-product-grid">{products.map(p=><MiniProduct key={p.id} p={p} onOpen={()=>setProduct(p)}/>)}</div>:<div className="empty-state"><h2>Catalogue coming soon</h2><p>This seller has not added products yet.</p></div>}</section>
 
-    <section className="ns-profile-section ns-contact-section"><div className="eyebrow">CONNECT WITH THE SELLER</div><h2>Need to ask something?</h2><p>Message the seller about products, availability, custom orders or timing.</p><div className="microsite-contact-actions">{seller.contact&&<a className="primary-button" href={"tel:"+seller.contact}><Phone size={16}/> Call</a>}{wa&&<a className="secondary-button" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a>}{seller.instagram_url&&<a className="secondary-button" href={seller.instagram_url} target="_blank" rel="noreferrer"><Instagram size={16}/> Instagram</a>}<button className="primary-button" onClick={()=>setEnquire("general")}><Send size={16}/> Send enquiry</button></div></section>
+    <section className="ns-profile-section ns-contact-section"><div className="eyebrow">CONNECT WITH THE SELLER</div><h2>Need to ask something?</h2><p>Message the seller about products, availability, custom orders or timing.</p><div className="microsite-contact-actions">{seller.contact&&<a className="primary-button" href={"tel:"+seller.contact}><Phone size={16}/> Call</a>}{wa&&<a className="secondary-button" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a>}{seller.instagram_url&&<a className="secondary-button" href={seller.instagram_url} target="_blank" rel="noreferrer">Instagram Instagram</a>}<button className="primary-button" onClick={()=>setEnquire("general")}><Send size={16}/> Send enquiry</button></div></section>
     <footer className="microsite-footer">NammaSpot · Local sellers, catalogues & connections</footer>
     {product&&<ProductModal product={product} onClose={()=>setProduct(null)} onEnquire={()=>{setProduct(null);setEnquire(product)}}/>}
     {enquire&&<Enquiry seller={seller} product={enquire==="general"?null:enquire} onClose={()=>setEnquire(null)}/>}

@@ -47,7 +47,7 @@ import {
   adminOtpUsageAlerts,
   uploadSellerMedia
 } from "./lib/api";
-import { categoryNames } from "./lib/seed";
+import { categoryNames } from "./lib/seed";\nimport { formatBytes, SELLER_STORAGE_QUOTA_LABEL, SELLER_STORAGE_WARNING_LABEL, MAX_SELLER_IMAGE_LABEL } from "./lib/storage";
 
 const popularCategories = ["Bakery", "Mehendi", "Crochet", "Makeup", "Art"];
 
@@ -721,7 +721,7 @@ function DashboardPage({ go }) {
       </div>
 
       {tab==="profile" && <ProfileEditor seller={seller} categories={categories} onSaved={(next)=>setSeller((current)=>({...current,...next}))}/>}
-      {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} onChange={setProducts}/>}
+      {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} storageUsage={storageUsage} onStorageUsageChange={setStorageUsage} onChange={setProducts}/>}
       {tab==="enquiries" && <EnquiryManager enquiries={enquiries} onChange={setEnquiries}/>}
       {tab==="public" && <PublicTools seller={seller} go={go}/>}
     </main>
@@ -772,11 +772,11 @@ function ProfileEditor({ seller,categories,onSaved }) {
   );
 }
 
-function ProductManager({ seller, products, categories, onChange }) {
+function ProductManager({ seller, products, categories, storageUsage, onStorageUsageChange, onChange }) {
   const blank={product_name:"",description:"",price:"",availability:true,image_url:"",category_id:""};
   const [form,setForm]=useState(blank);
   const [editing,setEditing]=useState(null);
-  const [state,setState]=useState({loading:false,error:""});
+  const [state,setState]=useState({loading:false,error:""});\n\n  useEffect(() => {\n    getSellerStorageUsage().then(onStorageUsageChange).catch(() => {});\n  }, [onStorageUsageChange]);
 
   const submit=async(event)=>{
     event.preventDefault();
@@ -826,7 +826,7 @@ function ProductManager({ seller, products, categories, onChange }) {
           <label>Price ₹ *<input type="number" min="0" step="0.01" value={form.price} onChange={(e)=>setForm({...form,price:e.target.value})} required/></label>
           <label>Category<select value={form.category_id} onChange={(e)=>setForm({...form,category_id:e.target.value})}><option value="">Optional</option>{categories.map((c)=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
           <label>Image URL<input type="url" value={form.image_url} onChange={(e)=>setForm({...form,image_url:e.target.value})} placeholder="https://…"/></label>
-          <label>Upload image<input type="file" accept="image/*" onChange={upload}/></label>
+          <label>Upload image<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={upload}/><small className="field-help">JPG, PNG or WebP · selected file up to 10 MB · stored at 500 KB or less</small></label>
         </div>
         <label>Description<textarea value={form.description} onChange={(e)=>setForm({...form,description:e.target.value})} maxLength={1000}/></label>
         <label className="check-row"><input type="checkbox" checked={form.availability} onChange={(e)=>setForm({...form,availability:e.target.checked})}/> Available</label>

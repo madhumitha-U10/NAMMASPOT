@@ -29,6 +29,7 @@ import {
   verifySellerRegistrationOtp,
   signOut,
   updateMySeller,
+  updateSellerImages,
   listMyProducts,
   createProduct,
   updateProduct,
@@ -52,6 +53,7 @@ import {
   getSellerStorageUsage
 } from "./lib/api";
 import { categoryNames } from "./lib/seed";
+import { addProductGalleryImage, deleteProductGalleryImage } from "./lib/microsite";
 import { formatBytes, SELLER_STORAGE_QUOTA_LABEL, SELLER_STORAGE_WARNING_LABEL, MAX_SELLER_IMAGE_LABEL } from "./lib/storage";
 
 const popularCategories = ["Bakery", "Mehendi", "Crochet", "Makeup", "Art"];
@@ -827,24 +829,53 @@ function ProfileEditor({ seller,categories,onSaved }) {
     business_name:seller.business_name, owner_name:seller.owner_name, category_id:seller.category_id || "",
     location:seller.location || "", location_url:seller.location_url || "", city:seller.city || "Chennai",
     description:seller.description || "", contact:seller.phone || "", whatsapp_phone:seller.whatsapp_phone || "",
-    instagram_url:seller.instagram_url || "", opening_time:seller.opening_time || "", closing_time:seller.closing_time || ""
+    instagram_url:seller.instagram_url || "", opening_time:seller.opening_time || "", closing_time:seller.closing_time || "",
+    profile_image_url:seller.profile_image_url || "", cover_image_url:seller.cover_image_url || ""
   });
-  const [state,setState] = useState({saving:false,error:"",success:""});
-
+  const [state,setState] = useState({saving:false,error:"",success:"",imageBusy:""});
+  const uploadImage = async (event, kind) => {
+    const file=event.target.files?.[0];
+    event.target.value="";
+    if(!file) return;
+    if(!["image/jpeg","image/png","image/webp"].includes(file.type)){setState(s=>({...s,error:"Unsupported image format. Use JPG, PNG or WebP."}));return;}
+    if(file.size>10*1024*1024){setState(s=>({...s,error:"This image is over 10 MB. Please choose a smaller image."}));return;}
+    setState(s=>({...s,error:"",imageBusy:kind}));
+    try{
+      const profile=await getCurrentProfile();
+      const url=await uploadSellerMedia(file,profile.id);
+      if(!url) throw new Error("Could not upload the image.");
+      const next=await updateSellerImages(seller.id,kind==="profile"?{profile_image_url:url}:{cover_image_url:url});
+      setData(d=>({...d,...next}));
+      onSaved(next);
+      setState(s=>({...s,imageBusy:"",success:kind==="profile"?"Logo/profile image updated.":"Cover image updated."}));
+    }catch(error){setState(s=>({...s,imageBusy:"",error:friendlyError(error),success:""}));}
+  };
   const save = async (event) => {
     event.preventDefault();
-    setState({saving:true,error:"",success:""});
+    setState({saving:true,error:"",success:"",imageBusy:""});
     try {
       const next = await updateMySeller(seller.id,data);
       onSaved(next);
-      setState({saving:false,error:"",success:"Profile saved."});
+      setState({saving:false,error:"",success:"Profile saved.",imageBusy:""});
     } catch (error) {
-      setState({saving:false,error:friendlyError(error),success:""});
+      setState({saving:false,error:friendlyError(error),success:"",imageBusy:""});
     }
   };
-
   return (
     <form className="seller-form" onSubmit={save}>
+      <div className="profile-media-grid">
+        <div className="profile-media-card">
+          <div className="profile-media-preview">{data.profile_image_url?<img src={data.profile_image_url} alt="Business logo" />:<Store size={34}/>}</div>
+          <div><strong>Business logo / profile image</strong><small>Shown beside your business name on your public NammaSpot website.</small></div>
+          <label className="secondary-button upload-button">{state.imageBusy==="profile"?"Uploading…":"Upload logo"}<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e,"profile")} hidden disabled={Boolean(state.imageBusy)}/></label>
+        </div>
+        <div className="profile-media-card profile-cover-card">
+          <div className="profile-cover-preview">{data.cover_image_url?<img src={data.cover_image_url} alt="Business cover" />:<span>Cover image preview</span>}</div>
+          <div><strong>Website cover image</strong><small>Used as the large banner on your mini website.</small></div>
+          <label className="secondary-button upload-button">{state.imageBusy==="cover"?"Uploading…":"Upload cover"}<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e,"cover")} hidden disabled={Boolean(state.imageBusy)}/></label>
+        </div>
+      </div>
+      <div className="image-upload-note">JPG, PNG or WebP · selected file up to 10 MB · automatically optimized before storage.</div>
       <div className="form-grid">
         <label>Business name *<input value={data.business_name} onChange={(e)=>setData({...data,business_name:e.target.value})} required/></label>
         <label>Owner name *<input value={data.owner_name} onChange={(e)=>setData({...data,owner_name:e.target.value})} required/></label>
@@ -861,7 +892,7 @@ function ProfileEditor({ seller,categories,onSaved }) {
       <label>Description *<textarea value={data.description} onChange={(e)=>setData({...data,description:e.target.value})} maxLength={600} required/></label>
       {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
       {state.success && <div className="form-status"><CheckCircle size={18}/>{state.success}</div>}
-      <button className="primary-button" disabled={state.saving}>{state.saving ? "Saving…" : "Save profile"}</button>
+      <button className="primary-button" disabled={state.saving||Boolean(state.imageBusy)}>{state.saving ? "Saving…" : "Save profile"}</button>
     </form>
   );
 }
@@ -871,6 +902,7 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
   const [form,setForm]=useState(blank);
   const [editing,setEditing]=useState(null);
   const [state,setState]=useState({loading:false,error:""});
+  const [galleryBusy,setGalleryBusy]=useState(false);
 
   useEffect(() => {
     getSellerStorageUsage().then(onStorageUsageChange).catch(() => {});
@@ -892,6 +924,34 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
   const edit=(product)=>{
     setEditing(product.id);
     setForm({product_name:product.name,description:product.description,price:product.price,availability:product.available,image_url:product.image_url || "",category_id:product.category_id || ""});
+  };
+
+  const uploadGallery = async (event) => {
+    const file=event.target.files?.[0];
+    event.target.value="";
+    if(!file || !editing) return;
+    if(!["image/jpeg","image/png","image/webp"].includes(file.type)){setState({loading:false,error:"Unsupported image format. Use JPG, PNG or WebP."});return;}
+    if(file.size>10*1024*1024){setState({loading:false,error:"This image is over 10 MB. Please choose a smaller image."});return;}
+    setGalleryBusy(true); setState({loading:false,error:""});
+    try{
+      const session=await getCurrentProfile();
+      const url=await uploadSellerMedia(file,session.id);
+      const current=products.find(p=>p.id===editing);
+      const order=(current?.images||[]).length;
+      await addProductGalleryImage(editing,seller.id,url,order);
+      const next=products.map(p=>p.id===editing?{...p,images:[...(p.images||[]),{id:"new-"+Date.now(),image_url:url,sort_order:order}]}:p);
+      onChange(next);
+      try{onStorageUsageChange(await getSellerStorageUsage());}catch{}
+    }catch(error){setState({loading:false,error:friendlyError(error)});}
+    finally{setGalleryBusy(false);}
+  };
+  const removeGallery = async (image) => {
+    if(!window.confirm("Remove this catalogue image?")) return;
+    try{
+      await deleteProductGalleryImage(image.id);
+      const next=products.map(p=>p.id===editing?{...p,images:(p.images||[]).filter(x=>x.id!==image.id)}:p);
+      onChange(next);
+    }catch(error){setState({loading:false,error:friendlyError(error)});}
   };
 
   const remove=async(id)=>{
@@ -933,17 +993,23 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
           <label>Price ₹ *<input type="number" min="0" step="0.01" value={form.price} onChange={(e)=>setForm({...form,price:e.target.value})} required/></label>
           <label>Category<select value={form.category_id} onChange={(e)=>setForm({...form,category_id:e.target.value})}><option value="">Optional</option>{categories.map((c)=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
           <label>Image URL<input type="url" value={form.image_url} onChange={(e)=>setForm({...form,image_url:e.target.value})} placeholder="https://…"/></label>
-          <label>Upload image<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={upload}/><small className="field-help">JPG, PNG or WebP · selected file up to 10 MB · stored at 500 KB or less</small></label>
+          <label>Upload primary image<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={upload}/><small className="field-help">This is the main catalogue image. JPG, PNG or WebP · selected file up to 10 MB · stored at 500 KB or less.</small></label>
         </div>
         <label>Description<textarea value={form.description} onChange={(e)=>setForm({...form,description:e.target.value})} maxLength={1000}/></label>
         <label className="check-row"><input type="checkbox" checked={form.availability} onChange={(e)=>setForm({...form,availability:e.target.checked})}/> Available</label>
+        {editing && <div className="catalogue-gallery-editor">
+          <div><strong>More catalogue images</strong><small>Add extra photos for this product. Customers can swipe through them on your public mini website.</small></div>
+          <div className="catalogue-gallery-grid">{(products.find(p=>p.id===editing)?.images||[]).map(img=><div className="catalogue-gallery-thumb" key={img.id}><img src={img.image_url} alt="" /><button type="button" className="danger-button" onClick={()=>removeGallery(img)} aria-label="Remove catalogue image"><Trash2 size={14}/></button></div>)}
+            <label className="catalogue-upload-tile">{galleryBusy?"Uploading…":"＋ Add image"}<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={uploadGallery} hidden disabled={galleryBusy}/></label>
+          </div>
+        </div>}
         {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
         <div className="button-row"><button className="primary-button" disabled={state.loading}>{state.loading ? "Saving…" : editing ? "Update product" : "Add product"}</button>{editing&&<button type="button" className="secondary-button" onClick={()=>{setEditing(null);setForm(blank);}}>Cancel</button>}</div>
       </form>
       <div className="dashboard-list">
         {products.length ? products.map((product)=>
           <article className="dashboard-item" key={product.id}>
-            <div><strong>{product.name}</strong><p>₹{product.price} · {product.available?"Available":"Unavailable"}</p><small>{product.description}</small></div>
+            <div className="dashboard-product-row">{product.image_url?<img className="dashboard-product-thumb" src={product.image_url} alt="" />:<div className="dashboard-product-thumb placeholder-thumb"><Store size={20}/></div>}<div><strong>{product.name}</strong><p>₹{product.price} · {product.available?"Available":"Unavailable"} · {(product.images||[]).length+ (product.image_url?1:0)} image{((product.images||[]).length+ (product.image_url?1:0))===1?"":"s"}</p><small>{product.description}</small></div></div>
             <div className="button-row"><button className="secondary-button" onClick={()=>edit(product)}><Pencil size={15}/> Edit</button><button className="danger-button" onClick={()=>remove(product.id)}><Trash2 size={15}/> Delete</button></div>
           </article>
         ) : <Empty title="No products added" text="Add your first product to publish your catalogue."/>}

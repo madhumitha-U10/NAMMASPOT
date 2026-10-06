@@ -819,3 +819,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   .admin-console-nav{grid-template-columns:1fr 1fr;padding-top:14px}
   .admin-console-sidebar-bottom{grid-template-columns:1fr 1fr;margin-top:10px;padding-top:10px}
 }
+
+
+.signup-trust-note,.login-identity-card{display:flex;gap:12px;align-items:flex-start;border:1px solid rgba(126,36,36,.14);background:rgba(126,36,36,.045);padding:14px 16px;border-radius:16px;margin-bottom:18px}
+.signup-trust-note svg,.login-identity-card svg{flex:0 0 auto;margin-top:2px}
+.signup-trust-note div,.login-identity-card div{display:grid;gap:3px}
+.signup-trust-note span,.login-identity-card span{font-size:.88rem;opacity:.72;line-height:1.45}
+.seller-form label small{display:block;margin-top:6px;font-size:.76rem;opacity:.65}
+.login-help{font-size:.82rem;line-height:1.5;opacity:.68;text-align:center;margin:2px 0 0}

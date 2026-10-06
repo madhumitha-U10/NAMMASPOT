@@ -586,7 +586,7 @@ function RegisterPage({ go }) {
   const [showPassword,setShowPassword] = useState(false);
   const [step,setStep] = useState(1);
 
-  const idValue = data.nammaspotId.toUpperCase().replace(/\s/g,"");
+  const idValue = data.nammaspotId.toLowerCase().replace(/\s/g,"");
   const passwordChecks = {
     length: data.password.length >= 10,
     lower: /[a-z]/.test(data.password),
@@ -595,7 +595,7 @@ function RegisterPage({ go }) {
     symbol: /[^A-Za-z0-9]/.test(data.password),
     noSpace: !/\s/.test(data.password),
   };
-  const accountReady = /^NS-[A-Z0-9_-]{6,20}$/.test(idValue) && Object.values(passwordChecks).every(Boolean);
+  const validId = /^ns-[a-z0-9_-]{6,20}$/.test(idValue);\n  const validPhone = data.phone.replace(/\\D/g,"").length >= 10;\n  const validWhatsapp = data.whatsapp.replace(/\\D/g,"").length >= 10;\n  const accountReady = validId && Object.values(passwordChecks).every(Boolean);
   const businessReady = Boolean(
     data.business.trim() &&
     data.owner.trim() &&
@@ -655,8 +655,8 @@ function RegisterPage({ go }) {
           <CheckCircle size={34}/>
           <h2>Account created</h2>
           <p>{state.success}</p>
-          <div className="created-id"><span>Your NammaSpot ID</span><strong>{state.nammaspotId}</strong></div>
-          <p className="muted-note">Save this ID. You will use it with your password every time you sign in.</p>
+          <div className="created-id"><span>Your NammaSpot ID</span><strong>{String(state.nammaspotId || "").toLowerCase()}</strong></div>
+          <p className="muted-note">Save this ID. You will use it with your password every time you sign in. Your ID is shown in lowercase here; NammaSpot accepts it when you log in.</p>
           <div className="button-row"><button className="primary-button" onClick={()=>go("/login")}><LogIn size={17}/> Go to seller login</button><button className="secondary-button" onClick={()=>go("/")}><Home size={17}/> Back to home</button></div>
         </section>
       ) : (
@@ -666,10 +666,10 @@ function RegisterPage({ go }) {
           {step===1 && <section className="signup-section">
             <div className="signup-section-heading"><span className="signup-number">1</span><div><h2>Create your login</h2><p>This is how you will access your seller dashboard later.</p></div></div>
             <label>Choose your NammaSpot ID <span className="required">*</span>
-              <input value={data.nammaspotId} onChange={e=>setData({...data,nammaspotId:e.target.value.toUpperCase().replace(/\s/g,"")})} placeholder="Example: NS-000001" maxLength={40} autoCapitalize="characters" spellCheck="false" required aria-describedby="id-help"/>
-              <small id="id-help">Your NammaSpot ID is your username for login. Use NS- followed by 6–20 letters, numbers, _ or -.</small>
+              <input value={data.nammaspotId} onChange={e=>setData({...data,nammaspotId:e.target.value.toUpperCase().replace(/\s/g,"")})} placeholder="Example: ns-000001" maxLength={40} autoCapitalize="characters" spellCheck="false" required aria-describedby="id-help"/>
+              <small id="id-help">Your NammaSpot ID is your username for login. Use ns- followed by 6–20 lowercase letters, numbers, _ or -.</small>
             </label>
-            <div className={idValue && !/^NS-[A-Z0-9_-]{6,20}$/.test(idValue) ? "field-feedback error":"field-feedback"}>{idValue ? (/^NS-[A-Z0-9_-]{6,20}$/.test(idValue) ? "✓ This ID format is ready to use" : "Use NS- followed by 6–20 letters, numbers, _ or -") : "Example: NS-000001"}</div>
+            <div className={idValue && !/^NS-[A-Z0-9_-]{6,20}$/.test(idValue) ? "field-feedback error":"field-feedback"}>{idValue ? (validId ? "✓ This ID format is ready to use" : "Use ns- followed by 6–20 lowercase letters, numbers, _ or -") : "Example: NS-000001"}</div>
 
             <label>Create your password <span className="required">*</span>
               <div className="password-input-wrap"><input type={showPassword?"text":"password"} value={data.password} onChange={e=>setData({...data,password:e.target.value})} autoComplete="new-password" spellCheck="false" autoCapitalize="off" aria-describedby="password-help" required/><button type="button" className="password-toggle" onClick={()=>setShowPassword(v=>!v)} aria-label={showPassword?"Hide password":"Show password"}>{showPassword?<EyeOff size={17}/>:<Eye size={17}/>}</button></div>
@@ -696,10 +696,11 @@ function RegisterPage({ go }) {
               <small>This is the name customers will see on your NammaSpot mini website.</small>
             </label>
             <div className="form-grid">
-              <label>Your name <span className="required">*</span><input value={data.owner} onChange={e=>setData({...data,owner:e.target.value})} maxLength={120} autoComplete="name" required/><small>We need the owner/contact person's name for admin review.</small></label>
-              <label>Business phone <span className="required">*</span><input type="tel" value={data.phone} onChange={e=>setData({...data,phone:e.target.value})} autoComplete="tel" inputMode="tel" required/><small>Required for customer contact and seller verification.</small></label>
-              <label>Business category <span className="optional">(recommended)</span><select value={data.category} onChange={e=>setData({...data,category:e.target.value})}>{categoryNames.map(c=><option key={c}>{c}</option>)}</select></label>
-              <label>Business location <span className="required">*</span><input value={data.location} onChange={e=>setData({...data,location:e.target.value})} placeholder="Example: RS Puram, Coimbatore" autoComplete="street-address" required/><small>Enter the area, town or city where customers can find you.</small></label>
+              <label>Your name <span className="required">*</span><input value={data.owner} onChange={e=>setData({...data,owner:e.target.value})} maxLength={120} autoComplete="name" required/><small>The name of the owner or main business contact.</small></label>
+              <label>Business phone <span className="required">*</span><input type="tel" value={data.phone} onChange={e=>setData({...data,phone:e.target.value})} autoComplete="tel" inputMode="tel" maxLength={20} required aria-describedby="phone-help"/><small id="phone-help">Enter a reachable 10-digit Indian mobile/phone number.</small>{data.phone && !validPhone && <span className="field-feedback error">Enter at least 10 digits.</span>}</label>
+              <label>WhatsApp number <span className="required">*</span><input type="tel" value={data.whatsapp} onChange={e=>setData({...data,whatsapp:e.target.value})} autoComplete="tel" inputMode="tel" maxLength={20} required aria-describedby="whatsapp-help"/><small id="whatsapp-help">Use the number customers should message on WhatsApp.</small>{data.whatsapp && !validWhatsapp && <span className="field-feedback error">Enter at least 10 digits.</span>}</label>
+              <label>Business category <span className="optional">(recommended)</span><select value={data.category} onChange={e=>setData({...data,category:e.target.value})}>{categoryNames.map(c=><option key={c}>{c}</option>)}</select><small>Choose the category that best describes your business.</small></label>
+              <label>Business location <span className="required">*</span><input value={data.location} onChange={e=>setData({...data,location:e.target.value})} placeholder="Example: RS Puram, Coimbatore" autoComplete="street-address" maxLength={240} required/><small>Area, town or city where customers can find you.</small></label>
             </div>
             <details className="signup-more-details"><summary>Add more business details now <span>optional</span></summary><div className="form-grid">
               <label>Google Maps / location URL<input type="url" value={data.locationUrl} onChange={e=>setData({...data,locationUrl:e.target.value})} placeholder="Paste a Google Maps share link"/></label>

@@ -45,8 +45,11 @@ import {
   adminDeleteCategory,
   adminStorageUsage,
   adminOtpUsageAlerts,
-  uploadSellerMedia,\n  getSellerStorageUsage\n} from "./lib/api";
-import { categoryNames } from "./lib/seed";\nimport { formatBytes, SELLER_STORAGE_QUOTA_LABEL, SELLER_STORAGE_WARNING_LABEL, MAX_SELLER_IMAGE_LABEL } from "./lib/storage";
+  uploadSellerMedia,
+  getSellerStorageUsage
+} from "./lib/api";
+import { categoryNames } from "./lib/seed";
+import { formatBytes, SELLER_STORAGE_QUOTA_LABEL, SELLER_STORAGE_WARNING_LABEL, MAX_SELLER_IMAGE_LABEL } from "./lib/storage";
 
 const popularCategories = ["Bakery", "Mehendi", "Crochet", "Makeup", "Art"];
 
@@ -775,7 +778,11 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
   const blank={product_name:"",description:"",price:"",availability:true,image_url:"",category_id:""};
   const [form,setForm]=useState(blank);
   const [editing,setEditing]=useState(null);
-  const [state,setState]=useState({loading:false,error:""});\n\n  useEffect(() => {\n    getSellerStorageUsage().then(onStorageUsageChange).catch(() => {});\n  }, [onStorageUsageChange]);
+  const [state,setState]=useState({loading:false,error:""});
+
+  useEffect(() => {
+    getSellerStorageUsage().then(onStorageUsageChange).catch(() => {});
+  }, [onStorageUsageChange]);
 
   const submit=async(event)=>{
     event.preventDefault();

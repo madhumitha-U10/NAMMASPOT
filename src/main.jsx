@@ -45,8 +45,7 @@ import {
   adminDeleteCategory,
   adminStorageUsage,
   adminOtpUsageAlerts,
-  uploadSellerMedia
-} from "./lib/api";
+  uploadSellerMedia,\n  getSellerStorageUsage\n} from "./lib/api";
 import { categoryNames } from "./lib/seed";\nimport { formatBytes, SELLER_STORAGE_QUOTA_LABEL, SELLER_STORAGE_WARNING_LABEL, MAX_SELLER_IMAGE_LABEL } from "./lib/storage";
 
 const popularCategories = ["Bakery", "Mehendi", "Crochet", "Makeup", "Art"];

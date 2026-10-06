@@ -565,14 +565,13 @@ function EnquiryModal({ seller, product, onClose }) {
 }
 
 function RegisterPage({ go }) {
-  const [data,setData] = useState({business:"",owner:"",email:"",phone:"",password:"",confirmPassword:"",category:"Handmade",location:"",locationUrl:"",description:"",whatsapp:"",instagram:""});
-  const [otpStep,setOtpStep] = useState(false);
+  const [data,setData] = useState({nammaspotId:"",business:"",owner:"",phone:"",password:"",confirmPassword:"",category:"Handmade",location:"",locationUrl:"",description:"",whatsapp:"",instagram:""});
   const [state,setState] = useState({loading:false,error:"",success:"",nammaspotId:""});
 
   const submit = async (event) => {
     event.preventDefault();
-    if (data.password.length < 8) {
-      setState({loading:false,error:"Password must be at least 8 characters.",success:"",nammaspotId:""});
+    if (!/^NS-[A-Z0-9_-]{6,20}$/.test(data.nammaspotId.trim().toUpperCase())) {
+      setState({loading:false,error:"Choose a NammaSpot ID such as NS-000001.",success:"",nammaspotId:""});
       return;
     }
     if (data.password !== data.confirmPassword) {
@@ -581,24 +580,11 @@ function RegisterPage({ go }) {
     }
     setState({loading:true,error:"",success:"",nammaspotId:""});
     try {
-      await startSellerRegistration(data);
-      setState({loading:false,error:"",success:"OTP sent to your email address.",nammaspotId:""});
-      setOtpStep(true);
-    } catch (error) {
-      setState({loading:false,error:friendlyError(error),success:"",nammaspotId:""});
-    }
-  };
-
-  const verify = async (event) => {
-    event.preventDefault();
-    setState((current)=>({...current,loading:true,error:"",success:""}));
-    try {
-      await verifySellerRegistrationOtp(data.email, data.otp);
+      const result = await startSellerRegistration(data);
       const seller = await getMySeller();
-      await setSellerPassword(data.password);
       await signOut();
-      setState({loading:false,error:"",success:"Registration verified. Your NammaSpot ID is " + (seller?.nammaspot_id || "being assigned") + ". Your profile is now pending admin approval.",nammaspotId:seller?.nammaspot_id || ""});
-      setOtpStep(false);
+      const assignedId = seller?.nammaspot_id || result.nammaspotId;
+      setState({loading:false,error:"",success:"Your NammaSpot account is created and waiting for admin approval.",nammaspotId:assignedId});
     } catch (error) {
       setState({loading:false,error:friendlyError(error),success:"",nammaspotId:""});
     }
@@ -607,47 +593,47 @@ function RegisterPage({ go }) {
   return (
     <main className="page form-page">
       <button className="back-button" onClick={()=>go("/")}><ArrowLeft size={17}/> Home</button>
-      <div className="page-title"><div className="eyebrow">FOR LOCAL MAKERS</div><h1>Get your NammaSpot ID.</h1><p>Simple signup. Verify your email. Wait for admin approval.</p></div>
-      {!otpStep ? (
-        <form className="seller-form" onSubmit={submit}>
-          <div className="form-grid">
-            <label>Business name *<input value={data.business} onChange={(e)=>setData({...data,business:e.target.value})} maxLength={160} required/></label>
-            <label>Your name (optional)<input value={data.owner} onChange={(e)=>setData({...data,owner:e.target.value})} maxLength={120} required/></label>
-            <label>Email address *<input type="email" value={data.email} onChange={(e)=>setData({...data,email:e.target.value})} placeholder="you@gmail.com" autoComplete="email" required/></label>
-            <label>Business phone (optional)<input type="tel" value={data.phone} onChange={(e)=>setData({...data,phone:e.target.value})} placeholder="For customer contact / WhatsApp"/></label>
-            <label>Password *<input type="password" autoComplete="new-password" value={data.password} onChange={(e)=>setData({...data,password:e.target.value})} placeholder="At least 8 characters" minLength={8} required/></label>
-            <label>Confirm password *<input type="password" autoComplete="new-password" value={data.confirmPassword} onChange={(e)=>setData({...data,confirmPassword:e.target.value})} placeholder="Re-enter password" minLength={8} required/></label>
-            <label>Category<select value={data.category} onChange={(e)=>setData({...data,category:e.target.value})}>{categoryNames.map((c)=><option key={c}>{c}</option>)}</select></label>
-            <label>Location<input value={data.location} onChange={(e)=>setData({...data,location:e.target.value})} placeholder="Anna Nagar, Chennai"/></label>
-            <label>Location URL<input type="url" value={data.locationUrl} onChange={(e)=>setData({...data,locationUrl:e.target.value})} placeholder="Google Maps URL (optional)"/></label>
-            <label>WhatsApp<input type="tel" value={data.whatsapp} onChange={(e)=>setData({...data,whatsapp:e.target.value})} placeholder="Optional"/></label>
-            <label>Instagram URL<input type="url" value={data.instagram} onChange={(e)=>setData({...data,instagram:e.target.value})} placeholder="https://instagram.com/…"/></label>
+      <div className="page-title">
+        <div className="eyebrow">FOR LOCAL MAKERS</div>
+        <h1>Get your NammaSpot ID.</h1>
+        <p>No email or OTP. Create your seller account, then wait for admin approval.</p>
+      </div>
+
+      <form className="seller-form" onSubmit={submit}>
+        <div className="signup-trust-note">
+          <ShieldCheck size={18}/>
+          <div><strong>Simple & local.</strong><span>Your NammaSpot ID is your login. Your profile stays hidden until an admin approves it.</span></div>
+        </div>
+        <div className="form-grid">
+          <label>NammaSpot ID *<input value={data.nammaspotId} onChange={(e)=>setData({...data,nammaspotId:e.target.value.toUpperCase().replace(/\\s/g,"")})} placeholder="NS-000001" maxLength={40} required/><small>6–20 characters after NS-. Use letters, numbers, _ or -.</small></label>
+          <label>Business name *<input value={data.business} onChange={(e)=>setData({...data,business:e.target.value})} maxLength={160} required/></label>
+          <label>Your name (optional)<input value={data.owner} onChange={(e)=>setData({...data,owner:e.target.value})} maxLength={120}/></label>
+          <label>Business phone (optional)<input type="tel" value={data.phone} onChange={(e)=>setData({...data,phone:e.target.value})} placeholder="For customer contact / WhatsApp"/></label>
+          <label>Password *<input type="password" autoComplete="new-password" value={data.password} onChange={(e)=>setData({...data,password:e.target.value})} placeholder="10+ chars, upper/lower/number/symbol" required/></label>
+          <label>Confirm password *<input type="password" autoComplete="new-password" value={data.confirmPassword} onChange={(e)=>setData({...data,confirmPassword:e.target.value})} placeholder="Re-enter password" required/></label>
+          <label>Category<select value={data.category} onChange={(e)=>setData({...data,category:e.target.value})}>{categoryNames.map((c)=><option key={c}>{c}</option>)}</select></label>
+          <label>Location<input value={data.location} onChange={(e)=>setData({...data,location:e.target.value})} placeholder="Anna Nagar, Chennai"/></label>
+          <label>Location URL<input type="url" value={data.locationUrl} onChange={(e)=>setData({...data,locationUrl:e.target.value})} placeholder="Google Maps URL (optional)"/></label>
+          <label>WhatsApp<input type="tel" value={data.whatsapp} onChange={(e)=>setData({...data,whatsapp:e.target.value})} placeholder="Optional"/></label>
+          <label>Instagram URL<input type="url" value={data.instagram} onChange={(e)=>setData({...data,instagram:e.target.value})} placeholder="https://instagram.com/…"/></label>
+        </div>
+        <label>About your business (optional)<textarea value={data.description} onChange={(e)=>setData({...data,description:e.target.value})} maxLength={300}/></label>
+        {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
+        {state.success && (
+          <div className="form-status">
+            <CheckCircle size={18}/>
+            <div><strong>{state.success}</strong><br/>Your login ID: <strong>{state.nammaspotId}</strong>. Save it somewhere safe.</div>
           </div>
-          <label>About your business (optional)<textarea value={data.description} onChange={(e)=>setData({...data,description:e.target.value})} maxLength={300} required/></label>
-          {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
-          {state.success && <div className="form-status"><CheckCircle size={18}/>{state.success}</div>}
-          <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Sending OTP…" : <><Plus size={18}/> Continue with email</>}</button>
-        </form>
-      ) : (
-        <form className="seller-form narrow-card" onSubmit={verify}>
-          <div className="eyebrow">VERIFY EMAIL</div>
-          <h2>Enter the 6-digit code</h2>
-          <p>We sent a 6-digit verification code to your email address.</p>
-          <label>OTP<input inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={data.otp || ""} onChange={(e)=>setData({...data,otp:e.target.value.replace(/\D/g,"").slice(0,6)})} required/></label>
-          {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
-          <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Verifying…" : "Verify & submit"}</button>
-          <button type="button" className="secondary-button full-button" onClick={()=>setOtpStep(false)}>Change email</button>
-        </form>
-      )}
+        )}
+        <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Creating your spot…" : <><Plus size={18}/> Create seller account</>}</button>
+        {state.success && <button type="button" className="secondary-button full-button" onClick={()=>go("/login")}>Go to seller login</button>}
+      </form>
     </main>
   );
 }
 
 function LoginPage({ go, onSignedIn }) {
   const [data,setData] = useState({nammaspotId:"",password:""});
-  const [setup,setSetup] = useState(false);
-  const [setupStep,setSetupStep] = useState(false);
-  const [setupData,setSetupData] = useState({nammaspotId:"",email:"",otp:"",password:"",confirmPassword:""});
   const [state,setState] = useState({loading:false,error:""});
 
   const submit = async (event) => {
@@ -660,7 +646,7 @@ function LoginPage({ go, onSignedIn }) {
       const seller = await getMySeller();
       if (seller?.verification_status !== "approved") {
         await signOut();
-        throw new Error("Your seller account is not approved yet.");
+        throw new Error("Your seller account is pending admin approval.");
       }
       onSignedIn(profile);
       go("/dashboard");
@@ -669,79 +655,25 @@ function LoginPage({ go, onSignedIn }) {
     }
   };
 
-  const sendSetupOtp = async (event) => {
-    event.preventDefault();
-    setState({loading:true,error:""});
-    try {
-      await startSellerPasswordSetup(setupData.nammaspotId, setupData.email);
-      setSetupStep(true);
-      setState({loading:false,error:""});
-    } catch (error) {
-      setState({loading:false,error:friendlyError(error)});
-    }
-  };
-
-  const finishSetup = async (event) => {
-    event.preventDefault();
-    if (setupData.password.length < 8) {
-      setState({loading:false,error:"Password must be at least 8 characters."});
-      return;
-    }
-    if (setupData.password !== setupData.confirmPassword) {
-      setState({loading:false,error:"Passwords do not match."});
-      return;
-    }
-    setState({loading:true,error:""});
-    try {
-      await verifySellerPasswordSetupOtp(setupData.email, setupData.otp);
-      await setSellerPassword(setupData.password);
-      await signOut();
-      setSetup(false);
-      setSetupStep(false);
-      setState({loading:false,error:""});
-      window.alert("Password created. You can now sign in with only your NammaSpot ID and password.");
-    } catch (error) {
-      setState({loading:false,error:friendlyError(error)});
-    }
-  };
-
-  if (setup) {
-    return (
-      <main className="page form-page narrow">
-        <button className="back-button" onClick={()=>{setSetup(false);setSetupStep(false);setState({loading:false,error:""});}}><ArrowLeft size={17}/> Back to login</button>
-        <div className="page-title"><div className="eyebrow">FIRST-TIME SETUP</div><h1>Create your password.</h1><p>Only existing sellers who do not yet have a password need this one-time email verification.</p></div>
-        {!setupStep ? (
-          <form className="seller-form" onSubmit={sendSetupOtp}>
-            <label>NammaSpot ID<input value={setupData.nammaspotId} onChange={(e)=>setSetupData({...setupData,nammaspotId:e.target.value.toUpperCase()})} placeholder="NS-000001" required/></label>
-            <label>Verified email address<input type="email" value={setupData.email} onChange={(e)=>setSetupData({...setupData,email:e.target.value})} placeholder="you@gmail.com" autoComplete="email" required/></label>
-            {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
-            <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Sending OTP…" : "Verify email"}</button>
-          </form>
-        ) : (
-          <form className="seller-form" onSubmit={finishSetup}>
-            <div className="eyebrow">VERIFY & CREATE PASSWORD</div>
-            <label>OTP<input inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={setupData.otp} onChange={(e)=>setSetupData({...setupData,otp:e.target.value.replace(/\D/g,"").slice(0,6)})} required/></label>
-            <label>New password<input type="password" autoComplete="new-password" minLength={8} value={setupData.password} onChange={(e)=>setSetupData({...setupData,password:e.target.value})} required/></label>
-            <label>Confirm password<input type="password" autoComplete="new-password" minLength={8} value={setupData.confirmPassword} onChange={(e)=>setSetupData({...setupData,confirmPassword:e.target.value})} required/></label>
-            {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
-            <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Creating…" : "Create password"}</button>
-          </form>
-        )}
-      </main>
-    );
-  }
-
   return (
     <main className="page form-page narrow">
       <button className="back-button" onClick={()=>go("/")}><ArrowLeft size={17}/> Home</button>
-      <div className="page-title"><div className="eyebrow">SELLER ACCESS</div><h1>Welcome back.</h1><p>Login uses only your NammaSpot ID and password.</p></div>
+      <div className="page-title">
+        <div className="eyebrow">SELLER ACCESS</div>
+        <h1>Welcome back.</h1>
+        <p>One ID. One password. No email or OTP needed.</p>
+      </div>
       <form className="seller-form" onSubmit={submit}>
-        <label>NammaSpot ID<input value={data.nammaspotId} onChange={(e)=>setData({...data,nammaspotId:e.target.value.toLowerCase()})} placeholder="ns-000001" required/></label>
+        <div className="login-identity-card">
+          <Store size={20}/>
+          <div><strong>NammaSpot seller login</strong><span>Use the NammaSpot ID you created during signup.</span></div>
+        </div>
+        <label>NammaSpot ID<input value={data.nammaspotId} onChange={(e)=>setData({...data,nammaspotId:e.target.value.toUpperCase().replace(/\\s/g,"")})} placeholder="NS-000001" autoCapitalize="characters" required/></label>
         <label>Password<input type="password" autoComplete="current-password" value={data.password} onChange={(e)=>setData({...data,password:e.target.value})} placeholder="Your password" required/></label>
         {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
         <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Signing in…" : <><LogIn size={17}/> Sign in</>}</button>
         <button type="button" className="secondary-button full-button" onClick={()=>go("/register")}>Create seller account</button>
-        <button type="button" className="secondary-button full-button" onClick={()=>{setSetup(true);setState({loading:false,error:""});}}>First-time / forgot password</button>
+        <p className="login-help">Forgot your password? For this free MVP, contact the NammaSpot admin for account recovery.</p>
       </form>
     </main>
   );

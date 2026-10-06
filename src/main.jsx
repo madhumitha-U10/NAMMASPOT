@@ -8,6 +8,9 @@ import {
   Trash2, Pencil, ExternalLink, Clock, Send, AlertCircle
 } from "lucide-react";
 import "./styles.css";
+import "./microsite.css";
+import SellerMicrositePage from "./SellerMicrositePage.jsx";
+import WebsiteEditorPage from "./WebsiteEditorPage.jsx";
 import {
   isSupabaseConfigured,
   BackendNotConfiguredError,
@@ -191,7 +194,8 @@ function App() {
       {route === "dashboard" && <DashboardPage go={go} profile={profile}/>}
       {route === "admin-login" && <AdminLoginPage go={go} onSignedIn={(next) => setProfile(next)} />}
       {route === "admin-dashboard" && <AdminPage go={go}/>}
-      {route === "seller" && <SellerPage go={go} slug={getSellerSlug(path)} saved={saved} toggleSave={toggleSave}/>}
+      {route === "seller" && <SellerMicrositePage go={go} slug={getSellerSlug(path)}/>}
+      {route === "website-editor" && <WebsiteEditorPage go={go}/>}
       {route === "not-found" && <main className="page"><Empty title="Page not found" text="That NammaSpot page does not exist." actionLabel="Back home" onAction={() => go("/")}/></main>}
 
       <MobileBottomNav path={path} go={go}/>
@@ -207,6 +211,7 @@ function getRoute(path) {
   if (path.startsWith("/saved")) return "saved";
   if (path.startsWith("/login")) return "login";
   if (path === "/register") return "register";
+  if (path.startsWith("/dashboard/website")) return "website-editor";
   if (path.startsWith("/dashboard")) return "dashboard";
   if (path.startsWith("/nammaspot-control-panel/login")) return "admin-login";
   if (path.startsWith("/nammaspot-control-panel/dashboard") || path.startsWith("/admin-console")) return "admin-dashboard";
@@ -721,7 +726,7 @@ function DashboardPage({ go }) {
       </div>
 
       <div className="dashboard-tabs">
-        {["profile","products","enquiries","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
+        {["profile","website","products","enquiries","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>item==="website"?go("/dashboard/website"):setTab(item)}>{item==="website"?"My Website":item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
       </div>
 
       {tab==="profile" && <ProfileEditor seller={seller} categories={categories} onSaved={(next)=>setSeller((current)=>({...current,...next}))}/>}

@@ -5,7 +5,7 @@ import {
   Search, MapPin, Heart, Share2, Phone, MessageCircle, Plus,
   ArrowLeft, Menu, X, Store, ChevronRight, Home, Compass, Grid2X2,
   Sparkles, CheckCircle, LogIn, LogOut, LayoutDashboard, ShieldCheck,
-  Trash2, Pencil, ExternalLink, Clock, Send, AlertCircle
+  Trash2, Pencil, ExternalLink, Clock, Send, AlertCircle, Eye, EyeOff
 } from "lucide-react";
 import "./styles.css";
 import "./microsite.css";
@@ -574,17 +574,33 @@ function EnquiryModal({ seller, product, onClose }) {
 }
 
 function RegisterPage({ go }) {
-  const [data,setData] = useState({nammaspotId:"",business:"",owner:"",phone:"",password:"",confirmPassword:"",category:"Handmade",location:"",locationUrl:"",description:"",whatsapp:"",instagram:""});
+  const [data,setData] = useState({nammaspotId:"",business:"",owner:"",phone:"",password:"",category:"Handmade",location:"",locationUrl:"",description:"",whatsapp:"",instagram:""});
   const [state,setState] = useState({loading:false,error:"",success:"",nammaspotId:""});
+  const [showPassword,setShowPassword] = useState(false);
+  const [step,setStep] = useState(1);
+
+  const idValue = data.nammaspotId.toUpperCase().replace(/\s/g,"");
+  const passwordChecks = {
+    length: data.password.length >= 10,
+    lower: /[a-z]/.test(data.password),
+    upper: /[A-Z]/.test(data.password),
+    number: /[0-9]/.test(data.password),
+    symbol: /[^A-Za-z0-9]/.test(data.password),
+    noSpace: !/\s/.test(data.password),
+  };
+  const accountReady = /^NS-[A-Z0-9_-]{6,20}$/.test(idValue) && Object.values(passwordChecks).every(Boolean);
+  const businessReady = Boolean(data.business.trim());
 
   const submit = async (event) => {
     event.preventDefault();
-    if (!/^NS-[A-Z0-9_-]{6,20}$/.test(data.nammaspotId.trim().toUpperCase())) {
-      setState({loading:false,error:"Choose a NammaSpot ID such as NS-000001.",success:"",nammaspotId:""});
+    if (!accountReady) {
+      setStep(1);
+      setState({loading:false,error:"Create a NammaSpot ID and a password that meets all the requirements shown below.",success:"",nammaspotId:""});
       return;
     }
-    if (data.password !== data.confirmPassword) {
-      setState({loading:false,error:"Passwords do not match.",success:"",nammaspotId:""});
+    if (!businessReady) {
+      setStep(2);
+      setState({loading:false,error:"Enter your business name to continue.",success:"",nammaspotId:""});
       return;
     }
     setState({loading:true,error:"",success:"",nammaspotId:""});
@@ -593,54 +609,101 @@ function RegisterPage({ go }) {
       const seller = await getMySeller();
       await signOut();
       const assignedId = seller?.nammaspot_id || result.nammaspotId;
-      setState({loading:false,error:"",success:"Your NammaSpot account is created and waiting for admin approval.",nammaspotId:assignedId});
+      setState({loading:false,error:"",success:"Your seller account has been created and sent for admin approval.",nammaspotId:assignedId});
     } catch (error) {
       setState({loading:false,error:friendlyError(error),success:"",nammaspotId:""});
     }
   };
 
   return (
-    <main className="page form-page">
+    <main className="page form-page seller-signup-page">
       <button className="back-button" onClick={()=>go("/")}><ArrowLeft size={17}/> Home</button>
       <div className="page-title">
-        <div className="eyebrow">FOR LOCAL MAKERS</div>
-        <h1>Get your NammaSpot ID.</h1>
-        <p>No email or OTP. Create your seller account, then wait for admin approval.</p>
+        <div className="eyebrow">BECOME A NAMMASPOT SELLER</div>
+        <h1>Create your seller account</h1>
+        <p className="signup-intro">Create your login first, then add your business details. No email or OTP is required.</p>
       </div>
 
-      <form className="seller-form" onSubmit={submit}>
-        <div className="signup-trust-note">
-          <ShieldCheck size={18}/>
-          <div><strong>Simple & local.</strong><span>Your NammaSpot ID is your login. Your profile stays hidden until an admin approves it.</span></div>
-        </div>
-        <div className="form-grid">
-          <label>NammaSpot ID *<input value={data.nammaspotId} onChange={(e)=>setData({...data,nammaspotId:e.target.value.toUpperCase().replace(/\\s/g,"")})} placeholder="NS-000001" maxLength={40} required/><small>6–20 characters after NS-. Use letters, numbers, _ or -.</small></label>
-          <label>Business name *<input value={data.business} onChange={(e)=>setData({...data,business:e.target.value})} maxLength={160} required/></label>
-          <label>Your name (optional)<input value={data.owner} onChange={(e)=>setData({...data,owner:e.target.value})} maxLength={120}/></label>
-          <label>Business phone (optional)<input type="tel" value={data.phone} onChange={(e)=>setData({...data,phone:e.target.value})} placeholder="For customer contact / WhatsApp"/></label>
-          <label>Password *<input type="password" autoComplete="new-password" value={data.password} onChange={(e)=>setData({...data,password:e.target.value})} placeholder="10+ chars, upper/lower/number/symbol" required/></label>
-          <label>Confirm password *<input type="password" autoComplete="new-password" value={data.confirmPassword} onChange={(e)=>setData({...data,confirmPassword:e.target.value})} placeholder="Re-enter password" required/></label>
-          <label>Category<select value={data.category} onChange={(e)=>setData({...data,category:e.target.value})}>{categoryNames.map((c)=><option key={c}>{c}</option>)}</select></label>
-          <label>Location<input value={data.location} onChange={(e)=>setData({...data,location:e.target.value})} placeholder="Anna Nagar, Chennai"/></label>
-          <label>Location URL<input type="url" value={data.locationUrl} onChange={(e)=>setData({...data,locationUrl:e.target.value})} placeholder="Google Maps URL (optional)"/></label>
-          <label>WhatsApp<input type="tel" value={data.whatsapp} onChange={(e)=>setData({...data,whatsapp:e.target.value})} placeholder="Optional"/></label>
-          <label>Instagram URL<input type="url" value={data.instagram} onChange={(e)=>setData({...data,instagram:e.target.value})} placeholder="https://instagram.com/…"/></label>
-        </div>
-        <label>About your business (optional)<textarea value={data.description} onChange={(e)=>setData({...data,description:e.target.value})} maxLength={300}/></label>
-        {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
-        {state.success && (
-          <div className="form-status">
-            <CheckCircle size={18}/>
-            <div><strong>{state.success}</strong><br/>Your login ID: <strong>{state.nammaspotId}</strong>. Save it somewhere safe.</div>
-          </div>
-        )}
-        <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Creating your spot…" : <><Plus size={18}/> Create seller account</>}</button>
-        {state.success && <button type="button" className="secondary-button full-button" onClick={()=>go("/login")}>Go to seller login</button>}
-      </form>
+      <div className="signup-how-it-works" aria-label="How seller signup works">
+        <div className="signup-step"><span>1</span><div><strong>Create your login</strong><small>Choose your NammaSpot ID and password</small></div></div>
+        <ChevronRight size={18} aria-hidden="true"/>
+        <div className="signup-step"><span>2</span><div><strong>Add your business</strong><small>Tell customers what you offer</small></div></div>
+        <ChevronRight size={18} aria-hidden="true"/>
+        <div className="signup-step"><span>3</span><div><strong>Get approved</strong><small>Admin reviews before you go public</small></div></div>
+      </div>
+
+      <div className="signup-before-card">
+        <ShieldCheck size={20}/>
+        <div><strong>What you need</strong><ul><li>A business name</li><li>A NammaSpot ID you will remember</li><li>A strong password</li><li>Business phone is recommended for customer contact</li></ul><span>You can add or change your website, location, hours and catalogue later from your dashboard.</span></div>
+      </div>
+
+      {state.success ? (
+        <section className="seller-form signup-success-card">
+          <CheckCircle size={34}/>
+          <h2>Account created</h2>
+          <p>{state.success}</p>
+          <div className="created-id"><span>Your NammaSpot ID</span><strong>{state.nammaspotId}</strong></div>
+          <p className="muted-note">Save this ID. You will use it with your password every time you sign in.</p>
+          <div className="button-row"><button className="primary-button" onClick={()=>go("/login")}><LogIn size={17}/> Go to seller login</button><button className="secondary-button" onClick={()=>go("/")}><Home size={17}/> Back to home</button></div>
+        </section>
+      ) : (
+        <form className="seller-form signup-form" onSubmit={submit} noValidate>
+          <div className="signup-progress" aria-label={`Step ${step} of 2`}><span className={step>=1?"active":""}>1 Account</span><span className={step>=2?"active":""}>2 Business</span></div>
+
+          {step===1 && <section className="signup-section">
+            <div className="signup-section-heading"><span className="signup-number">1</span><div><h2>Create your login</h2><p>This is how you will access your seller dashboard later.</p></div></div>
+            <label>Choose your NammaSpot ID <span className="required">*</span>
+              <input value={data.nammaspotId} onChange={e=>setData({...data,nammaspotId:e.target.value.toUpperCase().replace(/\s/g,"")})} placeholder="Example: NS-000001" maxLength={40} autoCapitalize="characters" spellCheck="false" required aria-describedby="id-help"/>
+              <small id="id-help">Your NammaSpot ID is your username for login. Use NS- followed by 6–20 letters, numbers, _ or -.</small>
+            </label>
+            <div className={idValue && !/^NS-[A-Z0-9_-]{6,20}$/.test(idValue) ? "field-feedback error":"field-feedback"}>{idValue ? (/^NS-[A-Z0-9_-]{6,20}$/.test(idValue) ? "✓ This ID format is ready to use" : "Use NS- followed by 6–20 letters, numbers, _ or -") : "Example: NS-000001"}</div>
+
+            <label>Create your password <span className="required">*</span>
+              <div className="password-input-wrap"><input type={showPassword?"text":"password"} value={data.password} onChange={e=>setData({...data,password:e.target.value})} autoComplete="new-password" spellCheck="false" autoCapitalize="off" aria-describedby="password-help" required/><button type="button" className="password-toggle" onClick={()=>setShowPassword(v=>!v)} aria-label={showPassword?"Hide password":"Show password"}>{showPassword?<EyeOff size={17}/>:<Eye size={17}/>}</button></div>
+              <small id="password-help">Use a password you can remember. Do not use your business name or NammaSpot ID.</small>
+            </label>
+            <div className="password-requirements" aria-live="polite">
+              <span className={passwordChecks.length?"pass":""}>✓ At least 10 characters</span>
+              <span className={passwordChecks.upper?"pass":""}>✓ One uppercase letter</span>
+              <span className={passwordChecks.lower?"pass":""}>✓ One lowercase letter</span>
+              <span className={passwordChecks.number?"pass":""}>✓ One number</span>
+              <span className={passwordChecks.symbol?"pass":""}>✓ One symbol</span>
+              <span className={passwordChecks.noSpace?"pass":""}>✓ No spaces</span>
+            </div>
+
+            <div className="signup-explanation"><strong>Important:</strong> You will log in later using only <b>NammaSpot ID + password</b>. There is no email or OTP in this seller signup.</div>
+            <button type="button" className="primary-button full-button" onClick={()=>{if(!accountReady){setState(s=>({...s,error:"Complete the NammaSpot ID and password requirements above."}));return;}setState(s=>({...s,error:""}));setStep(2);}}>Continue to business details <ChevronRight size={18}/></button>
+          </section>}
+
+          {step===2 && <section className="signup-section">
+            <div className="signup-section-heading"><span className="signup-number">2</span><div><h2>Tell us about your business</h2><p>Only the basics are needed to create your seller profile. You can complete your mini website later.</p></div></div>
+            <label>Business name <span className="required">*</span>
+              <input value={data.business} onChange={e=>setData({...data,business:e.target.value})} maxLength={160} autoComplete="organization" required/>
+              <small>This is the name customers will see on your NammaSpot mini website.</small>
+            </label>
+            <div className="form-grid">
+              <label>Your name <span className="optional">(optional)</span><input value={data.owner} onChange={e=>setData({...data,owner:e.target.value})} maxLength={120} autoComplete="name"/></label>
+              <label>Business phone <span className="optional">(optional but recommended)</span><input type="tel" value={data.phone} onChange={e=>setData({...data,phone:e.target.value})} autoComplete="tel"/><small>Customers can use this to contact you if you enable it.</small></label>
+              <label>Business category <span className="optional">(recommended)</span><select value={data.category} onChange={e=>setData({...data,category:e.target.value})}>{categoryNames.map(c=><option key={c}>{c}</option>)}</select></label>
+              <label>Area / city <span className="optional">(optional)</span><input value={data.location} onChange={e=>setData({...data,location:e.target.value})} placeholder="Example: RS Puram, Coimbatore" autoComplete="address-level2"/></label>
+            </div>
+            <details className="signup-more-details"><summary>Add more business details now <span>optional</span></summary><div className="form-grid">
+              <label>Google Maps / location URL<input type="url" value={data.locationUrl} onChange={e=>setData({...data,locationUrl:e.target.value})} placeholder="Paste a Google Maps share link"/></label>
+              <label>WhatsApp number<input type="tel" value={data.whatsapp} onChange={e=>setData({...data,whatsapp:e.target.value})} autoComplete="tel"/></label>
+              <label>Instagram URL<input type="url" value={data.instagram} onChange={e=>setData({...data,instagram:e.target.value})} placeholder="https://instagram.com/…"/></label>
+            </div><label>Short business description<textarea value={data.description} onChange={e=>setData({...data,description:e.target.value})} maxLength={300} placeholder="What do you sell or offer?"/></label></details>
+
+            <div className="signup-approval-card"><CheckCircle size={18}/><div><strong>What happens after you submit?</strong><ol><li>Your account is created.</li><li>Your seller profile stays hidden while it is <b>pending approval</b>.</li><li>After NammaSpot admin approval, you can log in and build your public mini website.</li></ol></div></div>
+
+            {state.error && <div className="inline-error" role="alert"><AlertCircle size={17}/>{state.error}</div>}
+            <div className="button-row signup-actions"><button type="button" className="secondary-button" onClick={()=>setStep(1)}><ArrowLeft size={17}/> Back</button><button className="primary-button" disabled={state.loading||!businessReady}>{state.loading ? "Creating your seller account…" : <><Plus size={18}/> Create seller account</>}</button></div>
+            <p className="signup-footer-note">By creating a seller account, you agree to provide accurate business information. You can update your profile and catalogue after approval.</p>
+          </section>}
+        </form>
+      )}
     </main>
   );
 }
-
 function LoginPage({ go, onSignedIn }) {
   const [data,setData] = useState({nammaspotId:"",password:""});
   const [state,setState] = useState({loading:false,error:""});

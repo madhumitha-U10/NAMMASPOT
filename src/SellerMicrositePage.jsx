@@ -63,7 +63,7 @@ export default function SellerMicrositePage({go,slug}){
       <div className="ns-profile-actions">{seller.contact&&<a className="primary-button" href={"tel:"+seller.contact}><Phone size={16}/> Call</a>}{wa&&<a className="secondary-button" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a>}<button className="secondary-button" onClick={()=>setSaved(!saved)}><Heart size={16} fill={saved?"currentColor":"none"}/> {saved?"Saved":"Save"}</button></div>
     </section>
 
-    {settings.tagline&&<section className="ns-customer-message"><div><div className="eyebrow">SELLER MESSAGE</div><strong>{esc(settings.tagline)}</strong><p>This message is set by the seller and can include today's date, opening time, closing time, order timing or any update for customers.</p></div><button className="primary-button" onClick={()=>setEnquire(null)}><Send size={16}/> Message seller</button></section>}
+    {settings.tagline&&<section className="ns-customer-message"><div><div className="eyebrow">SELLER MESSAGE</div><strong>{esc(settings.tagline)}</strong><p>This message is set by the seller and can include today's date, opening time, closing time, order timing or any update for customers.</p></div><button className="primary-button" onClick={()=>setEnquire("general")}><Send size={16}/> Message seller</button></section>}
 
     <section className="ns-info-strip">
       {seller.location&&<div><MapPin size={18}/><span>{esc(seller.location)}</span>{seller.location_url&&<a href={seller.location_url} target="_blank" rel="noreferrer">Directions <ExternalLink size={13}/></a>}</div>}

@@ -211,9 +211,9 @@ export function normalizePhone(value) {
 export async function signInSeller(nammaspotId, password) {
   if (!supabase) throw new BackendNotConfiguredError();
   const client = needBackend();
-  const cleanId = text(nammaspotId, 40).toLowerCase().replace(/[^a-z0-9_-]/g, "");
+  const cleanId = text(nammaspotId, 40).toUpperCase().replace(/[^A-Z0-9_-]/g, "");
   if (!cleanId) throw new Error("Enter your NammaSpot ID.");
-  const email = cleanId + "@accounts.nammaspot.internal";
+  const email = cleanId.toLowerCase() + "@accounts.nammaspot.internal";
   const { data, error } = await client.auth.signInWithPassword({ email, password });
   if (error) throw error;
   return data;
@@ -266,19 +266,21 @@ export async function setSellerPassword(password) {
 
 export async function startSellerRegistration(values) {
   if (!supabase) throw new BackendNotConfiguredError();
-  validatePassword(values.password, { nammaspotId: values.nammaspotId, email: values.email, name: values.owner || values.business });
   const client = needBackend();
-  const email = normalizeEmail(values.email);
-  if (!email || !email.includes("@")) throw new Error("Enter a valid email address.");
-  const { data: used, error: usedError } = await client.rpc("email_in_use", { p_email: email });
-  if (usedError) throw usedError;
-  if (used) throw new Error("That email address is already registered. Use your NammaSpot ID to log in.");
+  const cleanBusiness = text(values.business, 160);
+  const cleanId = text(values.nammaspotId, 40).toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+  if (!cleanBusiness) throw new Error("Enter your business name.");
+  if (!/^NS-[A-Z0-9_-]{6,20}$/.test(cleanId)) throw new Error("Choose a valid NammaSpot ID such as NS-000001.");
+  validatePassword(values.password, { nammaspotId: cleanId, name: values.owner || cleanBusiness });
+
+  const internalEmail = cleanId.toLowerCase() + "@accounts.nammaspot.internal";
   const metadata = {
     role: "seller",
+    nammaspot_id: cleanId,
     name: text(values.owner,120),
-    email,
+    email: internalEmail,
     phone: normalizePhone(values.phone),
-    business_name: text(values.business,160),
+    business_name: cleanBusiness,
     category_name: text(values.category,80),
     location: text(values.location,240),
     location_url: text(values.locationUrl,500),
@@ -286,27 +288,22 @@ export async function startSellerRegistration(values) {
     whatsapp_phone: normalizePhone(values.whatsapp || values.phone),
     instagram_url: text(values.instagram,500),
   };
-  const { data: otpGuard, error: otpGuardError } = await client.rpc("register_email_otp_request", { p_email: email });
-  if (otpGuardError) throw otpGuardError;
-  const { error } = await client.auth.signInWithOtp({
-    email,
-    options: { shouldCreateUser: true, data: metadata },
+
+  const { data, error } = await client.auth.signUp({
+    email: internalEmail,
+    password: values.password,
+    options: { data: metadata },
   });
   if (error) throw error;
-  if (otpGuard?.warning) console.warn("NammaSpot email OTP usage warning:", otpGuard.email_count, "emails in the current hour.");
-  return { email };
+  if (!data?.user) throw new Error("Could not create the seller account.");
+  if (!data?.session) {
+    throw new Error("Seller signup needs email confirmation disabled in Supabase because NammaSpot does not collect email addresses.");
+  }
+  return { nammaspotId: cleanId, session: data.session };
 }
 
-export async function verifySellerRegistrationOtp(email, token) {
-  if (!supabase) throw new BackendNotConfiguredError();
-  const client = needBackend();
-  const { data, error } = await client.auth.verifyOtp({
-    email: normalizeEmail(email),
-    token: text(token, 10),
-    type: "email",
-  });
-  if (error) throw error;
-  return data;
+export async function verifySellerRegistrationOtp() {
+  throw new Error("Email verification is not used for NammaSpot seller signup.");
 }
 
 export async function signOut() {

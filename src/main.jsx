@@ -593,7 +593,7 @@ function RegisterPage({ go }) {
     event.preventDefault();
     setState((current)=>({...current,loading:true,error:"",success:""}));
     try {
-      await verifySellerRegistrationOtp(data.phone, data.otp);
+      await verifySellerRegistrationOtp(data.email, data.otp);
       const seller = await getMySeller();
       await setSellerPassword(data.password);
       await signOut();
@@ -612,7 +612,7 @@ function RegisterPage({ go }) {
         <form className="seller-form" onSubmit={submit}>
           <div className="form-grid">
             <label>Business name *<input value={data.business} onChange={(e)=>setData({...data,business:e.target.value})} maxLength={160} required/></label>
-            <label>Your name *<input value={data.owner} onChange={(e)=>setData({...data,owner:e.target.value})} maxLength={120} required/></label>
+            <label>Your name (optional)<input value={data.owner} onChange={(e)=>setData({...data,owner:e.target.value})} maxLength={120} required/></label>
             <label>Email address *<input type="email" value={data.email} onChange={(e)=>setData({...data,email:e.target.value})} placeholder="you@gmail.com" autoComplete="email" required/></label>
             <label>Business phone (optional)<input type="tel" value={data.phone} onChange={(e)=>setData({...data,phone:e.target.value})} placeholder="For customer contact / WhatsApp"/></label>
             <label>Password *<input type="password" autoComplete="new-password" value={data.password} onChange={(e)=>setData({...data,password:e.target.value})} placeholder="At least 8 characters" minLength={8} required/></label>
@@ -623,7 +623,7 @@ function RegisterPage({ go }) {
             <label>WhatsApp<input type="tel" value={data.whatsapp} onChange={(e)=>setData({...data,whatsapp:e.target.value})} placeholder="Optional"/></label>
             <label>Instagram URL<input type="url" value={data.instagram} onChange={(e)=>setData({...data,instagram:e.target.value})} placeholder="https://instagram.com/…"/></label>
           </div>
-          <label>About your business *<textarea value={data.description} onChange={(e)=>setData({...data,description:e.target.value})} maxLength={300} required/></label>
+          <label>About your business (optional)<textarea value={data.description} onChange={(e)=>setData({...data,description:e.target.value})} maxLength={300} required/></label>
           {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
           {state.success && <div className="form-status"><CheckCircle size={18}/>{state.success}</div>}
           <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Sending OTP…" : <><Plus size={18}/> Continue with email</>}</button>

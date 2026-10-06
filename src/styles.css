@@ -827,3 +827,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .signup-trust-note span,.login-identity-card span{font-size:.88rem;opacity:.72;line-height:1.45}
 .seller-form label small{display:block;margin-top:6px;font-size:.76rem;opacity:.65}
 .login-help{font-size:.82rem;line-height:1.5;opacity:.68;text-align:center;margin:2px 0 0}
+
+
+.storage-usage-card{margin:0 0 18px;padding:14px 16px;border:1px solid var(--line,#e5ddd3);border-radius:16px;background:var(--surface,#fff)}
+.storage-usage-card.storage-warning{border-color:#c98b35}
+.storage-usage-card.storage-blocked{border-color:#b34b4b;background:#fff8f8}
+.storage-usage-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:9px;font-size:14px}
+.storage-usage-track{height:8px;border-radius:999px;background:#eee7df;overflow:hidden}
+.storage-usage-track span{display:block;height:100%;border-radius:inherit;background:currentColor;transition:width .25s ease}
+.storage-usage-card.storage-warning .storage-usage-track{color:#c98b35}
+.storage-usage-card.storage-blocked .storage-usage-track{color:#b34b4b}
+.storage-usage-card.storage-ok .storage-usage-track{color:#7d5b4b}
+.storage-usage-card small,.field-help{display:block;margin-top:8px;font-size:12px;line-height:1.45;color:#756b63}

@@ -596,7 +596,10 @@ function RegisterPage({ go }) {
     symbol: /[^A-Za-z0-9]/.test(data.password),
     noSpace: !/\s/.test(data.password),
   };
-  const validId = /^ns-[a-z0-9_-]{6,20}$/.test(idValue);\n  const validPhone = data.phone.replace(/\\D/g,"").length >= 10;\n  const validWhatsapp = data.whatsapp.replace(/\\D/g,"").length >= 10;\n  const accountReady = validId && Object.values(passwordChecks).every(Boolean);
+  const validId = /^ns-[a-z0-9_-]{6,20}$/.test(idValue);
+  const validPhone = data.phone.replace(/\\D/g,"").length >= 10;
+  const validWhatsapp = data.whatsapp.replace(/\\D/g,"").length >= 10;
+  const accountReady = validId && Object.values(passwordChecks).every(Boolean);
   const businessReady = Boolean(
     data.business.trim() &&
     data.owner.trim() &&

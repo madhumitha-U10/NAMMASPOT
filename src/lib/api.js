@@ -483,8 +483,8 @@ export async function adminStorageUsage() {
 }
 
 export async function adminListSellers() {
-  if (!supabase) return demoState().sellers.map((s)=>({id:s.id,slug:s.slug,business_name:s.business_name,owner_name:s.owner_name,contact:s.contact||s.phone,verification_status:s.verification_status,verified:s.verified,created_at:s.created_at||"",location:s.location,category:{name:s.category}}));
-  const client=needBackend(); const {data,error}=await client.from("sellers").select("id,slug,business_name,owner_name,contact,verification_status,verified,created_at,location,category:categories(name)").order("created_at",{ascending:false}).limit(100); if(error)throw error; return data||[];
+  if (!supabase) return demoState().sellers.map((s)=>({id:s.id,slug:s.slug,business_name:s.business_name,owner_name:s.owner_name,contact:s.contact||s.phone,whatsapp_phone:s.whatsapp_phone||s.whatsapp||s.contact||s.phone,verification_status:s.verification_status,verified:s.verified,created_at:s.created_at||"",location:s.location,category:{name:s.category}}));
+  const client=needBackend(); const {data,error}=await client.from("sellers").select("id,slug,business_name,owner_name,contact,whatsapp_phone,verification_status,verified,created_at,location,category:categories(name)").order("created_at",{ascending:false}).limit(100); if(error)throw error; return data||[];
 }
 
 export async function adminDeleteSuspendedSeller(sellerId) {

@@ -273,33 +273,39 @@ export async function startSellerRegistration(values) {
   if (!/^NS-[A-Z0-9_-]{6,20}$/.test(cleanId)) throw new Error("Choose a valid NammaSpot ID such as NS-000001.");
   validatePassword(values.password, { nammaspotId: cleanId, name: values.owner || cleanBusiness });
 
-  const internalEmail = cleanId.toLowerCase() + "@accounts.nammaspot.internal";
-  const metadata = {
-    role: "seller",
-    nammaspot_id: cleanId,
-    name: text(values.owner,120),
-    email: internalEmail,
-    phone: normalizePhone(values.phone),
-    business_name: cleanBusiness,
-    category_name: text(values.category,80),
-    location: text(values.location,240),
-    location_url: text(values.locationUrl,500),
-    description: text(values.description,300),
-    whatsapp_phone: normalizePhone(values.whatsapp || values.phone),
-    instagram_url: text(values.instagram,500),
-  };
-
-  const { data, error } = await client.auth.signUp({
-    email: internalEmail,
-    password: values.password,
-    options: { data: metadata },
+  const { data, error } = await client.functions.invoke("create-seller-account", {
+    body: {
+      nammaspotId: cleanId,
+      password: values.password,
+      business: cleanBusiness,
+      owner: text(values.owner,120),
+      phone: normalizePhone(values.phone),
+      category: text(values.category,80),
+      location: text(values.location,240),
+      locationUrl: text(values.locationUrl,500),
+      description: text(values.description,300),
+      whatsapp: normalizePhone(values.whatsapp || values.phone),
+      instagram: text(values.instagram,500),
+    },
   });
-  if (error) throw error;
-  if (!data?.user) throw new Error("Could not create the seller account.");
-  if (!data?.session) {
-    throw new Error("Seller signup needs email confirmation disabled in Supabase because NammaSpot does not collect email addresses.");
+
+  if (error) {
+    let message = error.message;
+    if (error.context && typeof error.context.clone === "function") {
+      try {
+        const response = await error.context.clone();
+        const body = await response.json();
+        message = body?.error || body?.message || message;
+      } catch {}
+    }
+    throw new Error(message || "Seller account creation failed.");
   }
-  return { nammaspotId: cleanId, session: data.session };
+  if (!data?.ok) throw new Error(data?.error || "Seller account creation failed.");
+
+  // The account is created with email confirmation already completed on the server.
+  // Sign in immediately so the existing RLS-protected trigger/profile flow can be used.
+  await signInSeller(cleanId, values.password);
+  return { nammaspotId: cleanId };
 }
 
 export async function verifySellerRegistrationOtp() {

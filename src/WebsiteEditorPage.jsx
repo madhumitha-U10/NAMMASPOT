@@ -1,6 +1,6 @@
 import {useEffect,useState} from "react";
 import {ArrowLeft,CheckCircle,Plus,Trash2,ExternalLink} from "lucide-react";
-import {getMySeller,updateMySeller,listMyProducts,uploadSellerMedia} from "./lib/api";
+import {getMySeller,updateMySeller,listMyProducts,uploadSellerMedia,getCurrentProfile} from "./lib/api";
 import {getMyMicrosite,saveMicrosite,saveHours,saveSpecialDates,setProductFeatured,addProductGalleryImage,deleteProductGalleryImage,sellerPublicUrl} from "./lib/microsite";
 import {categoryNames} from "./lib/seed";
 

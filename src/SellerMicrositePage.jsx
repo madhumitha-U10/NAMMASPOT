@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useState} from "react";
-import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,InstagramIcon,FacebookIcon,Youtube,Clock,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send} from "lucide-react";
+import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,Clock,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send,Globe} from "lucide-react";
 import {createEnquiry} from "./lib/api";
 import {getMicrosite,sellerPublicUrl} from "./lib/microsite";
 

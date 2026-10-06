@@ -21,7 +21,8 @@ export default [
         alert: "readonly",
         confirm: "readonly",
         prompt: "readonly",
-        URLSearchParams: "readonly"
+        URLSearchParams: "readonly",
+        console: "readonly"
       }
     },
     plugins: {

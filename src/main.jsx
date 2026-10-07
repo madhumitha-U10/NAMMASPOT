@@ -53,7 +53,7 @@ import {
   getSellerStorageUsage
 } from "./lib/api";
 import { categoryNames } from "./lib/seed";
-import { addProductGalleryImage, deleteProductGalleryImage } from "./lib/microsite";
+import { addProductGalleryImage, deleteProductGalleryImage, getMyMicrosite, saveMicrosite } from "./lib/microsite";
 import { formatBytes, SELLER_STORAGE_QUOTA_LABEL, SELLER_STORAGE_WARNING_LABEL, MAX_SELLER_IMAGE_LABEL } from "./lib/storage";
 
 const popularCategories = ["Bakery", "Mehendi", "Crochet", "Makeup", "Art"];
@@ -861,6 +861,14 @@ function ProfileEditor({ seller,categories,onSaved }) {
     profile_image_url:seller.profile_image_url || "", cover_image_url:seller.cover_image_url || ""
   });
   const [state,setState] = useState({saving:false,error:"",success:"",imageBusy:""});
+  const [dailyUpdate,setDailyUpdate] = useState("");
+  useEffect(() => {
+    let alive = true;
+    getMyMicrosite(seller.id).then((value) => {
+      if (alive) setDailyUpdate(value?.settings?.tagline || "");
+    }).catch(() => {});
+    return () => { alive = false; };
+  }, [seller.id]);
   const uploadImage = async (event, kind) => {
     const file=event.target.files?.[0];
     event.target.value="";
@@ -882,7 +890,10 @@ function ProfileEditor({ seller,categories,onSaved }) {
     event.preventDefault();
     setState({saving:true,error:"",success:"",imageBusy:""});
     try {
-      const next = await updateMySeller(seller.id,data);
+      const [next] = await Promise.all([
+        updateMySeller(seller.id,data),
+        saveMicrosite(seller.id,{tagline:dailyUpdate})
+      ]);
       onSaved(next);
       setState({saving:false,error:"",success:"Profile saved.",imageBusy:""});
     } catch (error) {
@@ -899,7 +910,7 @@ function ProfileEditor({ seller,categories,onSaved }) {
         </div>
         <div className="profile-media-card profile-cover-card">
           <div className="profile-cover-preview">{data.cover_image_url?<img src={data.cover_image_url} alt="Business cover" />:<span>Cover image preview</span>}</div>
-          <div><strong>Website cover image</strong><small>Used on your NammaSpot seller profile.</small></div>
+          <div><strong>NammaSpot profile cover image</strong><small>Shown at the top of your NammaSpot seller profile.</small></div>
           <label className="secondary-button upload-button">{state.imageBusy==="cover"?"Uploading…":"Upload cover"}<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e,"cover")} hidden disabled={Boolean(state.imageBusy)}/></label>
         </div>
       </div>
@@ -915,17 +926,20 @@ function ProfileEditor({ seller,categories,onSaved }) {
         <label>WhatsApp<input value={data.whatsapp_phone} onChange={(e)=>setData({...data,whatsapp_phone:e.target.value})}/></label>
         <label>Instagram<input type="url" value={data.instagram_url} onChange={(e)=>setData({...data,instagram_url:e.target.value})}/></label>
       </div>
-      <div className="profile-hours-compact">
-        <div className="profile-hours-copy">
-          <div className="eyebrow">BUSINESS HOURS</div>
-          <strong>When are you open?</strong>
-          <span>Set it once here. It is saved together with your profile.</span>
+      <div className="profile-daily-update">
+        <div className="profile-daily-update-copy">
+          <div className="eyebrow">DAILY UPDATE</div>
+          <strong>What should customers know today?</strong>
+          <span>Type it naturally — for example, “Open from 10 AM · Visit us today.”</span>
         </div>
-        <div className="profile-hours-fields">
-          <label>Open<input type="time" value={data.opening_time} onChange={(e)=>setData({...data,opening_time:e.target.value})}/></label>
-          <span className="hours-arrow">→</span>
-          <label>Close<input type="time" value={data.closing_time} onChange={(e)=>setData({...data,closing_time:e.target.value})}/></label>
-        </div>
+        <textarea
+          value={dailyUpdate}
+          onChange={(e)=>setDailyUpdate(e.target.value)}
+          maxLength={180}
+          rows={2}
+          placeholder="We are open from 10 AM today · Visit us at Anna Nagar"
+          aria-label="Daily update"
+        />
       </div>
       <label>Description *<textarea value={data.description} onChange={(e)=>setData({...data,description:e.target.value})} maxLength={600} required/></label>
       {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}

@@ -666,7 +666,7 @@ function RegisterPage({ go }) {
       <div className="page-title">
         <div className="eyebrow">BECOME A NAMMASPOT SELLER</div>
         <h1>Create your seller account</h1>
-        <p className="signup-intro">Create your login first, then add the required business details. No email or OTP is required.</p>
+        <p className="signup-intro">Create your login first, add your business details, then build your NammaSpot catalogue. No email or OTP is required.</p>
       </div>
 
       <div className="signup-how-it-works" aria-label="How seller signup works">
@@ -679,7 +679,7 @@ function RegisterPage({ go }) {
 
       <div className="signup-before-card">
         <ShieldCheck size={20}/>
-        <div><strong>What you need</strong><ul><li>A business name</li><li>A NammaSpot ID you will remember</li><li>A strong password</li><li>Your name, business phone, WhatsApp number and business location</li></ul><span>You can add or change your website, location, hours and catalogue later from your dashboard.</span></div>
+        <div><strong>What you need</strong><ul><li>A business name</li><li>A NammaSpot ID you will remember</li><li>A strong password</li><li>Your name, business phone, WhatsApp number and business location</li></ul><span>You can add your products, images, location and hours from your seller dashboard.</span></div>
       </div>
 
       {state.success ? (
@@ -725,7 +725,7 @@ function RegisterPage({ go }) {
             <div className="required-details-note"><CheckCircle size={17}/><span><strong>Required before approval:</strong> business name, your name, business phone, WhatsApp number and business location.</span></div>
             <label>Business name <span className="required">*</span>
               <input value={data.business} onChange={e=>setData({...data,business:e.target.value})} maxLength={160} autoComplete="organization" required/>
-              <small>This is the name customers will see on your NammaSpot mini website.</small>
+              <small>This is the name customers will see on your NammaSpot seller profile.</small>
             </label>
             <div className="form-grid">
               <label>Your name <span className="required">*</span><input value={data.owner} onChange={e=>setData({...data,owner:e.target.value})} maxLength={120} autoComplete="name" required/><small>The name of the owner or main business contact.</small></label>
@@ -802,7 +802,7 @@ function DashboardPage({ go }) {
   const [products,setProducts] = useState([]);
   const [enquiries,setEnquiries] = useState([]);
   const [categories,setCategories] = useState([]);
-  const [tab,setTab] = useState("profile");
+  const [tab,setTab] = useState("products");
   const [state,setState] = useState({loading:true,error:""});
   const [storageUsage,setStorageUsage] = useState(null);
 
@@ -895,7 +895,7 @@ function ProfileEditor({ seller,categories,onSaved }) {
         </div>
         <div className="profile-media-card profile-cover-card">
           <div className="profile-cover-preview">{data.cover_image_url?<img src={data.cover_image_url} alt="Business cover" />:<span>Cover image preview</span>}</div>
-          <div><strong>Website cover image</strong><small>Used as the large banner on your mini website.</small></div>
+          <div><strong>Website cover image</strong><small>Used as the cover image on your NammaSpot seller profile.</small></div>
           <label className="secondary-button upload-button">{state.imageBusy==="cover"?"Uploading…":"Upload cover"}<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e,"cover")} hidden disabled={Boolean(state.imageBusy)}/></label>
         </div>
       </div>
@@ -1006,7 +1006,7 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
   return (
     <div className="dashboard-content">
       <form className="seller-form compact-form" onSubmit={submit}>
-        <div className="eyebrow">{editing ? "EDIT PRODUCT" : "ADD PRODUCT"}</div>
+        <div className="product-manager-head"><div><div className="eyebrow">{editing ? "EDIT CATALOGUE ITEM" : "ADD TO CATALOGUE"}</div><h2>{editing ? "Update this product" : "Add a product"}</h2><p className="muted-note">{seller.verification_status === "pending" ? "You can prepare your catalogue now. It will become public after admin approval." : "Add the product name, price and image. Save it once and it will appear in your catalogue."}</p></div><span className="status-pill status-approved">{products.length} item{products.length===1?"":"s"}</span></div>
         {storageUsage && <div className={"storage-usage-card storage-" + storageUsage.status}>
           <div className="storage-usage-head"><strong>Image storage</strong><span>{formatBytes(storageUsage.used_bytes)} / {SELLER_STORAGE_QUOTA_LABEL}</span></div>
           <div className="storage-usage-track" role="progressbar" aria-valuenow={Math.min(100, Number(storageUsage.used_percent) || 0)} aria-valuemin="0" aria-valuemax="100"><span style={{width: Math.min(100, Number(storageUsage.used_percent) || 0) + "%"}} /></div>
@@ -1022,13 +1022,13 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
         <label>Description<textarea value={form.description} onChange={(e)=>setForm({...form,description:e.target.value})} maxLength={1000}/></label>
         <label className="check-row"><input type="checkbox" checked={form.availability} onChange={(e)=>setForm({...form,availability:e.target.checked})}/> Available</label>
         {editing && <div className="catalogue-gallery-editor">
-          <div><strong>More catalogue images</strong><small>Add extra photos for this product. Customers can swipe through them on your public mini website.</small></div>
+          <div><strong>More catalogue images</strong><small>Add extra photos for this product. Customers can view these additional images on your public NammaSpot catalogue.</small></div>
           <div className="catalogue-gallery-grid">{(products.find(p=>p.id===editing)?.images||[]).map(img=><div className="catalogue-gallery-thumb" key={img.id}><img src={img.image_url} alt="" /><button type="button" className="danger-button" onClick={()=>removeGallery(img)} aria-label="Remove catalogue image"><Trash2 size={14}/></button></div>)}
             <label className="catalogue-upload-tile">{galleryBusy?"Uploading…":"＋ Add image"}<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={uploadGallery} hidden disabled={galleryBusy}/></label>
           </div>
         </div>}
         {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
-        <div className="button-row"><button className="primary-button" disabled={state.loading}>{state.loading ? "Saving…" : editing ? "Update product" : "Add product"}</button>{editing&&<button type="button" className="secondary-button" onClick={()=>{setEditing(null);setForm(blank);}}>Cancel</button>}</div>
+        <div className="button-row"><button className="primary-button" type="submit" disabled={state.loading}>{state.loading ? "Saving…" : editing ? "Update product" : "Add product"}</button>{editing&&<button type="button" className="secondary-button" onClick={()=>{setEditing(null);setForm(blank);}}>Cancel</button>}</div>
       </form>
       <div className="dashboard-list">
         {products.length ? products.map((product)=>

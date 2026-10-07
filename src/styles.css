@@ -1923,3 +1923,187 @@ h1,h2,h3{line-height:1.15}
  .dashboard-page .dashboard-tabs{overflow-x:auto;white-space:nowrap}
  .dashboard-page .dashboard-tabs button{flex:none}
 }
+
+
+/* Daily seller update + touch-friendly product gallery */
+.ns-daily-update{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:min(300px,100%);
+  min-height:38px;
+  padding:7px 10px;
+  border:1px solid #e6d8ce;
+  border-radius:10px;
+  background:#fffaf6;
+  color:var(--burgundy);
+}
+.ns-daily-update>div{
+  min-width:0;
+  display:grid;
+  gap:2px;
+}
+.ns-daily-update small{
+  color:#8a8178;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.ns-daily-update span{
+  color:#403a35;
+  font-size:11px;
+  line-height:1.3;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.profile-daily-update{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(260px,420px);
+  align-items:center;
+  gap:16px;
+  margin:14px 0 18px;
+  padding:12px 14px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#fffdfa;
+}
+.profile-daily-update-copy{display:grid;gap:2px;min-width:0}
+.profile-daily-update-copy strong{font-size:14px;letter-spacing:-.01em}
+.profile-daily-update-copy span{font-size:11px;color:var(--muted);line-height:1.35}
+.profile-daily-update textarea{
+  width:100%;
+  min-height:54px;
+  resize:vertical;
+  border:1px solid #ddd5cc;
+  border-radius:9px;
+  background:#fff;
+  padding:9px 10px;
+  color:var(--ink);
+  font-size:12px;
+  line-height:1.4;
+}
+.profile-daily-update textarea:focus{
+  outline:2px solid rgba(126,36,36,.12);
+  border-color:var(--burgundy);
+}
+.microsite-product-modal{
+  width:min(760px,calc(100% - 20px));
+  max-height:94vh;
+  padding:12px;
+  overflow:auto;
+}
+.microsite-product-modal .modal-close{
+  z-index:3;
+  width:38px;
+  height:38px;
+  top:10px;
+  right:10px;
+}
+.microsite-product-modal .microsite-gallery{
+  height:min(58vh,520px);
+  min-height:280px;
+  grid-template-columns:52px minmax(0,1fr) 52px;
+  border-radius:14px;
+  overflow:hidden;
+  background:#f3eee7;
+}
+.microsite-gallery-stage{
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  display:grid;
+  place-items:center;
+  padding:18px;
+  background:#f3eee7;
+}
+.microsite-gallery-stage img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:contain;
+  object-position:center;
+}
+.microsite-gallery-stage span{
+  color:#81776e;
+  font-size:13px;
+}
+.microsite-product-modal .gallery-nav{
+  width:42px;
+  height:42px;
+  min-width:42px;
+  min-height:42px;
+  display:grid;
+  place-items:center;
+  border:1px solid #ded5cb;
+  background:rgba(255,255,255,.92);
+  color:var(--burgundy);
+  border-radius:50%;
+  justify-self:center;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.microsite-product-modal .gallery-nav:disabled{
+  opacity:.35;
+  cursor:default;
+}
+.microsite-product-modal .microsite-thumbs{
+  padding:9px 3px 5px;
+  scrollbar-width:thin;
+}
+.microsite-product-modal .microsite-thumbs button{
+  width:58px;
+  height:58px;
+  min-width:58px;
+  min-height:58px;
+  touch-action:manipulation;
+}
+.ns-reference-product-grid .microsite-product-image img{
+  object-fit:contain;
+  object-position:center;
+  padding:10px;
+}
+.ns-reference-product-grid .microsite-product-card{
+  touch-action:manipulation;
+}
+@media(max-width:700px){
+  .profile-daily-update{
+    grid-template-columns:1fr;
+    gap:9px;
+    padding:11px 12px;
+  }
+  .profile-daily-update textarea{min-height:58px}
+  .ns-daily-update{
+    width:100%;
+    flex-basis:100%;
+    order:-1;
+  }
+  .microsite-product-modal{
+    width:calc(100% - 12px);
+    padding:8px;
+    border-radius:16px;
+  }
+  .microsite-product-modal .microsite-gallery{
+    height:min(62vh,500px);
+    min-height:250px;
+    grid-template-columns:44px minmax(0,1fr) 44px;
+    border-radius:11px;
+  }
+  .microsite-gallery-stage{padding:10px}
+  .microsite-product-modal .gallery-nav{
+    width:40px;
+    height:40px;
+    min-width:40px;
+    min-height:40px;
+  }
+  .microsite-product-modal .microsite-thumbs button{
+    width:54px;
+    height:54px;
+    min-width:54px;
+    min-height:54px;
+  }
+  .microsite-product-copy{padding:4px 5px 2px}
+}

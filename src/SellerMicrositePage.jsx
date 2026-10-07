@@ -155,7 +155,7 @@ export default function SellerMicrositePage({go,slug}){
         <p>{esc(seller.description||"Local seller on NammaSpot")}</p>
         {seller.contact&&<a className="ns-right-contact" href={"tel:"+seller.contact}><Phone size={15}/>{seller.contact}</a>}
         {seller.whatsapp_phone&&<a className="ns-right-contact" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={15}/>{seller.whatsapp_phone}</a>}
-        {seller.instagram_url&&<a className="ns-right-contact" href={seller.instagram_url} target="_blank" rel="noreferrer"><Instagram size={15}/>Instagram</a>}
+        {seller.instagram_url&&<a className="ns-right-contact" href={seller.instagram_url} target="_blank" rel="noreferrer"><Camera size={15}/>Instagram</a>}
         <div className="ns-right-divider"/>
         <div className="ns-right-label">Opening Hours</div>
         {data.hours.length>0&&<div className="ns-right-hours">{data.hours.filter(x=>x.is_open).slice(0,1).map(h=><span key={h.day_of_week}>{days[h.day_of_week].slice(0,3)} - Sat <b>{(h.ranges||[]).map(r=>r.open+" - "+r.close).join(" · ")}</b></span>)}<span className={status?.open?"ns-open":"ns-closed"}>{status?.open?"Open now":"Closed now"}</span></div>}

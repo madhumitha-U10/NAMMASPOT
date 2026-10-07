@@ -102,6 +102,11 @@ export default function SellerMicrositePage({go,slug}){
           </div>
         </div>
         <div className="ns-reference-actions">
+          {(seller.opening_time || seller.closing_time) && <div className="ns-hours-corner" title="Seller business hours">
+            <Clock size={15}/>
+            <div><small>Today</small><strong>{seller.opening_time || "Open"} – {seller.closing_time || "Close"}</strong></div>
+            <span className={status?.open ? "ns-hours-dot is-open" : "ns-hours-dot"} aria-label={status?.open ? "Open now" : "Closed now"} />
+          </div>}
           {wa&&<a className="primary-button" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a>}
           {seller.contact&&<a className="secondary-button" href={"tel:"+seller.contact}><Phone size={16}/> Call</a>}
           <button className="secondary-button" onClick={share}><Share2 size={16}/> Share</button>

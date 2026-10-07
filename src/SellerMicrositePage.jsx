@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useState} from "react";
+import {useEffect,useMemo,useRef,useState} from "react";
 import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,Clock,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send,Heart,Home,Compass,Grid2X2,Bookmark,UserRound,Search,MoreHorizontal,Navigation,Star,Package,Camera,CalendarDays} from "lucide-react";
 import {createEnquiry} from "./lib/api";
 import {getMicrosite,sellerPublicUrl} from "./lib/microsite";
@@ -25,16 +25,22 @@ function nowStatus(hours,specialDates){
 function ProductModal({product,onClose,onEnquire}){
   const imgs=[product.image_url,...(product.images||[]).map(x=>x.image_url)].filter(Boolean);
   const [i,setI]=useState(0);
+  const touchStart=useRef(null);
+  const previous=()=>setI(v=>Math.max(0,v-1));
+  const next=()=>setI(v=>Math.min(imgs.length-1,v+1));
+  const onTouchStart=e=>{touchStart.current=e.changedTouches?.[0]?.clientX ?? null};
+  const onTouchEnd=e=>{if(touchStart.current==null)return;const end=e.changedTouches?.[0]?.clientX ?? touchStart.current;const delta=end-touchStart.current;touchStart.current=null;if(Math.abs(delta)<45)return;if(delta<0)next();else previous()};
   return <div className="modal-backdrop" onMouseDown={e=>e.target===e.currentTarget&&onClose()}>
-    <section className="modal microsite-product-modal">
+    <section className="modal microsite-product-modal" aria-label="Product image viewer">
       <button className="modal-close" onClick={onClose} aria-label="Close"><X/></button>
-      <div className="microsite-gallery">
-        <button className="gallery-nav" disabled={i===0} onClick={()=>setI(Math.max(0,i-1))} aria-label="Previous image"><ChevronLeft/></button>
+      <div className="microsite-gallery" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+        <button className="gallery-nav" disabled={i===0} onClick={previous} aria-label="Previous image"><ChevronLeft/></button>
         <div className="microsite-gallery-stage">
           {imgs[i] ? <img src={imgs[i]} alt={product.name||product.product_name} /> : <span>No product image</span>}
         </div>
-        <button className="gallery-nav" disabled={i===imgs.length-1} onClick={()=>setI(Math.min(imgs.length-1,i+1))} aria-label="Next image"><ChevronRight/></button>
+        <button className="gallery-nav" disabled={i===imgs.length-1} onClick={next} aria-label="Next image"><ChevronRight/></button>
       </div>
+      {imgs.length>1&&<div className="microsite-gallery-count" aria-live="polite">{i+1} / {imgs.length}</div>}
       <div className="microsite-thumbs">{imgs.map((u,n)=><button key={u+n} className={n===i?"active":""} onClick={()=>setI(n)}><img src={u} alt=""/></button>)}</div>
       <div className="microsite-product-copy"><div className="eyebrow">{product.category?.name||"CATALOGUE"}</div><h2>{esc(product.name||product.product_name)}</h2>{product.price!=null&&<strong className="microsite-price">₹{product.price}</strong>}<p>{esc(product.description)}</p><button className="primary-button full-button" onClick={onEnquire}><Send size={16}/> Ask about this product</button></div>
     </section>

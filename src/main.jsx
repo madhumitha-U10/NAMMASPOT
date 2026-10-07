@@ -159,13 +159,13 @@ function App() {
       )}
 
       <header className="topbar">
-        <button className="brand" onClick={() => go("/")} aria-label="NammaSpot home">NammaSpot</button>
+        <button className="brand" onClick={() => go("/")} aria-label="NammaSpot home"><span className="brand-mark">N</span><span>NammaSpot</span></button>
 
         <nav className={menu ? "desktop-nav open" : "desktop-nav"} aria-label="Primary navigation">
           <button onClick={() => go("/")}>Home</button>
-          <button onClick={() => go("/explore")}>Explore</button>
-          <button onClick={() => go("/categories")}>Categories</button>
-          <button onClick={() => go("/saved")}>Saved</button>
+          <button className={route === "explore" ? "nav-active" : ""} onClick={() => go("/explore")}>Explore</button>
+          <button className={route === "categories" ? "nav-active" : ""} onClick={() => go("/categories")}>Categories</button>
+          <button className={route === "saved" ? "nav-active" : ""} onClick={() => go("/saved")}>Saved</button>
           {profile?.role === "seller" && <button onClick={() => go("/dashboard")}><LayoutDashboard size={15}/> Dashboard</button>}
           {profile?.role === "admin" && <button onClick={() => go("/nammaspot-control-panel/dashboard")}><ShieldCheck size={15}/> Admin Console</button>}
           {profile ? (

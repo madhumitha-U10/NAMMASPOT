@@ -1323,3 +1323,50 @@ button:disabled{cursor:not-allowed;opacity:.58}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
+
+
+/* Compact typography + seller hours editor */
+body{font-size:15px}
+h1,h2,h3{line-height:1.15}
+.hero h1{font-size:clamp(38px,5vw,64px);line-height:1}
+.hero-copy{font-size:17px}
+.page-title h1{font-size:clamp(28px,4vw,42px)}
+.section-heading h2{font-size:26px}
+.ns-profile-heading h1{font-size:clamp(27px,4vw,40px)}
+.ns-profile-section h2{font-size:25px}
+.seller-card h3,.microsite-product-card h3{font-size:16px}
+.seller-card .card-body{font-size:13px}
+.ns-customer-message strong{font-size:15px}
+.ns-customer-message p{font-size:12px}
+.eyebrow{font-size:10px;letter-spacing:.18em}
+.primary-button,.secondary-button,.danger-button{font-size:13px;min-height:40px;padding:9px 12px}
+
+.hours-simple{
+  margin-top:16px;
+  padding:18px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:#fff;
+}
+.hours-time-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+.hours-time-grid label{font-size:13px;font-weight:750}
+.hours-time-grid input{display:block;width:100%;margin-top:7px;min-height:44px;border:1px solid #d9d4cc;border-radius:10px;padding:9px 10px;background:#fff}
+.hours-day-picker{display:flex;flex-wrap:wrap;gap:7px;margin-top:15px}
+.hours-day-picker button{
+  min-width:52px;min-height:38px;
+  border:1px solid #ddd7cf;border-radius:9px;
+  background:#fff;color:#625d57;font-size:12px;font-weight:750;
+}
+.hours-day-picker button.selected{
+  background:var(--burgundy);border-color:var(--burgundy);color:#fff;
+}
+@media(max-width:520px){
+  .hours-time-grid{grid-template-columns:1fr}
+  .hours-day-picker{gap:6px}
+  .hours-day-picker button{flex:1}
+  .hero h1{font-size:40px}
+}

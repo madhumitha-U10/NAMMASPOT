@@ -2107,3 +2107,113 @@ h1,h2,h3{line-height:1.15}
   }
   .microsite-product-copy{padding:4px 5px 2px}
 }
+
+
+/* Final UI/UX refinement: calmer hierarchy, useful motion, compact daily updates */
+.ns-reference-seller-head{align-items:start;padding-top:0}
+.ns-reference-actions{align-items:flex-end;padding-top:18px;max-width:300px}
+.ns-daily-update{
+  width:100%;
+  min-height:36px;
+  padding:6px 9px;
+  border-radius:9px;
+  background:linear-gradient(135deg,#fffaf6,#f8efe9);
+  border-color:#ead9cf;
+  box-shadow:0 2px 8px rgba(70,35,25,.04);
+}
+.ns-daily-update svg{flex:none}
+.ns-daily-update span{font-size:10.5px}
+.ns-reference-actions .primary-button,.ns-reference-actions .secondary-button{min-height:36px;padding:8px 11px;font-size:12px}
+.ns-reference-actions .ns-more-button{width:36px;height:36px}
+.ns-reference-tabs{background:transparent}
+.ns-reference-tabs a{transition:color .15s ease,background .15s ease}
+.ns-reference-tabs a:hover{color:var(--burgundy)}
+.ns-reference-section-head{padding-top:2px}
+.ns-reference-product-grid .microsite-product-card{
+  position:relative;
+  box-shadow:0 2px 10px rgba(26,22,18,.045);
+}
+.ns-reference-product-grid .microsite-product-card:hover{
+  transform:translateY(-3px);
+  border-color:#d7c9bd;
+  box-shadow:0 12px 28px rgba(26,22,18,.09);
+}
+.ns-reference-product-grid .microsite-product-image{
+  aspect-ratio:1/1;
+  padding:8px;
+  background:
+    radial-gradient(circle at 50% 35%,#fff 0%,#f8f3ec 62%,#f0e9df 100%);
+}
+.ns-reference-product-grid .microsite-product-image img{
+  object-fit:contain;
+  object-position:center;
+  padding:4px;
+  transition:transform .25s ease;
+}
+.ns-reference-product-grid .microsite-product-card:hover .microsite-product-image img{transform:scale(1.035)}
+.ns-reference-product-grid .microsite-product-card>div:last-child{min-height:78px}
+.microsite-product-modal .microsite-gallery{
+  position:relative;
+  touch-action:pan-y;
+}
+.microsite-gallery-stage{
+  overflow:hidden;
+}
+.microsite-gallery-stage img{
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+  object-position:center;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+.microsite-gallery-count{
+  position:absolute;
+  left:50%;
+  bottom:13px;
+  transform:translateX(-50%);
+  z-index:2;
+  padding:5px 9px;
+  border-radius:999px;
+  background:rgba(20,17,14,.68);
+  color:#fff;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.05em;
+  pointer-events:none;
+}
+.microsite-product-copy{
+  padding:12px 4px 4px;
+}
+.microsite-product-copy h2{font-size:24px;margin:5px 0}
+.microsite-product-copy p{font-size:13px;line-height:1.5;color:var(--muted)}
+.profile-daily-update{
+  grid-template-columns:minmax(180px,.7fr) minmax(0,1.3fr);
+  gap:12px;
+  margin:12px 0 14px;
+  padding:9px 11px;
+  border-radius:11px;
+}
+.profile-daily-update-copy strong{font-size:13px}
+.profile-daily-update-copy span{font-size:10px}
+.profile-daily-update textarea{
+  min-height:40px;
+  max-height:58px;
+  resize:none;
+  padding:8px 9px;
+  font-size:12px;
+}
+@media(max-width:820px){
+  .ns-reference-actions{max-width:none;padding-top:7px}
+}
+@media(max-width:700px){
+  .profile-daily-update{grid-template-columns:1fr;gap:6px}
+  .profile-daily-update textarea{min-height:42px;max-height:52px}
+  .ns-daily-update{width:100%;flex-basis:auto}
+}
+@media(max-width:480px){
+  .ns-reference-actions{gap:6px}
+  .ns-reference-actions .primary-button,.ns-reference-actions .secondary-button{flex:1;min-width:0}
+  .ns-reference-actions .ns-more-button{flex:0 0 36px}
+  .microsite-product-modal .microsite-gallery{height:min(64vh,500px);min-height:250px}
+}

@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useState} from "react";
-import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,Clock,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send ,Heart} from "lucide-react";
+import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,Clock,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send,Heart,Home,Compass,Grid2X2,Bookmark,UserRound,Search,MoreHorizontal,Navigation,Star,Package,Instagram} from "lucide-react";
 import {createEnquiry} from "./lib/api";
 import {getMicrosite,sellerPublicUrl} from "./lib/microsite";
 
@@ -55,27 +55,130 @@ export default function SellerMicrositePage({go,slug}){
   const products=data.products||[];
   const share=async()=>{const url=sellerPublicUrl(seller.slug);try{if(navigator.share)await navigator.share({title:seller.business_name,text:"Discover this local seller on NammaSpot",url});else{await navigator.clipboard.writeText(url);alert("Seller link copied.");}}catch{}};
   const wa=seller.whatsapp_phone?"https://wa.me/"+seller.whatsapp_phone.replace(/\D/g,""):null;
-  return <main className="seller-microsite ns-seller-profile">
-    <div className="ns-profile-bar"><button className="back-button" onClick={()=>go("/explore")}><ArrowLeft size={17}/> Explore</button><span className="ns-profile-brand">NammaSpot</span><button className="icon-button" onClick={share} aria-label="Share seller"><Share2 size={19}/></button></div>
-    <section className="ns-profile-header">
-      <div className="ns-profile-avatar">{seller.profile_image_url?<img src={seller.profile_image_url} alt={seller.business_name+" logo"}/>:seller.business_name?.charAt(0)}</div>
-      <div className="ns-profile-heading"><div className="eyebrow">{seller.category?.name||"LOCAL SELLER"} {seller.verified&&<span className="microsite-verified"><CheckCircle size={13}/> Verified</span>}</div><h1>{esc(seller.business_name)}</h1><p>{esc(seller.description||"Local seller on NammaSpot")}</p></div>
-      <div className="ns-profile-actions">{seller.contact&&<a className="primary-button" href={"tel:"+seller.contact}><Phone size={16}/> Call</a>}{wa&&<a className="secondary-button" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a>}<button className="secondary-button" onClick={()=>setSaved(!saved)}><Heart size={16} fill={saved?"currentColor":"none"}/> {saved?"Saved":"Save"}</button></div>
+  return <main className="seller-microsite ns-seller-profile ns-reference-layout">
+    <aside className="ns-left-sidebar">
+      <button className="ns-side-brand" onClick={()=>go("/")}>NammaSpot</button>
+      <div className="ns-side-tagline">Local Sellers <span>•</span> Real People <span>•</span> Genuine Products</div>
+      <nav className="ns-side-nav" aria-label="NammaSpot navigation">
+        <button className="active" onClick={()=>go("/")}><Home size={18}/> Home</button>
+        <button onClick={()=>go("/explore")}><Compass size={18}/> Explore</button>
+        <button onClick={()=>go("/categories")}><Grid2X2 size={18}/> Categories</button>
+        <button onClick={()=>go("/nearby")}><Navigation size={18}/> Nearby</button>
+        <button onClick={()=>go("/saved")}><Bookmark size={18}/> Saved</button>
+      </nav>
+      <div className="ns-side-divider"/>
+      <button className="ns-side-account" onClick={()=>go("/account")}><UserRound size={18}/> My Account</button>
+      <div className="ns-side-local-note">Support Local<br/>Discover Local ♡</div>
+    </aside>
+
+    <section className="ns-center-column">
+      <header className="ns-reference-topbar">
+        <button className="ns-mobile-back" onClick={()=>go("/explore")} aria-label="Back"><ArrowLeft size={18}/></button>
+        <div className="ns-reference-search"><Search size={17}/><input aria-label="Search NammaSpot" placeholder="Search for sellers, products, categories..." onFocus={()=>go("/explore")}/></div>
+        <div className="ns-reference-top-actions">
+          <span className="ns-location"><MapPin size={16}/> Chennai <span>⌄</span></span>
+          <button className="icon-button" onClick={()=>setSaved(!saved)} aria-label="Save seller"><Heart size={20} fill={saved?"currentColor":"none"}/></button>
+          <button className="icon-button" onClick={share} aria-label="Share seller"><Share2 size={19}/></button>
+          <button className="ns-account-dot" aria-label="Account"><UserRound size={18}/></button>
+        </div>
+      </header>
+
+      <div className="ns-seller-cover">
+        {seller.cover_image_url&&<img src={seller.cover_image_url} alt="" />}
+      </div>
+
+      <section className="ns-reference-seller-head">
+        <div className="ns-reference-avatar">{seller.profile_image_url?<img src={seller.profile_image_url} alt={seller.business_name+" logo"}/>:seller.business_name?.charAt(0)}</div>
+        <div className="ns-reference-seller-copy">
+          <div className="eyebrow">{seller.category?.name||"LOCAL SELLER"}</div>
+          <h1>{esc(seller.business_name)} {seller.verified&&<CheckCircle className="ns-inline-verified" size={17}/>}</h1>
+          <div className="ns-handle">{seller.slug?("@"+seller.slug):"@local-seller"} <span className="ns-verified-pill">{seller.verified?"✓ Verified Seller":"NammaSpot Seller"}</span></div>
+          <div className="ns-reference-location"><MapPin size={15}/>{esc(seller.location||"Chennai, Tamil Nadu")}</div>
+          <p>{esc(seller.description||"Local seller on NammaSpot")}</p>
+          <div className="ns-reference-stats">
+            <span><b>{products.length}</b> Products</span>
+            <span><b>Local</b> Seller</span>
+            <span><b>{seller.category?.name||"Local"}</b> Category</span>
+          </div>
+        </div>
+        <div className="ns-reference-actions">
+          {wa&&<a className="primary-button" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a>}
+          {seller.contact&&<a className="secondary-button" href={"tel:"+seller.contact}><Phone size={16}/> Call</a>}
+          <button className="secondary-button" onClick={share}><Share2 size={16}/> Share</button>
+          <button className="icon-button ns-more-button" aria-label="More"><MoreHorizontal size={20}/></button>
+        </div>
+      </section>
+
+      {settings.tagline&&<section className="ns-customer-message ns-reference-message"><div><div className="eyebrow">SELLER MESSAGE</div><strong>{esc(settings.tagline)}</strong><p>Updates from this seller for customers.</p></div><button className="primary-button" onClick={()=>setEnquire("general")}><Send size={15}/> Message seller</button></section>}
+
+      <div className="ns-reference-tabs">
+        <a className="active" href="#catalogue">Catalogue</a>
+        <a href="#about">About</a>
+        <a href="#reviews">Reviews</a>
+      </div>
+
+      <section id="catalogue" className="ns-profile-section ns-reference-catalogue">
+        <div className="ns-reference-section-head">
+          <div><h2>Our Catalogue</h2><p>Browse products and services from this local seller.</p></div>
+          <div className="ns-catalogue-search"><Search size={15}/><input placeholder="Search products..." aria-label="Search products"/></div>
+        </div>
+        {products.length?<div className="microsite-product-grid ns-reference-product-grid">{products.map(p=><MiniProduct key={p.id} p={p} onOpen={()=>setProduct(p)}/>)}</div>:<div className="empty-state"><h2>Catalogue coming soon</h2><p>This seller has not added products yet.</p></div>}
+      </section>
+
+      <section id="about" className="ns-profile-section ns-reference-about">
+        <div className="eyebrow">ABOUT THIS SELLER</div>
+        <h2>About</h2>
+        <p>{esc(seller.description||"This local seller is part of the NammaSpot community.")}</p>
+      </section>
+
+      <section id="reviews" className="ns-profile-section ns-reference-reviews">
+        <div className="eyebrow">CUSTOMER TRUST</div>
+        <h2>Reviews</h2>
+        <p>Customer reviews will appear here as NammaSpot gathers verified local feedback.</p>
+      </section>
+
+      <footer className="microsite-footer">NammaSpot · Local sellers, catalogues & connections</footer>
     </section>
 
-    {settings.tagline&&<section className="ns-customer-message"><div><div className="eyebrow">SELLER MESSAGE</div><strong>{esc(settings.tagline)}</strong><p>This message is set by the seller and can include today's date, opening time, closing time, order timing or any update for customers.</p></div><button className="primary-button" onClick={()=>setEnquire("general")}><Send size={16}/> Message seller</button></section>}
+    <aside className="ns-right-sidebar">
+      <section className="ns-right-card ns-contact-card">
+        <h3>Contact Seller</h3>
+        <p>Have a question? Reach out directly to the seller.</p>
+        {wa&&<a className="primary-button full-button" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a>}
+        {seller.contact&&<a className="secondary-button full-button" href={"tel:"+seller.contact}><Phone size={16}/> Call</a>}
+        <button className="secondary-button full-button" onClick={share}><Share2 size={16}/> Share</button>
+      </section>
 
-    <section className="ns-info-strip">
-      {seller.location&&<div><MapPin size={18}/><span>{esc(seller.location)}</span>{seller.location_url&&<a href={seller.location_url} target="_blank" rel="noreferrer">Directions <ExternalLink size={13}/></a>}</div>}
-      {data.hours.length>0&&<div><Clock size={18}/><span><b>{status?.open?"Open now":"Closed now"}</b>{status?.close&&" · Closes "+status.close}{status?.next&&!status?.open&&" · Opens "+status.next}</span></div>}
-    </section>
+      <section className="ns-right-card" id="business-information">
+        <h3>Business Information</h3>
+        <div className="ns-right-label">About</div>
+        <p>{esc(seller.description||"Local seller on NammaSpot")}</p>
+        {seller.contact&&<a className="ns-right-contact" href={"tel:"+seller.contact}><Phone size={15}/>{seller.contact}</a>}
+        {seller.whatsapp_phone&&<a className="ns-right-contact" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={15}/>{seller.whatsapp_phone}</a>}
+        {seller.instagram_url&&<a className="ns-right-contact" href={seller.instagram_url} target="_blank" rel="noreferrer"><Instagram size={15}/>Instagram</a>}
+        <div className="ns-right-divider"/>
+        <div className="ns-right-label">Opening Hours</div>
+        {data.hours.length>0&&<div className="ns-right-hours">{data.hours.filter(x=>x.is_open).slice(0,1).map(h=><span key={h.day_of_week}>{days[h.day_of_week].slice(0,3)} - Sat <b>{(h.ranges||[]).map(r=>r.open+" - "+r.close).join(" · ")}</b></span>)}<span className={status?.open?"ns-open":"ns-closed"}>{status?.open?"Open now":"Closed now"}</span></div>}
+        <div className="ns-right-divider"/>
+        <div className="ns-right-label">Location</div>
+        <p>{esc(seller.location||"Chennai, Tamil Nadu")}</p>
+        {seller.location_url&&<a className="secondary-button ns-map-button" href={seller.location_url} target="_blank" rel="noreferrer"><Navigation size={14}/> View on Map</a>}
+        <div className="ns-map-placeholder"><MapPin size={24}/><span>{esc(seller.location||"Chennai")}</span></div>
+      </section>
 
+      <section className="ns-right-card ns-similar-card">
+        <div className="ns-similar-head"><h3>Similar Sellers</h3><button onClick={()=>go("/explore")}>See all →</button></div>
+        <div className="ns-similar-items">
+          <div><span><Package size={17}/></span><small>Local Seller</small><button>Follow</button></div>
+          <div><span><Star size={17}/></span><small>{seller.category?.name||"Local"}</small><button>Follow</button></div>
+          <div><span><Heart size={17}/></span><small>Nearby Seller</small><button>Follow</button></div>
+        </div>
+      </section>
+    </aside>
 
-    <section id="catalogue" className="ns-profile-section"><div className="section-heading"><div><div className="eyebrow">NAMMASPOT CATALOGUE</div><h2>Products & services.</h2><p>Browse what this local seller offers and ask them directly.</p></div></div>{products.length?<div className="microsite-product-grid">{products.map(p=><MiniProduct key={p.id} p={p} onOpen={()=>setProduct(p)}/>)}</div>:<div className="empty-state"><h2>Catalogue coming soon</h2><p>This seller has not added products yet.</p></div>}</section>
-    {data.hours.length>0&&<section className="ns-profile-section"><div className="section-heading"><div><div className="eyebrow">TIMINGS</div><h2>When you can find them.</h2></div></div><div className="ns-hours-grid">{days.map((d,i)=>{const h=data.hours.find(x=>Number(x.day_of_week)===i);return <div key={d}><b>{d}</b><span>{h?.is_open?(h.ranges||[]).map(r=>r.open+"–"+r.close).join(" · "):"Closed"}</span></div>})}</div>{data.specialDates?.length>0&&<div className="ns-special-dates"><strong>Special dates & updates</strong>{data.specialDates.map(x=><span key={x.id}>{x.special_date} · {x.label} · {x.is_closed?"Closed":(x.ranges||[]).map(r=>r.open+"–"+r.close).join(" · ")}</span>)}</div>}</section>}
-
-    <section className="ns-profile-section ns-contact-section"><div className="eyebrow">CONNECT WITH THE SELLER</div><h2>Need to ask something?</h2><p>Message the seller about products, availability, custom orders or timing.</p><div className="microsite-contact-actions">{seller.contact&&<a className="primary-button" href={"tel:"+seller.contact}><Phone size={16}/> Call</a>}{wa&&<a className="secondary-button" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a>}{seller.instagram_url&&<a className="secondary-button" href={seller.instagram_url} target="_blank" rel="noreferrer">Instagram</a>}<button className="primary-button" onClick={()=>setEnquire("general")}><Send size={16}/> Send enquiry</button></div></section>
-    <footer className="microsite-footer">NammaSpot · Local sellers, catalogues & connections</footer>
+    {product&&<ProductModal product={product} onClose={()=>setProduct(null)} onEnquire={()=>{setProduct(null);setEnquire(product)}}/>}
+    {enquire&&<Enquiry seller={seller} product={enquire==="general"?null:enquire} onClose={()=>setEnquire(null)}/>}
+  </main>;
     {product&&<ProductModal product={product} onClose={()=>setProduct(null)} onEnquire={()=>{setProduct(null);setEnquire(product)}}/>}
     {enquire&&<Enquiry seller={seller} product={enquire==="general"?null:enquire} onClose={()=>setEnquire(null)}/>}
   </main>;

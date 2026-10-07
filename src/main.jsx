@@ -295,6 +295,11 @@ function HomePage({ go, query, setQuery }) {
               <button key={category} onClick={() => go("/explore?search=" + encodeURIComponent(category))}>{category}</button>
             ))}
           </div>
+          <div className="home-trust-row" aria-label="How NammaSpot works">
+            <span><CheckCircle size={15}/> Real local sellers</span>
+            <span><Compass size={15}/> Browse catalogues</span>
+            <span><MessageCircle size={15}/> Contact directly</span>
+          </div>
         </div>
       </section>
 
@@ -429,6 +434,8 @@ function SellerCard({ seller, index=0, go, toggleSave, saved, detailed=false }) 
   return (
     <article className={detailed ? "seller-card detailed" : "seller-card"}>
       <button className={"seller-cover cover-" + ((index % 4)+1)} onClick={() => go("/s/" + seller.slug)} aria-label={"Open " + seller.name}>
+        {seller.profile_image_url && <img className="seller-cover-image" src={seller.profile_image_url} alt="" loading="lazy" />}
+        <span className="seller-cover-shade" />
         <span className="category-label">{seller.category}</span>
         {seller.featured && <span className="featured-label"><Sparkles size={13}/> Featured</span>}
       </button>

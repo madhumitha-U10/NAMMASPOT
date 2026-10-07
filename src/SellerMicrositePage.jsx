@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useState} from "react";
-import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,Clock,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send,Heart,Home,Compass,Grid2X2,Bookmark,UserRound,Search,MoreHorizontal,Navigation,Star,Package,Instagram} from "lucide-react";
+import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,Clock,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send,Heart,Home,Compass,Grid2X2,Bookmark,UserRound,Search,MoreHorizontal,Navigation,Star,Package,Camera} from "lucide-react";
 import {createEnquiry} from "./lib/api";
 import {getMicrosite,sellerPublicUrl} from "./lib/microsite";
 

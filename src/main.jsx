@@ -839,7 +839,7 @@ function DashboardPage({ go }) {
       </div>
 
       <div className="dashboard-tabs">
-        {["profile","website","products","enquiries","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>item==="website"?go("/dashboard/website"):setTab(item)}>{item==="website"?"My Website":item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
+        {["profile","products","enquiries","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item==="public"?"Public profile":item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
       </div>
 
       {tab==="profile" && <ProfileEditor seller={seller} categories={categories} onSaved={(next)=>setSeller((current)=>({...current,...next}))}/>}
@@ -892,12 +892,12 @@ function ProfileEditor({ seller,categories,onSaved }) {
       <div className="profile-media-grid">
         <div className="profile-media-card">
           <div className="profile-media-preview">{data.profile_image_url?<img src={data.profile_image_url} alt="Business logo" />:<Store size={34}/>}</div>
-          <div><strong>Business logo / profile image</strong><small>Shown beside your business name on your public NammaSpot website.</small></div>
+          <div><strong>Business logo / profile image</strong><small>Shown beside your business name on your public NammaSpot seller profile.</small></div>
           <label className="secondary-button upload-button">{state.imageBusy==="profile"?"Uploading…":"Upload logo"}<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e,"profile")} hidden disabled={Boolean(state.imageBusy)}/></label>
         </div>
         <div className="profile-media-card profile-cover-card">
           <div className="profile-cover-preview">{data.cover_image_url?<img src={data.cover_image_url} alt="Business cover" />:<span>Cover image preview</span>}</div>
-          <div><strong>Website cover image</strong><small>Used as the cover image on your NammaSpot seller profile.</small></div>
+          <div><strong>Website cover image</strong><small>Used on your NammaSpot seller profile.</small></div>
           <label className="secondary-button upload-button">{state.imageBusy==="cover"?"Uploading…":"Upload cover"}<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e,"cover")} hidden disabled={Boolean(state.imageBusy)}/></label>
         </div>
       </div>
@@ -912,8 +912,18 @@ function ProfileEditor({ seller,categories,onSaved }) {
         <label>Phone<input value={data.contact} onChange={(e)=>setData({...data,contact:e.target.value})}/></label>
         <label>WhatsApp<input value={data.whatsapp_phone} onChange={(e)=>setData({...data,whatsapp_phone:e.target.value})}/></label>
         <label>Instagram<input type="url" value={data.instagram_url} onChange={(e)=>setData({...data,instagram_url:e.target.value})}/></label>
-        <label>Opening time<input type="time" value={data.opening_time} onChange={(e)=>setData({...data,opening_time:e.target.value})}/></label>
-        <label>Closing time<input type="time" value={data.closing_time} onChange={(e)=>setData({...data,closing_time:e.target.value})}/></label>
+      </div>
+      <div className="profile-hours-compact">
+        <div className="profile-hours-copy">
+          <div className="eyebrow">BUSINESS HOURS</div>
+          <strong>When are you open?</strong>
+          <span>Set it once here. It is saved together with your profile.</span>
+        </div>
+        <div className="profile-hours-fields">
+          <label>Open<input type="time" value={data.opening_time} onChange={(e)=>setData({...data,opening_time:e.target.value})}/></label>
+          <span className="hours-arrow">→</span>
+          <label>Close<input type="time" value={data.closing_time} onChange={(e)=>setData({...data,closing_time:e.target.value})}/></label>
+        </div>
       </div>
       <label>Description *<textarea value={data.description} onChange={(e)=>setData({...data,description:e.target.value})} maxLength={600} required/></label>
       {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}

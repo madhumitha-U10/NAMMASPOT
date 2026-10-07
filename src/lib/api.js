@@ -407,7 +407,19 @@ export async function createProduct(values) {
     state.products.unshift(product); saveDemo(state); return productsOf([product])[0];
   }
   const client = needBackend();
-  const { data,error } = await client.from("products").insert({ seller_id:values.seller_id, product_name:text(values.product_name,160), description:text(values.description,1000), price:Number(values.price), availability:Boolean(values.availability), image_url:text(values.image_url,800) || null, category_id:values.category_id || null }).select("id,seller_id,product_name,description,price,availability,image_url,category_id,created_at").single();
+  const productName = text(values.product_name,160);
+  if (!productName) throw new Error("Enter a product name.");
+  const { data,error } = await client.from("products").insert({
+    seller_id:values.seller_id,
+    name:productName,
+    product_name:productName,
+    description:text(values.description,1000),
+    price:Number(values.price),
+    available:Boolean(values.availability),
+    availability:Boolean(values.availability),
+    image_url:text(values.image_url,800) || null,
+    category_id:values.category_id || null
+  }).select("id,seller_id,name,product_name,description,price,available,availability,image_url,category_id,created_at").single();
   if (error) throw error; return productsOf([data])[0];
 }
 
@@ -418,7 +430,19 @@ export async function updateProduct(productId,values) {
     state.products[index]={...state.products[index],product_name:text(values.product_name,160),name:text(values.product_name,160),description:text(values.description,1000),price:Number(values.price),availability:Boolean(values.availability),available:Boolean(values.availability),image_url:text(values.image_url,800),category_id:values.category_id || null};
     saveDemo(state); return productsOf([state.products[index]])[0];
   }
-  const client=needBackend(); const {data,error}=await client.from("products").update({product_name:text(values.product_name,160),description:text(values.description,1000),price:Number(values.price),availability:Boolean(values.availability),image_url:text(values.image_url,800)||null,category_id:values.category_id||null}).eq("id",productId).select("id,seller_id,product_name,description,price,availability,image_url,category_id,created_at").single();
+  const client=needBackend();
+  const productName = text(values.product_name,160);
+  if (!productName) throw new Error("Enter a product name.");
+  const {data,error}=await client.from("products").update({
+    name:productName,
+    product_name:productName,
+    description:text(values.description,1000),
+    price:Number(values.price),
+    available:Boolean(values.availability),
+    availability:Boolean(values.availability),
+    image_url:text(values.image_url,800)||null,
+    category_id:values.category_id||null
+  }).eq("id",productId).select("id,seller_id,name,product_name,description,price,available,availability,image_url,category_id,created_at").single();
   if(error) throw error; return productsOf([data])[0];
 }
 

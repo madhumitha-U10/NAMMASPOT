@@ -687,7 +687,7 @@ function RegisterPage({ go }) {
 
       <div className="signup-before-card">
         <ShieldCheck size={20}/>
-        <div><strong>What you need</strong><ul><li>A business name</li><li>A NammaSpot ID you will remember</li><li>A strong password</li><li>Your name, business phone, WhatsApp number and business location</li></ul><span>You can add your products, images, location and hours from your seller dashboard.</span></div>
+        <div><strong>What you need</strong><ul><li>A business name</li><li>A NammaSpot ID you will remember</li><li>A strong password</li><li>Your name, business phone, WhatsApp number and business location</li></ul><span>You can add your products, images, location and daily update from your seller dashboard.</span></div>
       </div>
 
       {state.success ? (
@@ -696,7 +696,7 @@ function RegisterPage({ go }) {
           <h2>Account created</h2>
           <p>{state.success}</p>
           <div className="created-id"><span>Your NammaSpot ID</span><strong>{String(state.nammaspotId || "").toLowerCase()}</strong></div>
-          <p className="muted-note">Save this ID. You will use it with your password every time you sign in. Your ID is shown in lowercase here; NammaSpot accepts it when you log in.</p>
+          <p className="muted-note">Save this ID. You will use it with your password every time you sign in. Your ID is shown in lowercase here; use the same ID when you log in.</p>
           <div className="button-row"><button className="primary-button" onClick={()=>go("/login")}><LogIn size={17}/> Go to seller login</button><button className="secondary-button" onClick={()=>go("/")}><Home size={17}/> Back to home</button></div>
         </section>
       ) : (
@@ -729,7 +729,7 @@ function RegisterPage({ go }) {
           </section>}
 
           {step===2 && <section className="signup-section">
-            <div className="signup-section-heading"><span className="signup-number">2</span><div><h2>Tell us about your business</h2><p>These required details help NammaSpot verify your business before approval. You can build the rest of your mini website later.</p></div></div>
+            <div className="signup-section-heading"><span className="signup-number">2</span><div><h2>Tell us about your business</h2><p>These required details help NammaSpot verify your business before approval. You can complete your NammaSpot catalogue after approval.</p></div></div>
             <div className="required-details-note"><CheckCircle size={17}/><span><strong>Required before approval:</strong> business name, your name, business phone, WhatsApp number and business location.</span></div>
             <label>Business name <span className="required">*</span>
               <input value={data.business} onChange={e=>setData({...data,business:e.target.value})} maxLength={160} autoComplete="organization" required/>
@@ -747,7 +747,7 @@ function RegisterPage({ go }) {
               <label>Instagram URL<input type="url" value={data.instagram} onChange={e=>setData({...data,instagram:e.target.value})} placeholder="https://instagram.com/…"/></label>
             </div><label>Short business description<textarea value={data.description} onChange={e=>setData({...data,description:e.target.value})} maxLength={300} placeholder="What do you sell or offer?"/></label></details>
 
-            <div className="signup-approval-card"><ShieldCheck size={18}/><div><strong>What happens after you submit?</strong><ol><li>Your account is created.</li><li>Your seller profile stays hidden while it is <b>pending approval</b>.</li><li>After NammaSpot admin approval, you can log in and build your public mini website.</li></ol></div></div>
+            <div className="signup-approval-card"><ShieldCheck size={18}/><div><strong>What happens after you submit?</strong><ol><li>Your account is created.</li><li>Your seller profile stays hidden while it is <b>pending approval</b>.</li><li>After NammaSpot admin approval, your NammaSpot seller profile can go public.</li></ol></div></div>
 
             {state.error && <div className="inline-error" role="alert"><AlertCircle size={17}/>{state.error}</div>}
             <div className="button-row signup-actions"><button type="button" className="secondary-button" onClick={()=>setStep(1)}><ArrowLeft size={17}/> Back</button><button className="primary-button" disabled={state.loading||!businessReady}>{state.loading ? "Creating your seller account…" : <><Plus size={18}/> Create seller account</>}</button></div>

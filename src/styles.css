@@ -911,3 +911,22 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   .ns-hours-grid>div{display:grid;gap:4px}
   .ns-hours-grid span{text-align:left}
 }
+
+
+/* Customer-first polish: clearer discovery, real seller imagery, stronger touch targets */
+.home-trust-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;color:#5e5b55;font-size:13px;font-weight:700}
+.home-trust-row span{display:inline-flex;align-items:center;gap:6px;padding:8px 11px;border:1px solid #e2ded5;border-radius:999px;background:rgba(255,254,250,.72)}
+.home-trust-row svg{color:var(--burgundy)}
+.seller-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;transition:transform .35s ease}
+.seller-cover-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,19,28,.04) 20%,rgba(15,19,28,.48) 100%);z-index:1}
+.seller-cover:hover .seller-cover-image{transform:scale(1.045)}
+.seller-cover .category-label,.seller-cover .featured-label{position:relative;z-index:2}
+.seller-cover .featured-label{margin-left:auto}
+.seller-card{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.seller-card:hover{transform:translateY(-3px);border-color:#cfc5ba;box-shadow:0 16px 36px rgba(32,33,30,.08)}
+.card-link{min-height:46px}
+@media(max-width:700px){
+  .home-trust-row{gap:7px}
+  .home-trust-row span{font-size:12px;padding:8px 9px}
+  .seller-card:hover{transform:none}
+}

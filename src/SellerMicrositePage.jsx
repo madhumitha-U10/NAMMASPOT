@@ -82,7 +82,28 @@ export default function SellerMicrositePage({go,slug}){
     let canonical=document.querySelector('link[rel="canonical"]');
     if(!canonical){canonical=document.createElement("link");canonical.rel="canonical";document.head.appendChild(canonical)}
     canonical.href=url;
-  },[seller,settings]);
+    const jsonId="nammaspot-seller-jsonld";
+    document.getElementById(jsonId)?.remove();
+    const schema={
+      "@context":"https://schema.org",
+      "@type":"LocalBusiness",
+      "@id":url+"#business",
+      name:seller.business_name||"Local seller",
+      description:desc,
+      url,
+      image,
+      telephone:seller.contact||seller.phone||undefined,
+      address:{"@type":"PostalAddress",addressLocality:seller.city||seller.location||"Tamil Nadu",addressRegion:"Tamil Nadu",addressCountry:"IN"},
+      sameAs:seller.instagram_url?[seller.instagram_url]:undefined,
+      hasOfferCatalog:{"@type":"OfferCatalog",name:"Catalogue",itemListElement:(data.products||[]).slice(0,50).map(p=>({"@type":"Offer","itemOffered":{"@type":"Product",name:p.name||p.product_name||"Local product",image:p.image_url||undefined}}))}
+    };
+    const jsonScript=document.createElement("script");
+    jsonScript.id=jsonId;
+    jsonScript.type="application/ld+json";
+    jsonScript.textContent=JSON.stringify(schema).replace(/</g,"\\u003c");
+    document.head.appendChild(jsonScript);
+    return ()=>jsonScript.remove();
+  },[seller,settings,data]);
   if(state.loading)return <main className="page"><div className="page-title"><div className="eyebrow">NAMMASPOT SELLER</div><h1>Loading seller…</h1></div></main>;
   if(state.error)return <main className="page"><div className="error-state"><h2>Could not load this seller</h2><p>{state.error}</p><button className="secondary-button" onClick={()=>go("/explore")}>Back to Explore</button></div></main>;
   if(!data)return <main className="page"><div className="empty-state"><h2>Seller not found</h2><p>This NammaSpot seller page is unavailable.</p></div></main>;

@@ -148,6 +148,8 @@ function App() {
 
   useEffect(() => {
     const privateRoutes = new Set(["login", "register", "dashboard", "admin-login", "admin-dashboard", "admin", "saved", "not-found"]);
+    setMeta("robots", privateRoutes.has(route) ? "noindex,nofollow,noarchive" : "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1");
+    if (route === "seller") return;
     const metadata = {
       home: ["NammaSpot — Namma Ooru. Namma People. Namma Spot.", "Discover local sellers, home businesses, crafts, food and makers across Chennai and Tamil Nadu."],
       explore: ["Explore Local Sellers · NammaSpot", "Explore local businesses, products, makers and home sellers across Tamil Nadu."],
@@ -165,8 +167,7 @@ function App() {
     const [title, description] = metadata[route] || metadata.home;
     document.title = title;
     setMeta("description", description);
-    setMeta("robots", privateRoutes.has(route) ? "noindex,nofollow,noarchive" : "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1");
-    if (route !== "seller") setCanonical(location.origin + (location.pathname === "/" ? "/" : location.pathname));
+    setCanonical(location.origin + (location.pathname === "/" ? "/" : location.pathname));
     setPropertyMeta("og:title", title);
     setPropertyMeta("og:description", description);
     setPropertyMeta("og:url", location.origin + location.pathname);

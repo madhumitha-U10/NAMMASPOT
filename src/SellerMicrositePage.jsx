@@ -56,7 +56,10 @@ function Enquiry({seller,product,onClose}){
 
 export default function SellerMicrositePage({go,slug}){
   const [state,setState]=useState({loading:true,error:"",data:null});
+  const [language,setLanguage]=useState(()=>localStorage.getItem("nammaspot-language")==="ta"?"ta":"en");
+  const isTamil=language==="ta";
   const [product,setProduct]=useState(null),[enquire,setEnquire]=useState(null),[saved,setSaved]=useState(false);
+  useEffect(()=>{localStorage.setItem("nammaspot-language",language);document.documentElement.lang=language},[language]);
   useEffect(()=>{let alive=true;getMicrosite(slug).then(data=>alive&&setState({loading:false,error:"",data})).catch(e=>alive&&setState({loading:false,error:e.message||"Could not load this seller.",data:null}));return()=>{alive=false}},[slug]);
   const data=state.data,seller=data?.seller,settings=data?.settings||{};
   const status=useMemo(()=>data?nowStatus(data.hours,data.specialDates):null,[data]);
@@ -115,14 +118,15 @@ export default function SellerMicrositePage({go,slug}){
       <button className="ns-side-brand" onClick={()=>go("/")}>NammaSpot</button>
       <div className="ns-side-tagline">Local Sellers <span>•</span> Real People <span>•</span> Genuine Products</div>
       <nav className="ns-side-nav" aria-label="NammaSpot navigation">
-        <button className="active" onClick={()=>go("/")}><Home size={18}/> Home</button>
-        <button onClick={()=>go("/explore")}><Compass size={18}/> Explore</button>
-        <button onClick={()=>go("/categories")}><Grid2X2 size={18}/> Categories</button>
-        <button onClick={()=>go("/nearby")}><Navigation size={18}/> Nearby</button>
-        <button onClick={()=>go("/saved")}><Bookmark size={18}/> Saved</button>
+        <button className="active" onClick={()=>go("/")}><Home size={18}/> {isTamil?"முகப்பு":"Home"}</button>
+        <button onClick={()=>go("/explore")}><Compass size={18}/> {isTamil?"தேடுக":"Explore"}</button>
+        <button onClick={()=>go("/categories")}><Grid2X2 size={18}/> {isTamil?"வகைகள்":"Categories"}</button>
+        <button onClick={()=>go("/nearby")}><Navigation size={18}/> {isTamil?"அருகில்":"Nearby"}</button>
+        <button onClick={()=>go("/saved")}><Bookmark size={18}/> {isTamil?"சேமித்தவை":"Saved"}</button>
       </nav>
       <div className="ns-side-divider"/>
-      <button className="ns-side-account" onClick={()=>go("/account")}><UserRound size={18}/> My Account</button>
+      <button className="ns-side-account" onClick={()=>go("/account")}><UserRound size={18}/> {isTamil?"என் கணக்கு":"My Account"}</button>
+      <button className="ns-language-toggle" type="button" onClick={()=>setLanguage(isTamil?"en":"ta")}>{isTamil?"English":"தமிழ்"}</button>
       <div className="ns-side-local-note">Support Local<br/>Discover Local ♡</div>
     </aside>
 

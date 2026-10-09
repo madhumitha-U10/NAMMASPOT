@@ -236,14 +236,11 @@ export async function startSellerPasswordSetup(nammaspotId, email) {
   const seller = data?.[0];
   if (!seller) throw new Error("NammaSpot ID and email address do not match.");
   if (!["pending","approved"].includes(seller.verification_status)) throw new Error("This seller account cannot set a password right now.");
-  const { data: otpGuard, error: otpGuardError } = await client.rpc("register_email_otp_request", { p_email: normalized });
-  if (otpGuardError) throw otpGuardError;
   const { error: otpError } = await client.auth.signInWithOtp({
     email: normalized,
     options: { shouldCreateUser: false },
   });
   if (otpError) throw otpError;
-  if (otpGuard?.warning) console.warn("NammaSpot email OTP usage warning:", otpGuard.email_count, "emails in the current hour.");
   return normalized;
 }
 

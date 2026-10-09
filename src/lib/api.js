@@ -1,7 +1,7 @@
-import { supabase, isSupabaseConfigured, uploadSellerMedia, getSellerStorageUsage } from "./supabase";
+import { supabase, isSupabaseConfigured, isProductionConfigurationError, uploadSellerMedia, getSellerStorageUsage } from "./supabase";
 import { seedSellers, categoryNames } from "./seed";
 
-export { isSupabaseConfigured, uploadSellerMedia, getSellerStorageUsage };
+export { isSupabaseConfigured, isProductionConfigurationError, uploadSellerMedia, getSellerStorageUsage };
 
 export class BackendNotConfiguredError extends Error {
   constructor() {

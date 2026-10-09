@@ -1,11 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
 
-const url = import.meta.env.VITE_SUPABASE_URL || "https://ahncpjthmaxapawjzcwt.supabase.co";
-const key =
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-  import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  "sb_publishable_tjoHCwVR3UVDOl4cc5EDUQ_vF2LWM27";
+const url = import.meta.env.VITE_SUPABASE_URL;
+const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+export const isProductionConfigurationError = Boolean(import.meta.env.PROD && (!url || !key));
 export const isSupabaseConfigured = Boolean(url && key);
 
 export const supabase = isSupabaseConfigured
@@ -63,6 +61,9 @@ async function compressImage(file) {
 }
 
 export async function uploadSellerMedia(file, userId, bucket = "seller-media") {
+  if (!supabase && import.meta.env.PROD) {
+    throw new Error("NammaSpot cannot upload because production Supabase configuration is missing. Contact support.");
+  }
   if (!supabase || !file || !userId) return null;
   const compressed = await compressImage(file);
 

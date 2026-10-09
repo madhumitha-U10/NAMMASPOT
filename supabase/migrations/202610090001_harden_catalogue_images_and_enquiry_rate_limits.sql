@@ -5,8 +5,9 @@ create policy "seller media owner read storage guard" on public.storage_guard
   for select to authenticated
   using (exists (select 1 from public.admins a where a.user_id = (select auth.uid())));
 
+drop policy if exists "public and owner read product images" on public.product_images;
 drop policy if exists "public read approved product images" on public.product_images;
-create policy "public read approved product images" on public.product_images
+create policy "public seller and admin read product images" on public.product_images
   for select to anon, authenticated
   using (
     exists (
@@ -15,30 +16,11 @@ create policy "public read approved product images" on public.product_images
       join public.sellers s on s.id = p.seller_id
       where p.id = product_images.product_id
         and p.seller_id = product_images.seller_id
-        and s.id = product_images.seller_id
-        and s.verification_status = 'approved'
-    )
-  );
-
-drop policy if exists "seller manage own product images" on public.product_images;
-create policy "seller manage own product images" on public.product_images
-  for all to authenticated
-  using (
-    exists (
-      select 1 from public.sellers s
-      join public.products p on p.seller_id = s.id
-      where s.id = product_images.seller_id
-        and s.user_id = (select auth.uid())
-        and p.id = product_images.product_id
-    )
-  )
-  with check (
-    exists (
-      select 1 from public.sellers s
-      join public.products p on p.seller_id = s.id
-      where s.id = product_images.seller_id
-        and s.user_id = (select auth.uid())
-        and p.id = product_images.product_id
+        and (
+          s.verification_status = 'approved'
+          or s.user_id = (select auth.uid())
+          or exists (select 1 from public.admins a where a.user_id = (select auth.uid()))
+        )
     )
   );
 

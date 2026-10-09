@@ -683,7 +683,7 @@ function EnquiryModal({ seller, product, onClose }) {
               <label>Your name *<input value={data.name} onChange={(e)=>setData({...data,name:e.target.value})} maxLength={120} required/></label>
               <label>Phone / email *<input value={data.contact} onChange={(e)=>setData({...data,contact:e.target.value})} maxLength={160} required/></label>
               <label>Message *<textarea value={data.message} onChange={(e)=>setData({...data,message:e.target.value})} maxLength={1000} required/></label>
-              {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
+              {state.error && <div className="inline-error" role="alert" aria-live="assertive"><AlertCircle size={17}/>{state.error}</div>}
               <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Sending…" : <><Send size={16}/> Send enquiry</>}</button>
             </form>
           </>
@@ -770,7 +770,7 @@ function RegisterPage({ go }) {
         <section className="seller-form signup-success-card">
           <CheckCircle size={34}/>
           <h2>Account created</h2>
-          <p>{state.success}</p>
+          <p role="status" aria-live="polite">{state.success}</p>
           <div className="created-id"><span>Your NammaSpot ID</span><strong>{String(state.nammaspotId || "").toLowerCase()}</strong></div>
           <p className="muted-note">Save this ID. You will use it with your password every time you sign in. Your ID is shown in lowercase here; use the same ID when you log in.</p>
           <div className="button-row"><button className="primary-button" onClick={()=>go("/login")}><LogIn size={17}/> Go to seller login</button><button className="secondary-button" onClick={()=>go("/")}><Home size={17}/> Back to home</button></div>
@@ -872,7 +872,7 @@ function LoginPage({ go, onSignedIn }) {
         </div>
         <label>NammaSpot ID<input value={data.nammaspotId} onChange={(e)=>setData({...data,nammaspotId:e.target.value.toUpperCase().replace(/\\s/g,"")})} placeholder="NS-000001" autoCapitalize="characters" required/></label>
         <label>Password<input type="password" autoComplete="current-password" value={data.password} onChange={(e)=>setData({...data,password:e.target.value})} placeholder="Your password" required/></label>
-        {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
+        {state.error && <div className="inline-error" role="alert" aria-live="assertive"><AlertCircle size={17}/>{state.error}</div>}
         <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Signing in…" : <><LogIn size={17}/> Sign in</>}</button>
         <button type="button" className="secondary-button full-button" onClick={()=>go("/register")}>Create seller account</button>
         <p className="login-help">Forgot your password? For this free MVP, contact the NammaSpot admin for account recovery.</p>
@@ -1022,8 +1022,8 @@ function ProfileEditor({ seller,categories,onSaved }) {
         />
       </div>
       <label>Description *<textarea value={data.description} onChange={(e)=>setData({...data,description:e.target.value})} maxLength={600} required/></label>
-      {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
-      {state.success && <div className="form-status"><CheckCircle size={18}/>{state.success}</div>}
+      {state.error && <div className="inline-error" role="alert" aria-live="assertive"><AlertCircle size={17}/>{state.error}</div>}
+      {state.success && <div className="form-status" role="status" aria-live="polite"><CheckCircle size={18}/>{state.success}</div>}
       <button className="primary-button" disabled={state.saving||Boolean(state.imageBusy)}>{state.saving ? "Saving…" : "Save profile"}</button>
     </form>
   );
@@ -1135,7 +1135,7 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
             <label className="catalogue-upload-tile">{galleryBusy?"Uploading…":"＋ Add image"}<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={uploadGallery} hidden disabled={galleryBusy}/></label>
           </div>
         </div>}
-        {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
+        {state.error && <div className="inline-error" role="alert" aria-live="assertive"><AlertCircle size={17}/>{state.error}</div>}
         <div className="button-row"><button className="primary-button" type="submit" disabled={state.loading}>{state.loading ? "Saving…" : editing ? "Update product" : "Add product"}</button>{editing&&<button type="button" className="secondary-button" onClick={()=>{setEditing(null);setForm(blank);}}>Cancel</button>}</div>
       </form>
       <div className="dashboard-list">
@@ -1227,7 +1227,7 @@ function AdminLoginPage({ go, onSignedIn }) {
       <form className="seller-form" onSubmit={submit}>
         <label>Admin email<input type="email" autoComplete="username" value={data.email} onChange={(e)=>setData({...data,email:e.target.value})} placeholder="Admin email" required/></label>
         <label>Password<input type="password" autoComplete="current-password" value={data.password} onChange={(e)=>setData({...data,password:e.target.value})} placeholder="Admin password" required/></label>
-        {state.error && <div className="inline-error"><AlertCircle size={17}/>{state.error}</div>}
+        {state.error && <div className="inline-error" role="alert" aria-live="assertive"><AlertCircle size={17}/>{state.error}</div>}
         <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Signing in…" : <><ShieldCheck size={17}/> Enter control panel</>}</button>
         <button type="button" className="secondary-button full-button" onClick={()=>go("/")}>Back to NammaSpot</button>
       </form>
@@ -1364,7 +1364,7 @@ function AdminPage() {
         </div>
       </div>
 
-      {error && <div className="inline-error"><AlertCircle size={17}/>{error}</div>}
+      {error && <div className="inline-error" role="alert" aria-live="assertive"><AlertCircle size={17}/>{error}</div>}
 
       {otpAlerts.length > 0 && (
         <div className="dashboard-item" role="alert" aria-live="polite">

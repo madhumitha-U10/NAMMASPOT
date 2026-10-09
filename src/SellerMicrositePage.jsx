@@ -60,7 +60,29 @@ export default function SellerMicrositePage({go,slug}){
   useEffect(()=>{let alive=true;getMicrosite(slug).then(data=>alive&&setState({loading:false,error:"",data})).catch(e=>alive&&setState({loading:false,error:e.message||"Could not load this seller.",data:null}));return()=>{alive=false}},[slug]);
   const data=state.data,seller=data?.seller,settings=data?.settings||{};
   const status=useMemo(()=>data?nowStatus(data.hours,data.specialDates):null,[data]);
-  useEffect(()=>{if(!seller)return;const url=sellerPublicUrl(seller.slug);document.title=(seller.business_name||"Local seller")+" · NammaSpot";const desc=(seller.description||settings.tagline||"Local seller on NammaSpot").slice(0,155);document.querySelector('meta[name="description"]')?.setAttribute("content",desc);let c=document.querySelector('link[rel="canonical"]');if(!c){c=document.createElement("link");c.rel="canonical";document.head.appendChild(c)}c.href=url},[seller,settings]);
+  useEffect(()=>{
+    if(!seller)return;
+    const url=sellerPublicUrl(seller.slug);
+    const title=(seller.business_name||"Local seller")+" · Catalogue · NammaSpot";
+    const desc=(seller.description||settings.tagline||"Discover this local seller and their catalogue on NammaSpot.").replace(/\s+/g," ").slice(0,155);
+    const image=seller.cover_image_url||seller.profile_image_url||location.origin+"/og-image.svg";
+    document.title=title;
+    const setMeta=(selector,attribute,value)=>{let el=document.querySelector(selector);if(!el){el=document.createElement("meta");const [kind,key]=selector.match(/\[(name|property)="([^"]+)"\]/).slice(1);el.setAttribute(kind,key);document.head.appendChild(el)}el.setAttribute("content",value)};
+    setMeta('meta[name="description"]',"name",desc);
+    setMeta('meta[name="robots"]',"name","index,follow,max-image-preview:large");
+    setMeta('meta[property="og:title"]',"property",title);
+    setMeta('meta[property="og:description"]',"property",desc);
+    setMeta('meta[property="og:url"]',"property",url);
+    setMeta('meta[property="og:image"]',"property",image);
+    setMeta('meta[property="og:type"]',"property","profile");
+    setMeta('meta[name="twitter:card"]',"name","summary_large_image");
+    setMeta('meta[name="twitter:title"]',"name",title);
+    setMeta('meta[name="twitter:description"]',"name",desc);
+    setMeta('meta[name="twitter:image"]',"name",image);
+    let canonical=document.querySelector('link[rel="canonical"]');
+    if(!canonical){canonical=document.createElement("link");canonical.rel="canonical";document.head.appendChild(canonical)}
+    canonical.href=url;
+  },[seller,settings]);
   if(state.loading)return <main className="page"><div className="page-title"><div className="eyebrow">NAMMASPOT SELLER</div><h1>Loading seller…</h1></div></main>;
   if(state.error)return <main className="page"><div className="error-state"><h2>Could not load this seller</h2><p>{state.error}</p><button className="secondary-button" onClick={()=>go("/explore")}>Back to Explore</button></div></main>;
   if(!data)return <main className="page"><div className="empty-state"><h2>Seller not found</h2><p>This NammaSpot seller page is unavailable.</p></div></main>;

@@ -13,6 +13,7 @@ import SellerMicrositePage from "./SellerMicrositePage.jsx";
 import WebsiteEditorPage from "./WebsiteEditorPage.jsx";
 import {
   isSupabaseConfigured,
+  isProductionConfigurationError,
   BackendNotConfiguredError,
   getPublicSellers,
   getPublicSeller,
@@ -147,8 +148,43 @@ function App() {
 
   useEffect(() => {
     const privateRoutes = new Set(["login", "register", "dashboard", "admin-login", "admin-dashboard", "admin", "saved", "not-found"]);
+    const metadata = {
+      home: ["NammaSpot — Namma Ooru. Namma People. Namma Spot.", "Discover local sellers, home businesses, crafts, food and makers across Chennai and Tamil Nadu."],
+      explore: ["Explore Local Sellers · NammaSpot", "Explore local businesses, products, makers and home sellers across Tamil Nadu."],
+      categories: ["Shop by Category · NammaSpot", "Discover local sellers by category on NammaSpot."],
+      featured: ["Featured Local Sellers · NammaSpot", "Meet featured local sellers and small businesses on NammaSpot."],
+      saved: ["Saved Sellers · NammaSpot", "Your saved local sellers on NammaSpot."],
+      login: ["Seller Login · NammaSpot", "Sign in to manage your NammaSpot seller account."],
+      register: ["Create Seller Account · NammaSpot", "Create a NammaSpot seller account and publish your local business catalogue after approval."],
+      dashboard: ["Seller Dashboard · NammaSpot", "Manage your NammaSpot business profile, catalogue and enquiries."],
+      "admin-login": ["Admin Login · NammaSpot", "Authorized NammaSpot administration access."],
+      "admin-dashboard": ["Admin Console · NammaSpot", "Authorized NammaSpot administration console."],
+      "website-editor": ["Seller Profile Settings · NammaSpot", "Manage your NammaSpot seller profile settings."],
+      "not-found": ["Page Not Found · NammaSpot", "This NammaSpot page could not be found."]
+    };
+    const [title, description] = metadata[route] || metadata.home;
+    document.title = title;
+    setMeta("description", description);
     setMeta("robots", privateRoutes.has(route) ? "noindex,nofollow,noarchive" : "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1");
-  }, [route]);
+    if (route !== "seller") setCanonical(location.origin + (location.pathname === "/" ? "/" : location.pathname));
+    setPropertyMeta("og:title", title);
+    setPropertyMeta("og:description", description);
+    setPropertyMeta("og:url", location.origin + location.pathname);
+    setPropertyMeta("og:image", location.origin + "/og-image.svg");
+    setPropertyMeta("og:type", route === "seller" ? "profile" : "website");
+    setMeta("twitter:card", "summary_large_image");
+    setMeta("twitter:title", title);
+    setMeta("twitter:description", description);
+    setMeta("twitter:image", location.origin + "/og-image.svg");
+  }, [route, path]);
+
+  if (isProductionConfigurationError) {
+    return <main className="page" role="alert" style={{maxWidth:680,margin:"12vh auto",padding:24}}>
+      <div className="eyebrow">NAMMASPOT CONFIGURATION ERROR</div>
+      <h1>Production backend is not configured</h1>
+      <p>NammaSpot has stopped instead of showing demo data. Configure VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in the Vercel Production environment, then redeploy.</p>
+    </main>;
+  }
 
   return (
     <div className="app-shell">
@@ -1408,6 +1444,12 @@ async function shareSeller(seller) {
 function setMeta(name,content) {
   let element=document.querySelector('meta[name="' + name + '"]');
   if (!element) { element=document.createElement("meta"); element.setAttribute("name",name); document.head.appendChild(element); }
+  element.setAttribute("content",content);
+}
+
+function setPropertyMeta(property,content) {
+  let element=document.querySelector('meta[property="' + property + '"]');
+  if (!element) { element=document.createElement("meta"); element.setAttribute("property",property); document.head.appendChild(element); }
   element.setAttribute("content",content);
 }
 

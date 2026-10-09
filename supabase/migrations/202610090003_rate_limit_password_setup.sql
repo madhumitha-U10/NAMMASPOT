@@ -31,18 +31,27 @@ $function$;
 
 drop function if exists public.lookup_seller_email(text,text);
 create function public.lookup_seller_email(p_nammaspot_id text,p_email text)
-returns table(verification_status text, role text)
+returns table(can_set_password boolean)
 language plpgsql security definer set search_path = ''
 as $function$
 declare v_guard jsonb;
 begin
+  if p_nammaspot_id is null or length(trim(p_nammaspot_id)) < 3
+     or p_email is null or position('@' in trim(p_email)) < 2 then
+    raise exception 'Invalid account recovery details';
+  end if;
   v_guard := public.register_email_otp_request(p_email);
-  if coalesce((v_guard->>'allowed')::boolean,false) is false then raise exception 'Too many password setup requests. Please wait and try again later'; end if;
-  return query select s.verification_status,u.role from public.sellers s join public.users u on u.id=s.user_id
-    where upper(trim(s.nammaspot_id))=upper(trim(p_nammaspot_id)) and lower(trim(s.email))=lower(trim(p_email)) limit 1;
+  if coalesce((v_guard->>'allowed')::boolean,false) is false then
+    raise exception 'Too many password setup requests. Please wait and try again later';
+  end if;
+  return query select (s.verification_status in ('pending','approved')) as can_set_password
+    from public.sellers s
+    where upper(trim(s.nammaspot_id))=upper(trim(p_nammaspot_id))
+      and lower(trim(s.email))=lower(trim(p_email))
+    limit 1;
 end;
 $function$;
 revoke all on function public.register_email_otp_request(text) from public, anon, authenticated;
 grant execute on function public.register_email_otp_request(text) to service_role;
 revoke all on function public.lookup_seller_email(text,text) from public, authenticated;
-grant execute on function public.lookup_seller_email(text,text) to anon, authenticated, service_role;
+grant execute on function public.lookup_seller_email(text,text) to anon, service_role;

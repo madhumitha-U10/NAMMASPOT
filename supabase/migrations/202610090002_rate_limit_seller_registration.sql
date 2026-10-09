@@ -16,7 +16,7 @@ returns boolean language plpgsql security definer set search_path = ''
 as $function$
 declare v_ip_count integer; v_phone_count integer; v_id_count integer;
 begin
-  if (auth.jwt() ->> 'role') <> 'service_role' then raise exception 'Service role required'; end if;
+  if coalesce(auth.jwt() ->> 'role','') <> 'service_role' then raise exception 'Service role required'; end if;
   if coalesce(length(p_ip_hash),0) < 32 or coalesce(length(p_phone_hash),0) < 32 or coalesce(length(p_id_hash),0) < 32 then
     raise exception 'Invalid registration rate-limit key';
   end if;

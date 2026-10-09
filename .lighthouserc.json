@@ -1,0 +1,57 @@
+{
+  "ci": {
+    "collect": {
+      "url": [
+        "https://nammaspot.vercel.app/",
+        "https://nammaspot.vercel.app/register",
+        "https://nammaspot.vercel.app/s/art-story-e17c5042",
+        "https://nammaspot.vercel.app/nammaspot-control-panel/login"
+      ],
+      "numberOfRuns": 1,
+      "settings": {
+        "formFactor": "mobile",
+        "screenEmulation": {
+          "mobile": true,
+          "disabled": false,
+          "width": 360,
+          "height": 800,
+          "deviceScaleFactor": 1,
+          "isMobile": true,
+          "hasTouch": true
+        },
+        "throttlingMethod": "simulate"
+      }
+    },
+    "assert": {
+      "assertions": {
+        "categories:performance": [
+          "warn",
+          {
+            "minScore": 0.5
+          }
+        ],
+        "categories:accessibility": [
+          "warn",
+          {
+            "minScore": 0.8
+          }
+        ],
+        "categories:best-practices": [
+          "warn",
+          {
+            "minScore": 0.8
+          }
+        ],
+        "categories:seo": [
+          "warn",
+          {
+            "minScore": 0.8
+          }
+        ]
+      }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}

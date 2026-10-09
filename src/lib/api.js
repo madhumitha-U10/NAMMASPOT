@@ -45,6 +45,7 @@ function seedState() {
 }
 
 function demoState() {
+  if (import.meta.env.PROD) throw new BackendNotConfiguredError();
   try {
     const raw = localStorage.getItem(DEMO_KEY);
     if (raw) {
@@ -63,6 +64,10 @@ function saveDemo(state) {
 }
 
 function currentDemoUser() {
+  if (import.meta.env.PROD) {
+    try { localStorage.removeItem(CURRENT_USER_KEY); } catch {}
+    return null;
+  }
   try { return JSON.parse(localStorage.getItem(CURRENT_USER_KEY) || "null"); } catch { return null; }
 }
 
@@ -598,6 +603,7 @@ export async function adminDeleteCategory(id) {
   const client=needBackend(); const {error}=await client.from("categories").delete().eq("id",id); if(error)throw error;
 }export async function signInAdmin(email,password) {
   if (!supabase) {
+    if (import.meta.env.PROD) throw new BackendNotConfiguredError();
     if (text(email,320).toLowerCase() === "admin@nammaspot.local" && password === "nammaspot-demo") {
       const user = { id:"demo-admin", name:"NammaSpot Admin", email:text(email,320).toLowerCase(), phone:"", role:"admin" };
       setCurrentDemoUser(user);
@@ -619,6 +625,7 @@ export async function adminDeleteCategory(id) {
 
 export async function signIn(email,password) {
   if (!supabase) {
+    if (import.meta.env.PROD) throw new BackendNotConfiguredError();
     if (text(email,320).toLowerCase() === "admin@nammaspot.local" && password === "nammaspot-demo") {
       const user = { id:"demo-admin", name:"NammaSpot Admin", email:text(email,320).toLowerCase(), phone:"", role:"admin" };
       setCurrentDemoUser(user);

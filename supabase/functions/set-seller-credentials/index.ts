@@ -1,0 +1,30 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const cors={"Access-Control-Allow-Origin":"https://nammaspot.vercel.app","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS","Content-Type":"application/json","Vary":"Origin"};
+const json=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:cors});
+Deno.serve(async(req:Request)=>{
+ if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
+ if(req.method!=="POST")return json({error:"Method not allowed"},405);
+ const authHeader=req.headers.get("Authorization");
+ if(!authHeader?.startsWith("Bearer "))return json({error:"Unauthorized"},401);
+ const supabaseUrl=Deno.env.get("SUPABASE_URL"),anonKey=Deno.env.get("SUPABASE_ANON_KEY"),serviceRoleKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+ if(!supabaseUrl||!anonKey||!serviceRoleKey)return json({error:"Server configuration error"},500);
+ const userClient=createClient(supabaseUrl,anonKey,{global:{headers:{Authorization:authHeader}},auth:{persistSession:false,autoRefreshToken:false}});
+ const {data:{user},error:userError}=await userClient.auth.getUser();
+ if(userError||!user)return json({error:"Unauthorized"},401);
+ let body:{password?:string}; try{body=await req.json();}catch{return json({error:"Invalid JSON"},400);}
+ const password=String(body.password??"");
+ if(password.length<10||password.length>128||/\s/.test(password)||!/[a-z]/.test(password)||!/[A-Z]/.test(password)||!/[0-9]/.test(password)||!/[^A-Za-z0-9]/.test(password))return json({error:"Use a 10–128 character password with uppercase, lowercase, a number and a symbol, without spaces."},400);
+ const admin=createClient(supabaseUrl,serviceRoleKey,{auth:{persistSession:false,autoRefreshToken:false}});
+ const {data:seller,error:sellerError}=await admin.from("sellers").select("id,nammaspot_id,user_id,email,verification_status").eq("user_id",user.id).maybeSingle();
+ if(sellerError)return json({error:"Could not load seller account."},500);
+ if(!seller?.nammaspot_id)return json({error:"NammaSpot ID is not assigned yet."},400);
+ if(!["pending","approved"].includes(seller.verification_status))return json({error:"This seller account cannot set login credentials in its current status."},403);
+ const lowered=password.toLowerCase();
+ if([seller.nammaspot_id,seller.email].some((value)=>String(value||"").length>=4&&lowered.includes(String(value).toLowerCase())))return json({error:"Password must not contain your NammaSpot ID or email address."},400);
+ const internalEmail=seller.nammaspot_id.toLowerCase().replace(/[^a-z0-9_-]/g,"")+"@accounts.nammaspot.internal";
+ const {error:updateError}=await admin.auth.admin.updateUserById(user.id,{email:internalEmail,email_confirm:true,password});
+ if(updateError)return json({error:updateError.message},400);
+ await admin.from("users").update({email:internalEmail}).eq("id",user.id);
+ return json({ok:true,nammaspot_id:seller.nammaspot_id,verified_email:seller.email||null});
+});

@@ -238,9 +238,8 @@ export async function startSellerPasswordSetup(nammaspotId, email) {
     p_email: normalized,
   });
   if (error) throw error;
-  const seller = data?.[0];
-  if (!seller) throw new Error("NammaSpot ID and email address do not match.");
-  if (!["pending","approved"].includes(seller.verification_status)) throw new Error("This seller account cannot set a password right now.");
+  const account = data?.[0];
+  if (!account?.can_set_password) throw new Error("We couldn't verify those details. Check your NammaSpot ID and email, then try again.");
   const { error: otpError } = await client.auth.signInWithOtp({
     email: normalized,
     options: { shouldCreateUser: false },

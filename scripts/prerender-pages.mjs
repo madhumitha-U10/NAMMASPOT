@@ -9,7 +9,7 @@ function escapeHtml(value = "") {
   return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 }
 function replaceMeta(html, selector, tag) {
-  const re = new RegExp("<meta(?=[^>]*" + selector + ")[^>]*>", "i");
+  const re = new RegExp("<(?:meta|link)(?=[^>]*" + selector + ")[^>]*>", "i");
   return re.test(html) ? html.replace(re, tag) : html.replace("</head>", "    " + tag + "\n  </head>");
 }
 function withMetadata(html, { title, description, url, image = origin + "/og-image.svg", robots = "index,follow,max-image-preview:large", type = "website", jsonLd = null }) {

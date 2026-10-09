@@ -1,0 +1,7 @@
+project_id = "ahncpjthmaxapawjzcwt"
+
+[functions.create-seller-account]
+verify_jwt = false
+
+[functions.set-seller-credentials]
+verify_jwt = true

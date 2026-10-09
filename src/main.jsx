@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { QRCodeSVG } from "qrcode.react";
+const QRCodeSVG = lazy(() => import("qrcode.react").then((module) => ({ default: module.QRCodeSVG })));
 import {
   Search, MapPin, Heart, Share2, Phone, MessageCircle, Plus,
   ArrowLeft, Menu, X, Store, ChevronRight, Home, Compass, Grid2X2,
@@ -9,8 +9,8 @@ import {
 } from "lucide-react";
 import "./styles.css";
 import "./microsite.css";
-import SellerMicrositePage from "./SellerMicrositePage.jsx";
-import WebsiteEditorPage from "./WebsiteEditorPage.jsx";
+const SellerMicrositePage = lazy(() => import("./SellerMicrositePage.jsx"));
+const WebsiteEditorPage = lazy(() => import("./WebsiteEditorPage.jsx"));
 import {
   isSupabaseConfigured,
   isProductionConfigurationError,
@@ -241,8 +241,8 @@ function App() {
       {route === "dashboard" && <DashboardPage go={go} profile={profile}/>}
       {route === "admin-login" && <AdminLoginPage go={go} onSignedIn={(next) => setProfile(next)} />}
       {route === "admin-dashboard" && <AdminPage go={go}/>}
-      {route === "seller" && <SellerMicrositePage go={go} slug={getSellerSlug(path)}/>}
-      {route === "website-editor" && <WebsiteEditorPage go={go}/>}
+      {route === "seller" && <Suspense fallback={<main className="page" aria-live="polite">Loading seller catalogue…</main>}><SellerMicrositePage go={go} slug={getSellerSlug(path)}/></Suspense>}
+      {route === "website-editor" && <Suspense fallback={<main className="page" aria-live="polite">Loading settings…</main>}><WebsiteEditorPage go={go}/></Suspense>}
       {route === "not-found" && <main className="page"><Empty title="Page not found" text="That NammaSpot page does not exist." actionLabel="Back home" onAction={() => go("/")}/></main>}
 
       <MobileBottomNav path={path} go={go} language={language}/>
@@ -1170,7 +1170,7 @@ function PublicTools({ seller, go }) {
         <div className="eyebrow">YOUR QR</div>
         <h2>Offline → online.</h2>
         <p>Print this QR or share it with customers. It opens the seller page.</p>
-        <div className="qr-wrap"><QRCodeSVG value={publicUrl} size={190} includeMargin/></div>
+        <div className="qr-wrap"><Suspense fallback={<span className="muted">Preparing QR code…</span>}><QRCodeSVG value={publicUrl} size={190} includeMargin/></Suspense></div>
         <code>{publicUrl}</code>
         <div className="button-row">
           <button className="primary-button" onClick={copy}>Copy link</button>

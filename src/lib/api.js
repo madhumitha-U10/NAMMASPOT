@@ -185,7 +185,7 @@ function categoryMatches(sellerCategory, selectedCategory) {
   return accepted.includes(actual);
 }
 
-async function getPublicSellers({ query = "", category = "All", near = "" } = {}) {
+export async function getPublicSellers({ query = "", category = "All", near = "" } = {}) {
   if (!supabase) {
     const state = demoState();
     const q = query.trim().toLowerCase();

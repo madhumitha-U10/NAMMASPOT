@@ -1,5 +1,6 @@
 import {useEffect,useMemo,useRef,useState} from "react";
 import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,Clock,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send,Heart,Home,Compass,Grid2X2,Bookmark,UserRound,Search,MoreHorizontal,Navigation,Star,Package,Camera,CalendarDays} from "lucide-react";
+import {QRCodeCanvas} from "qrcode.react";
 import {createEnquiry} from "./lib/api";
 import {getMicrosite,sellerPublicUrl} from "./lib/microsite";
 
@@ -59,6 +60,7 @@ export default function SellerMicrositePage({go,slug}){
   const [language,setLanguage]=useState(()=>localStorage.getItem("nammaspot-language")==="ta"?"ta":"en");
   const isTamil=language==="ta";
   const [product,setProduct]=useState(null),[enquire,setEnquire]=useState(null),[saved,setSaved]=useState(false);
+  const [shareOpen,setShareOpen]=useState(false);
   useEffect(()=>{localStorage.setItem("nammaspot-language",language);document.documentElement.lang=language},[language]);
   useEffect(()=>{let alive=true;getMicrosite(slug).then(data=>alive&&setState({loading:false,error:"",data})).catch(e=>alive&&setState({loading:false,error:e.message||"Could not load this seller.",data:null}));return()=>{alive=false}},[slug]);
   const data=state.data,seller=data?.seller,settings=data?.settings||{};
@@ -111,7 +113,7 @@ export default function SellerMicrositePage({go,slug}){
   if(state.error)return <main className="page"><div className="error-state"><h2>Could not load this seller</h2><p>{state.error}</p><button className="secondary-button" onClick={()=>go("/explore")}>Back to Explore</button></div></main>;
   if(!data)return <main className="page"><div className="empty-state"><h2>Seller not found</h2><p>This NammaSpot seller page is unavailable.</p></div></main>;
   const products=data.products||[];
-  const share=async()=>{const url=sellerPublicUrl(seller.slug);try{if(navigator.share)await navigator.share({title:seller.business_name,text:"Discover this local seller on NammaSpot",url});else{await navigator.clipboard.writeText(url);alert("Seller link copied.");}}catch{}};
+  const share=()=>setShareOpen(true);
   const wa=seller.whatsapp_phone?"https://wa.me/"+seller.whatsapp_phone.replace(/\D/g,""):null;
   return <main className="seller-microsite ns-seller-profile ns-reference-layout">
     <aside className="ns-left-sidebar">
@@ -237,9 +239,136 @@ export default function SellerMicrositePage({go,slug}){
       </section>
     </aside>
 
+    {shareOpen&&<SellerShareModal seller={seller} url={sellerPublicUrl(seller.slug)} onClose={()=>setShareOpen(false)}/>}
     {product&&<ProductModal product={product} onClose={()=>setProduct(null)} onEnquire={()=>{setProduct(null);setEnquire(product)}}/>}
     {enquire&&<Enquiry seller={seller} product={enquire==="general"?null:enquire} onClose={()=>setEnquire(null)}/>}
   </main>;
+}
+
+
+function SellerShareModal({seller,url,onClose}){
+  const qrCanvasRef=useRef(null);
+  const [imageUrl,setImageUrl]=useState("");
+  const [state,setState]=useState({loading:true,error:"",notice:""});
+  const shopName=String(seller.business_name||"Local seller").trim().slice(0,180);
+  useEffect(()=>{
+    let cancelled=false;
+    setState({loading:true,error:"",notice:""});
+    setImageUrl("");
+    const build=()=>{
+      try{
+        const qr=qrCanvasRef.current;
+        if(!qr)throw new Error("The QR code is not ready yet. Please try again.");
+        const output=document.createElement("canvas");
+        output.width=1080;output.height=1350;
+        const ctx=output.getContext("2d");
+        if(!ctx)throw new Error("Your browser cannot create the share image.");
+        const roundRect=(x,y,w,h,r,fill,stroke)=>{
+          ctx.beginPath();ctx.roundRect(x,y,w,h,r);
+          if(fill){ctx.fillStyle=fill;ctx.fill()}
+          if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.stroke()}
+        };
+        ctx.fillStyle="#fffaf3";ctx.fillRect(0,0,1080,1350);
+        roundRect(28,28,1024,1294,34,null,"#7e2424");
+        ctx.fillStyle="#7e2424";ctx.textAlign="center";ctx.textBaseline="alphabetic";
+        ctx.font="800 66px Arial, sans-serif";ctx.fillText("NammaSpot",540,150);
+        ctx.fillStyle="#76675e";ctx.font="500 27px Arial, sans-serif";ctx.fillText("LOCAL SELLERS · REAL PEOPLE",540,200);
+        ctx.fillStyle="#302622";ctx.font="700 48px Arial, sans-serif";
+        const words=shopName.split(/\s+/);let line="",lines=[];
+        for(const word of words){const test=line?line+" "+word:word;if(ctx.measureText(test).width>850&&line){lines.push(line);line=word}else line=test}
+        if(line)lines.push(line);
+        const shown=lines.slice(0,3);
+        let y=290;
+        shown.forEach(text=>{ctx.fillText(text,540,y);y+=60});
+        if(lines.length>3){ctx.font="500 28px Arial, sans-serif";ctx.fillText("…",540,y-8);y+=20}
+        const qrSize=450,qrX=(1080-qrSize)/2,qrY=Math.max(390,y+24);
+        roundRect(qrX-24,qrY-24,qrSize+48,qrSize+48,22,"#ffffff","#eadfd4");
+        const qrImage=new Image();
+        qrImage.onload=()=>{
+          if(cancelled)return;
+          ctx.fillStyle="#ffffff";ctx.fillRect(qrX,qrY,qrSize,qrSize);
+          ctx.drawImage(qrImage,qrX,qrY,qrSize,qrSize);
+          ctx.fillStyle="#7e2424";ctx.font="800 40px Arial, sans-serif";ctx.fillText("Scan to explore",540,qrY+qrSize+100);
+          ctx.fillStyle="#5d5149";ctx.font="500 28px Arial, sans-serif";ctx.fillText("Discover this shop on NammaSpot",540,qrY+qrSize+150);
+          ctx.fillStyle="#7e2424";ctx.font="700 24px Arial, sans-serif";ctx.fillText("nammaspot.vercel.app",540,1260);
+          try{const result=output.toDataURL("image/png");if(!cancelled){setImageUrl(result);setState({loading:false,error:"",notice:""})}}
+          catch{if(!cancelled)setState({loading:false,error:"Could not export the QR image in this browser.",notice:""})}
+        };
+        qrImage.onerror=()=>{if(!cancelled)setState({loading:false,error:"Could not prepare the QR image. Please try again.",notice:""})};
+        qrImage.src=qr.toDataURL("image/png");
+      }catch(error){if(!cancelled)setState({loading:false,error:error.message||"Could not create the share image.",notice:""})}
+    };
+    const timer=window.setTimeout(build,0);
+    return()=>{cancelled=true;window.clearTimeout(timer)};
+  },[url,shopName]);
+  useEffect(()=>{
+    const onKey=e=>{if(e.key==="Escape")onClose()};
+    window.addEventListener("keydown",onKey);
+    return()=>window.removeEventListener("keydown",onKey);
+  },[onClose]);
+  const blobFromData=()=>{if(!imageUrl)throw new Error("The share image is still being prepared.");const parts=imageUrl.split(",");const bytes=atob(parts[1]);const array=new Uint8Array(bytes.length);for(let i=0;i<bytes.length;i++)array[i]=bytes.charCodeAt(i);return new Blob([array],{type:"image/png"})};
+  const download=()=>{
+    try{const blob=blobFromData(),blobUrl=URL.createObjectURL(blob),a=document.createElement("a");a.href=blobUrl;a.download="nammaspot-"+(seller.slug||"shop")+"-qr.png";document.body.appendChild(a);a.click();a.remove();window.setTimeout(()=>URL.revokeObjectURL(blobUrl),1500);setState(s=>({...s,error:"",notice:"Download started. Check your Downloads folder."}))}
+    catch(error){setState(s=>({...s,error:error.message||"Could not download the image.",notice:""}))}
+  };
+  const shareImage=async()=>{
+    try{
+      const blob=blobFromData(),file=new File([blob],"nammaspot-"+(seller.slug||"shop")+"-qr.png",{type:"image/png"});
+      if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],title:shopName+" · NammaSpot",text:"Discover this shop on NammaSpot"});
+        setState(s=>({...s,error:"",notice:"Share sheet opened. Choose an app to send the QR image."}));
+      }else{
+        download();
+        setState(s=>({...s,error:"",notice:"Image sharing is not supported here, so the branded QR image was downloaded instead."}));
+      }
+    }catch(error){
+      if(error?.name==="AbortError"){setState(s=>({...s,error:"",notice:"Sharing cancelled."}));return}
+      setState(s=>({...s,error:error.message||"Sharing failed. Try downloading the image instead.",notice:""}));
+    }
+  };
+  const copyLink=async()=>{
+    try{
+      if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(url)}
+      else{
+        const input=document.createElement("textarea");input.value=url;input.setAttribute("readonly","");input.style.position="fixed";input.style.opacity="0";document.body.appendChild(input);input.select();
+        const ok=document.execCommand("copy");input.remove();if(!ok)throw new Error("Clipboard access is unavailable. Copy the shop link manually.");
+      }
+      setState(s=>({...s,error:"",notice:"Shop link copied."}));
+    }catch(error){setState(s=>({...s,error:error.message||"Could not copy the link.",notice:""}))}
+  };
+  const printQr=()=>{
+    try{
+      if(!imageUrl)throw new Error("The share image is still being prepared.");
+      const win=window.open("","_blank","noopener,noreferrer");
+      if(!win)throw new Error("Your browser blocked the print window. Allow pop-ups and try again.");
+      const safeName=shopName.replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+      win.document.write("<!doctype html><html><head><title>"+safeName+" · NammaSpot QR</title><meta name='viewport' content='width=device-width, initial-scale=1'><style>body{font-family:Arial,sans-serif;text-align:center;margin:24px;color:#302622}img{width:min(100%,600px);height:auto} @media print{body{margin:0}img{width:100%;max-width:180mm}}</style></head><body><img alt='NammaSpot QR code for "+safeName+"' src='"+imageUrl+"'><script>window.onload=()=>window.print()<\/script></body></html>");
+      win.document.close();
+      setState(s=>({...s,error:"",notice:"Print window opened."}));
+    }catch(error){setState(s=>({...s,error:error.message||"Could not open print view.",notice:""}))}
+  };
+  return <div className="modal-backdrop ns-share-backdrop" onMouseDown={e=>e.target===e.currentTarget&&onClose()}>
+    <section className="modal ns-share-modal" role="dialog" aria-modal="true" aria-labelledby="ns-share-title" aria-describedby="ns-share-description">
+      <button type="button" className="modal-close" onClick={onClose} aria-label="Close QR sharing"><X size={19}/></button>
+      <div className="eyebrow">SHARE YOUR SPOT</div>
+      <h2 id="ns-share-title">Share your shop</h2>
+      <p id="ns-share-description" className="muted-note">A branded QR image that opens this seller’s real NammaSpot catalogue.</p>
+      <div className="ns-share-preview" aria-live="polite">
+        {state.loading&&<div className="ns-share-loading"><span className="ns-share-spinner" aria-hidden="true"/>Creating your QR image…</div>}
+        {state.error&&<div className="inline-error" role="alert">{state.error}</div>}
+        {imageUrl&&<img src={imageUrl} alt={"NammaSpot branded QR code for "+shopName} />}
+      </div>
+      <div className="ns-share-url"><span>Shop link</span><code>{url}</code></div>
+      <div className="ns-share-actions">
+        <button type="button" className="primary-button" onClick={shareImage} disabled={!imageUrl||state.loading}><Share2 size={16}/> Share QR image</button>
+        <button type="button" className="secondary-button" onClick={download} disabled={!imageUrl||state.loading}><ExternalLink size={16}/> Download image</button>
+        <button type="button" className="secondary-button" onClick={copyLink}><CheckCircle size={16}/> Copy shop link</button>
+        <button type="button" className="secondary-button" onClick={printQr} disabled={!imageUrl||state.loading}><ExternalLink size={16}/> Print QR</button>
+      </div>
+      {state.notice&&<p className="ns-share-notice" role="status" aria-live="polite">{state.notice}</p>}
+      <div className="ns-share-qr-source" aria-hidden="true"><QRCodeCanvas ref={qrCanvasRef} value={url} size={360} level="H" includeMargin bgColor="#ffffff" fgColor="#111111"/></div>
+    </section>
+  </div>;
 }
 
 function MiniProduct({p,onOpen}){return <article className="microsite-product-card" tabIndex="0" onClick={onOpen} onKeyDown={e=>{if(e.key==="Enter"||e.key===" ")onOpen()}}><div className="microsite-product-image">{p.image_url?<img src={p.image_url} alt={p.name||p.product_name} loading="lazy"/>:<span>{(p.name||p.product_name||"?").charAt(0)}</span>}</div><div><small>{p.category?.name||"Local"}</small><h3>{esc(p.name||p.product_name)}</h3>{p.description&&<p>{esc(p.description).slice(0,120)}</p>}{p.price!=null&&<strong>₹{p.price}</strong>}</div></article>}

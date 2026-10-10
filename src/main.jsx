@@ -54,37 +54,13 @@ import {
   getSellerStorageUsage
 } from "./lib/api";
 import { categoryNames } from "./lib/seed";
+import CategoryIcon from "./components/brand/CategoryIcon.jsx";
+import { KolamDivider, TempleBorder, PaperKolamBackground } from "./components/brand/BrandElements.jsx";
 import { addProductGalleryImage, deleteProductGalleryImage, getMyMicrosite, saveMicrosite } from "./lib/microsite";
 import { formatBytes, SELLER_STORAGE_QUOTA_LABEL, SELLER_STORAGE_WARNING_LABEL, MAX_SELLER_IMAGE_LABEL } from "./lib/storage";
 
 const popularCategories = ["Bakery", "Mehendi", "Crochet", "Makeup", "Art"];
 
-const categoryVisuals = {
-  bakery: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=900&q=82",
-  mehendi: "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=900&q=82",
-  crochet: "https://images.unsplash.com/photo-1604881988758-f76ad2f7aac1?auto=format&fit=crop&w=900&q=82",
-  makeup: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&q=82",
-  art: "https://images.unsplash.com/photo-1549490349-8643362247b5?auto=format&fit=crop&w=900&q=82",
-  fashion: "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=900&q=82",
-  jewelry: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=900&q=82",
-  jewellery: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=900&q=82",
-  food: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=900&q=82",
-  gifts: "https://images.unsplash.com/photo-1513883049090-d0b7439799bf?auto=format&fit=crop&w=900&q=82",
-  crafts: "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=900&q=82",
-  photography: "https://images.unsplash.com/photo-1452780212940-6f5c0d14d848?auto=format&fit=crop&w=900&q=82",
-  accessories: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=900&q=82",
-  accessory: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=900&q=82",
-  beauty: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=900&q=82",
-  "home decor": "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=900&q=82",
-  home: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=900&q=82",
-  decor: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=900&q=82",
-  handmade: "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=900&q=82"
-};
-
-function categoryImage(category) {
-  const key = String(category || "").trim().toLowerCase();
-  return categoryVisuals[key] || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=900&q=82";
-}
 
 function App() {
   const [path, setPath] = useState(() => location.pathname + location.search);
@@ -260,8 +236,6 @@ function getRoute(path) {
   if (path.startsWith("/login")) return "login";
   if (path === "/register") return "register";
   if (path.startsWith("/dashboard/website")) return "website-editor";
-  if (path.startsWith("/dashboard/website")) return "website-editor";
-  if (path.startsWith("/dashboard/website")) return "website-editor";
   if (path.startsWith("/dashboard")) return "dashboard";
   if (path.startsWith("/nammaspot-control-panel/login")) return "admin-login";
   if (path.startsWith("/nammaspot-control-panel/dashboard") || path.startsWith("/admin-console")) return "admin-dashboard";
@@ -309,20 +283,30 @@ function HomePage({ go, query, setQuery }) {
             Discover the authentic flavours, crafts and talents of Chennai&apos;s vibrant local scene.
             Handcrafted by the community, for the community.
           </p>
-          <div className="hero-search">
-            <Search size={24}/>
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              onKeyDown={(event) => event.key === "Enter" && go(query.trim() ? "/explore?search=" + encodeURIComponent(query.trim()) : "/explore")}
-              placeholder="Try 'bridal mehendi Adyar' or 'eggless cake'"
-              aria-label="Search local sellers and products"
-            />
-          </div>
+          <p className="hero-tamil" lang="ta">நம்ம ஊரு. நம்ம மக்கள். நம்ம ஸ்பாட்.</p>
+          <PaperKolamBackground className="hero-search-wrap">
+            <KolamDivider className="hero-kolam-divider" title="Kolam-inspired search accent" />
+            <div className="hero-search">
+              <Search size={24}/>
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={(event) => event.key === "Enter" && go(query.trim() ? "/explore?search=" + encodeURIComponent(query.trim()) : "/explore")}
+                placeholder="Try 'bridal mehendi Adyar' or 'eggless cake'"
+                aria-label="Search local sellers and products"
+              />
+            </div>
+          </PaperKolamBackground>
           <button className="hero-search-button" onClick={() => go(query.trim() ? "/explore?search=" + encodeURIComponent(query.trim()) : "/explore")}>Search</button>
-          <div className="quick-chips">
+          <div className="quick-chips" aria-label="Popular categories">
             {popularCategories.map((category) => (
               <button key={category} onClick={() => go("/explore?search=" + encodeURIComponent(category))}>{category}</button>
+            ))}
+          </div>
+          <div className="neighbourhood-chips" aria-label="Explore Chennai neighbourhoods">
+            <span>YOUR SIDE OF CHENNAI</span>
+            {["Adyar", "T. Nagar", "Anna Nagar", "Mylapore", "Velachery", "OMR"].map((area) => (
+              <button key={area} onClick={() => go("/explore?area=" + encodeURIComponent(area))}>{area}</button>
             ))}
           </div>
           <div className="home-trust-row" aria-label="How NammaSpot works">
@@ -366,6 +350,7 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
   const category = params.get("cat") || "All";
   const near = params.get("near") || "";
   const urlQuery = params.get("search") || "";
+  const area = params.get("area") || "";
   useEffect(() => { if (urlQuery) setQuery(urlQuery); }, [urlQuery, setQuery]);
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -377,7 +362,8 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
     }, 300);
     return () => window.clearTimeout(timer);
   }, [query]);
-  const options = useMemo(() => ({ query, category, near }), [query, category, near]);
+  const activeNear = area || near;
+  const options = useMemo(() => ({ query, category, near: activeNear }), [query, category, activeNear]);
   const state = useAsync(() => getPublicSellers(options), [options]);
 
   const categories = Array.from(new Set(["All", ...popularCategories, ...categoryNames]));
@@ -385,7 +371,7 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
   return (
     <main className="page">
       <div className="page-title">
-        <div className="eyebrow">{near ? "NEARBY" : "DISCOVER"}</div>
+        <div className="eyebrow">{activeNear ? "NEARBY · " + activeNear.toUpperCase() : "DISCOVER"}</div>
         <h1>{near ? "Local around Chennai." : "Find your kind of local."}</h1>
         <p>Search by seller, product, category or neighbourhood.</p>
       </div>
@@ -413,32 +399,44 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
   );
 }
 
+const chennaiCategories = [
+  "Food & Bakery", "Mehendi", "Bridal Makeup", "Crochet & Handmade",
+  "Jewellery", "Boutique & Fashion", "Home Decor", "Gifts", "Art",
+  "Photography", "Beauty", "Services"
+];
+
 function CategoriesPage({ go }) {
   const state = useAsync(() => getCategories(), []);
-  const categories = state.data?.length ? state.data.map((item) => item.name) : categoryNames;
+  const customCategories = (state.data || []).map((item) => item.name).filter((name) =>
+    !chennaiCategories.some((known) => known.toLowerCase() === String(name).trim().toLowerCase())
+  );
+  const categories = [...chennaiCategories, ...customCategories];
   return (
-    <main className="page categories-page">
+    <main className="page categories-page paper-kolam">
       <div className="page-title">
-        <div className="eyebrow">BROWSE LOCAL</div>
+        <div className="eyebrow">MADE AROUND US · CHENNAI</div>
         <h1>Find your kind of local.</h1>
-        <p>Explore thoughtful collections from neighbourhood shops, home businesses and local makers.</p>
+        <p>From home-baked treats to handmade treasures, meet the people and small businesses that make our neighbourhoods feel like home.</p>
+        <TempleBorder className="temple-border page-temple-border" title="Temple-inspired section border" />
       </div>
       {state.loading ? <CardSkeletonRow detailed/> :
         <div className="category-grid-large">
           {categories.map((category,index) => (
-            <button className="category-card-visual" key={category} onClick={() => go("/explore?cat=" + encodeURIComponent(category))} aria-label={"Explore " + category}>
-              <img src={categoryImage(category)} alt={category + " category"} loading="lazy" />
-              <span className="category-card-shade" />
-              <span className="category-card-number">{String(index + 1).padStart(2,"0")}</span>
-              <span className="category-card-copy">
-                <small>DISCOVER</small>
-                <strong>{category}</strong>
-                <span>Explore local {category.toLowerCase()}</span>
-              </span>
-              <span className="category-card-arrow"><ChevronRight size={19}/></span>
-            </button>
+            <div className="category-card-wrap" key={category}>
+              <button className="category-card-visual" onClick={() => go("/explore?cat=" + encodeURIComponent(category))} aria-label={"Explore " + category}>
+                <span className="category-card-number">{String(index + 1).padStart(2,"0")}</span>
+                <span className="category-icon-disc"><CategoryIcon category={category} size={46}/></span>
+                <span className="category-card-copy">
+                  <small>LOCAL FINDS</small>
+                  <strong>{category}</strong>
+                  <span>Made with care, close to home</span>
+                </span>
+                <span className="category-card-arrow"><ChevronRight size={19}/></span>
+              </button>
+            </div>
           ))}
         </div>}
+      <KolamDivider className="category-kolam-footer" title="Kolam-inspired divider" />
     </main>
   );
 }

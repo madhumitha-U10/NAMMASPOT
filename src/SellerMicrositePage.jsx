@@ -303,7 +303,7 @@ function SellerShareModal({seller,url,onClose}){
         roundRect(68,66,944,136,25,"#762C3A",null);
         ctx.textAlign="left";ctx.textBaseline="middle";
         ctx.fillStyle="#FFFFFF";ctx.font="800 54px Arial, sans-serif";ctx.fillText("NammaSpot",104,118);
-        ctx.fillStyle="#F7E7DB";ctx.font="500 22px Arial, sans-serif";ctx.fillText("YOUR NEIGHBOURHOOD, ONLINE",106,160);
+        ctx.fillStyle="#F7E7DB";ctx.font="500 22px Arial, sans-serif";ctx.fillText("LOCAL SHOPS. MORE WAYS TO DISCOVER.",106,160);
         // Small editorial kicker.
         centered("A SHOP WORTH DISCOVERING",250,"700 22px Arial, sans-serif","#8A4A51");
         // Shop name, sized and wrapped for long real-world names.

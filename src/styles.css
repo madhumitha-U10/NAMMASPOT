@@ -977,12 +977,6 @@ button:disabled{cursor:not-allowed;opacity:.58}
   font-size:23px;
   letter-spacing:-.045em;
 }
-.brand-mark{
-  width:30px;height:30px;display:grid;place-items:center;
-  border-radius:9px;background:var(--burgundy);color:#fff;
-  font-size:15px;font-weight:900;letter-spacing:-.02em;
-  box-shadow:0 5px 14px rgba(123,37,40,.2);
-}
 .desktop-nav{gap:2px}
 .desktop-nav button{
   min-height:40px;
@@ -1281,8 +1275,7 @@ button:disabled{cursor:not-allowed;opacity:.58}
 @media(max-width:820px){
   .topbar{height:66px;padding:0 16px}
   .brand{font-size:21px}
-  .brand-mark{width:28px;height:28px}
-  .desktop-nav{
+    .desktop-nav{
     position:absolute;top:66px;left:10px;right:10px;
     display:none;flex-direction:column;align-items:stretch;
     padding:10px;background:#fff;border:1px solid var(--line);
@@ -2251,11 +2244,6 @@ body{
   border-bottom-color:rgba(116,35,47,.12);
 }
 .brand{font-size:26px;letter-spacing:-.055em;gap:9px;display:flex;align-items:center}
-.brand-mark{
-  width:34px;height:34px;display:grid;place-items:center;
-  border-radius:11px;background:var(--burgundy);color:#fff8ee;
-  font-family:Georgia,serif;font-size:22px;font-weight:700;
-}
 .desktop-nav{gap:3px}
 .desktop-nav button{font-size:13px;padding:10px 11px;border-radius:999px;transition:background .18s,color .18s}
 .desktop-nav button:hover{background:#f0e5d8;color:var(--burgundy)}
@@ -2339,8 +2327,7 @@ input,textarea,select{border-radius:10px}
 @media(max-width:700px){
   .topbar{height:62px;padding-inline:16px}
   .brand{font-size:22px}
-  .brand-mark{width:31px;height:31px;font-size:20px}
-  .desktop-nav{display:none}
+    .desktop-nav{display:none}
   .desktop-nav.open{
     display:flex;position:absolute;left:12px;right:12px;top:68px;
     flex-direction:column;align-items:stretch;gap:4px;padding:12px;

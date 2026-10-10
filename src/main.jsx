@@ -55,7 +55,6 @@ import {
 } from "./lib/api";
 import { categoryNames } from "./lib/seed";
 import CategoryIcon from "./components/brand/CategoryIcon.jsx";
-import { KolamDivider, TempleBorder, PaperKolamBackground } from "./components/brand/BrandElements.jsx";
 import { addProductGalleryImage, deleteProductGalleryImage, getMyMicrosite, saveMicrosite } from "./lib/microsite";
 import { formatBytes, SELLER_STORAGE_QUOTA_LABEL, SELLER_STORAGE_WARNING_LABEL, MAX_SELLER_IMAGE_LABEL } from "./lib/storage";
 
@@ -291,9 +290,7 @@ function HomePage({ go, query, setQuery }) {
             Discover the authentic flavours, crafts and talents of Chennai&apos;s vibrant local scene.
             Handcrafted by the community, for the community.
           </p>
-          <p className="hero-tamil" lang="ta">நம்ம ஊரு. நம்ம மக்கள். நம்ம ஸ்பாட்.</p>
-          <PaperKolamBackground className="hero-search-wrap">
-            <KolamDivider className="hero-kolam-divider" title="Kolam-inspired search accent" />
+          <div className="hero-search-wrap">
             <div className="hero-search">
               <Search size={24}/>
               <input
@@ -304,7 +301,7 @@ function HomePage({ go, query, setQuery }) {
                 aria-label="Search local sellers and products"
               />
             </div>
-          </PaperKolamBackground>
+          </div>
           <button className="hero-search-button" onClick={() => go(query.trim() ? "/explore?search=" + encodeURIComponent(query.trim()) : "/explore")}>Search</button>
           <div className="quick-chips" aria-label="Popular categories">
             {popularCategories.map((category) => (
@@ -425,12 +422,11 @@ function CategoriesPage({ go }) {
   );
   const categories = [...chennaiCategories, ...customCategories];
   return (
-    <main className="page categories-page paper-kolam">
+    <main className="page categories-page">
       <div className="page-title">
         <div className="eyebrow">MADE AROUND US · CHENNAI</div>
         <h1>Find your kind of local.</h1>
         <p>From home-baked treats to handmade treasures, meet the people and small businesses that make our neighbourhoods feel like home.</p>
-        <TempleBorder className="temple-border page-temple-border" title="Temple-inspired section border" />
       </div>
       {state.loading ? <CardSkeletonRow detailed/> :
         <div className="category-grid-large">
@@ -449,7 +445,6 @@ function CategoriesPage({ go }) {
             </div>
           ))}
         </div>}
-      <KolamDivider className="category-kolam-footer" title="Kolam-inspired divider" />
     </main>
   );
 }

@@ -526,13 +526,18 @@ export async function createReview(values) {
   if (!supabase) throw new BackendNotConfiguredError();
   const reviewerName = text(values.reviewer_name, 80);
   const rawContact = String(values.reviewer_contact || "").trim();
-  const reviewerContact = rawContact.includes("@")
-    ? normalizeEmail(rawContact)
-    : rawContact.replace(/[^0-9+]/g, "").slice(0, 40);
+  let reviewerContact = "";
+  if (rawContact.includes("@")) {
+    reviewerContact = normalizeEmail(rawContact);
+    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(reviewerContact)) throw new Error("Enter a valid email address.");
+  } else {
+    const digits = rawContact.replace(/\\D/g, "");
+    if (digits.length < 10 || digits.length > 15) throw new Error("Enter a valid phone number or email.");
+    reviewerContact = normalizePhone(rawContact);
+  }
   const rating = Number(values.rating);
   const comment = text(values.comment, 1000);
   if (reviewerName.length < 2) throw new Error("Enter your name (at least 2 characters).");
-  if (reviewerContact.length < 5) throw new Error("Enter a valid phone number or email.");
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) throw new Error("Choose a rating from 1 to 5 stars.");
   if (comment.length < 5) throw new Error("Please write at least 5 characters about your experience.");
   const { error } = await needBackend().from("reviews").insert({

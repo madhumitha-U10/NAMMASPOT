@@ -11,6 +11,11 @@ export default [
       parserOptions: { ecmaFeatures: { jsx: true } },
       globals: {
         window: "readonly",
+        process: "readonly",
+        atob: "readonly",
+        Blob: "readonly",
+        File: "readonly",
+        Image: "readonly",
         document: "readonly",
         location: "readonly",
         history: "readonly",

@@ -132,13 +132,13 @@ function App() {
     setMeta("robots", privateRoutes.has(route) ? "noindex,nofollow,noarchive" : "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1");
     if (route === "seller") return;
     const metadata = {
-      home: ["NammaSpot — Namma Ooru. Namma People. Namma Spot.", "Discover local sellers, home businesses, crafts, food and makers across Chennai and Tamil Nadu."],
-      explore: ["Explore Local Sellers · NammaSpot", "Explore local businesses, products, makers and home sellers across Tamil Nadu."],
-      categories: ["Shop by Category · NammaSpot", "Discover local sellers by category on NammaSpot."],
-      featured: ["Featured Local Sellers · NammaSpot", "Meet featured local sellers and small businesses on NammaSpot."],
-      saved: ["Saved Sellers · NammaSpot", "Your saved local sellers on NammaSpot."],
+      home: ["NammaSpot — Namma Ooru. Namma People. Namma Spot.", "Discover independent sellers, home businesses, crafts, food and makers across Chennai and Tamil Nadu."],
+      explore: ["Explore Sellers · NammaSpot", "Explore independent businesses, products, makers and home sellers across Tamil Nadu."],
+      categories: ["Shop by Category · NammaSpot", "Discover sellers by category on NammaSpot."],
+      featured: ["Featured Sellers · NammaSpot", "Meet featured sellers and small businesses on NammaSpot."],
+      saved: ["Saved Sellers · NammaSpot", "Your saved sellers on NammaSpot."],
       login: ["Seller Login · NammaSpot", "Sign in to manage your NammaSpot seller account."],
-      register: ["Create Seller Account · NammaSpot", "Create a NammaSpot seller account and publish your local business catalogue after approval."],
+      register: ["Create Seller Account · NammaSpot", "Create a NammaSpot seller account and publish your business catalogue after approval."],
       dashboard: ["Seller Dashboard · NammaSpot", "Manage your NammaSpot business profile, catalogue and enquiries."],
       "admin-login": ["Admin Login · NammaSpot", "Authorized NammaSpot administration access."],
       "admin-dashboard": ["Admin Console · NammaSpot", "Authorized NammaSpot administration console."],
@@ -321,7 +321,7 @@ function HomePage({ go, query, setQuery }) {
           <div className="eyebrow">CHENNAI · TAMIL NADU</div>
           <h1>Namma Ooru.<br/>Namma People.<br/><em>Namma Spot.</em></h1>
           <p className="hero-copy">
-            Discover the authentic flavours, crafts and talents of Chennai&apos;s vibrant local scene.
+            Discover the authentic flavours, crafts and talents of Chennai&apos;s vibrant creative scene.
             Handcrafted by the community, for the community.
           </p>
           <div className="hero-search-wrap">
@@ -332,7 +332,7 @@ function HomePage({ go, query, setQuery }) {
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={(event) => event.key === "Enter" && go(query.trim() ? "/explore?search=" + encodeURIComponent(query.trim()) : "/explore")}
                 placeholder="Try 'bridal mehendi Adyar' or 'eggless cake'"
-                aria-label="Search local sellers and products"
+                aria-label="Search sellers and products"
               />
             </div>
           </div>
@@ -349,7 +349,7 @@ function HomePage({ go, query, setQuery }) {
             ))}
           </div>
           <div className="home-trust-row" aria-label="How NammaSpot works">
-            <span><CheckCircle size={15}/> Real local sellers</span>
+            <span><CheckCircle size={15}/> Real sellers</span>
             <span><Compass size={15}/> Browse catalogues</span>
             <span><MessageCircle size={15}/> Contact directly</span>
           </div>
@@ -360,7 +360,7 @@ function HomePage({ go, query, setQuery }) {
         <div className="section-heading">
           <div>
             <div className="eyebrow">AROUND CHENNAI</div>
-            <h2>Little finds, local stories.</h2>
+            <h2>Little finds, meaningful stories.</h2>
           </div>
           <button className="text-link" onClick={() => go("/explore")}>Explore all <ChevronRight size={17}/></button>
         </div>
@@ -368,13 +368,13 @@ function HomePage({ go, query, setQuery }) {
         {state.loading ? <CardSkeletonRow/> :
           state.error ? <ErrorState message={state.error} retry={() => location.reload()}/> :
           sellers.length ? <div className="seller-preview-grid">{sellers.map((seller,index) => <SellerCard key={seller.id} seller={seller} index={index} go={go}/>)}</div> :
-          <Empty title="Local sellers are coming soon" text="Check back soon for the first NammaSpot catalogues." actionLabel="Explore" onAction={() => go("/explore")}/>}
+          <Empty title="Sellers are coming soon" text="Check back soon for the first NammaSpot catalogues." actionLabel="Explore" onAction={() => go("/explore")}/>}
       </section>
 
       <section className="story-strip">
         <div className="story-icon"><Store size={28}/></div>
         <div>
-          <div className="eyebrow">FOR LOCAL MAKERS</div>
+          <div className="eyebrow">FOR CREATORS & SELLERS</div>
           <h2>Your work deserves a spot.</h2>
           <p>Put your products, story and contact details in one simple digital catalogue.</p>
         </div>
@@ -411,7 +411,7 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
     <main className="page">
       <div className="page-title">
         <div className="eyebrow">{activeNear ? "NEARBY · " + activeNear.toUpperCase() : "DISCOVER"}</div>
-        <h1>{near ? "Local around Chennai." : "Find your kind of local."}</h1>
+        <h1>{near ? "Discover around Chennai." : "Find your next favourite."}</h1>
         <p>Search by seller, product, category or neighbourhood.</p>
       </div>
 
@@ -459,8 +459,8 @@ function CategoriesPage({ go }) {
     <main className="page categories-page">
       <div className="page-title">
         <div className="eyebrow">MADE AROUND US · CHENNAI</div>
-        <h1>Find your kind of local.</h1>
-        <p>From home-baked treats to handmade treasures, meet the people and small businesses that make our neighbourhoods feel like home.</p>
+        <h1>Find your next favourite.</h1>
+        <p>From home-baked treats to handmade treasures, discover the people and independent businesses bringing creativity to everyday life.</p>
       </div>
       {state.loading ? <CardSkeletonRow detailed/> :
         <div className="category-grid-large">
@@ -470,9 +470,9 @@ function CategoriesPage({ go }) {
                 <span className="category-card-number">{String(index + 1).padStart(2,"0")}</span>
                 <span className="category-icon-disc"><CategoryIcon category={category} size={46}/></span>
                 <span className="category-card-copy">
-                  <small>LOCAL FINDS</small>
+                  <small>FRESH FINDS</small>
                   <strong>{category}</strong>
-                  <span>Made with care, close to home</span>
+                  <span>Made with care, ready to discover</span>
                 </span>
                 <span className="category-card-arrow"><ChevronRight size={19}/></span>
               </button>
@@ -487,11 +487,11 @@ function FeaturedPage({ go, saved, toggleSave }) {
   const items = (state.data || []).filter((seller) => seller.featured);
   return (
     <main className="page">
-      <div className="page-title"><div className="eyebrow">HANDPICKED</div><h1>Featured local sellers.</h1><p>A small selection worth a closer look.</p></div>
+      <div className="page-title"><div className="eyebrow">HANDPICKED</div><h1>Featured sellers.</h1><p>A small selection worth a closer look.</p></div>
       {state.loading ? <CardSkeletonRow detailed/> :
         state.error ? <ErrorState message={state.error}/> :
         items.length ? <div className="seller-list">{items.map((seller,index) => <SellerCard key={seller.id} seller={seller} index={index} go={go} toggleSave={toggleSave} saved={saved.includes(seller.id)} detailed/>)}</div> :
-        <Empty title="Featured sellers are coming soon" text="Explore the current local catalogue instead." actionLabel="Explore sellers" onAction={() => go("/explore")}/>}
+        <Empty title="Featured sellers are coming soon" text="Explore the catalogue instead." actionLabel="Explore sellers" onAction={() => go("/explore")}/>}
     </main>
   );
 }
@@ -501,7 +501,7 @@ function SavedPage({ go, saved, toggleSave }) {
   const sellers = (state.data || []).filter((seller) => saved.includes(seller.id));
   return (
     <main className="page">
-      <div className="page-title"><div className="eyebrow">YOUR LIST</div><h1>Places you want to remember.</h1><p>Keep your local favourites close by.</p></div>
+      <div className="page-title"><div className="eyebrow">YOUR LIST</div><h1>Places you want to remember.</h1><p>Keep your favourites close by.</p></div>
       {state.loading ? <CardSkeletonRow detailed/> :
         state.error ? <ErrorState message={state.error}/> :
         sellers.length ? <div className="seller-list">{sellers.map((seller,index) => <SellerCard key={seller.id} seller={seller} index={index} go={go} toggleSave={toggleSave} saved detailed/>)}</div> :
@@ -1532,7 +1532,7 @@ function MobileBottomNav({ path,go }) {
 async function shareSeller(seller) {
   const url=location.origin+"/s/"+seller.slug;
   try {
-    if (navigator.share) await navigator.share({title:seller.name,text:"Discover this local seller on NammaSpot",url});
+    if (navigator.share) await navigator.share({title:seller.name,text:"Discover this seller on NammaSpot",url});
     else { await navigator.clipboard.writeText(url); alert("Seller link copied."); }
   } catch {}
 }

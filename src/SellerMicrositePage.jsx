@@ -10,10 +10,9 @@ const whatsappUrl=(seller,product=null)=>{
   const raw=String(seller?.whatsapp_phone||"").replace(/\D/g,"");
   if(!raw)return null;
   const phone=raw.length===10?"91"+raw:raw.startsWith("0")&&raw.length===11?"91"+raw.slice(1):raw;
-  const itemName=product?.name||product?.product_name;
-  const message=itemName
-    ? "Hi! I found "+itemName+" on NammaSpot at "+(seller.business_name||"this shop")+". I’d like to enquire about this product. Is it available?"
-    : "Hi! I found "+(seller.business_name||"your shop")+" on NammaSpot. I’d like to make an enquiry. Could you please share more details?";
+  // Keep the opening message consistent for every seller and product.
+  // Customers can freely continue in English, Tamil, or Tanglish.
+  const message = "Hi! 👋 Contacting you via NammaSpot.\nMy enquiry: ";
   return "https://wa.me/"+phone+"?text="+encodeURIComponent(message);
 };
 

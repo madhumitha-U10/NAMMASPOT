@@ -313,7 +313,7 @@ function SellerShareModal({seller,url,onClose}){
           centered(line,nameY,fitNameFont(line,850),"#302622");
           nameY+=62;
         });
-        const category=String(seller.category?.name||"LOCAL SHOP").trim().toUpperCase().slice(0,60);
+        const category=String(seller.category?.name||"CATALOGUE").trim().toUpperCase().slice(0,60);
         const location=String(seller.location||seller.city||"").trim().replace(/\s+/g," ").slice(0,70);
         const meta=location?category+"  ·  "+location:category;
         centered(meta,Math.max(390,nameY+12),"600 21px Arial, sans-serif","#76675E");

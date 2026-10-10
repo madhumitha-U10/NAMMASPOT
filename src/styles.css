@@ -2569,3 +2569,193 @@ body { overflow-x:hidden; }
   .category-card-copy strong { font-size:16px; }
   .category-card-copy span { font-size:9px; }
 }
+
+
+/* Chennai-rooted brand system: paper, kolam geometry and temple-line detailing. */
+.paper-kolam {
+  position: relative;
+  background-color: var(--paper, #f9f4e9);
+  background-image:
+    radial-gradient(circle at 12px 12px, rgba(126,36,36,.055) 1px, transparent 1.6px),
+    radial-gradient(circle at 24px 24px, rgba(126,36,36,.025) 1px, transparent 1.8px);
+  background-size: 32px 32px;
+}
+.hero { position:relative; isolation:isolate; }
+.hero-inner { position:relative; z-index:1; }
+.hero-tamil {
+  margin: 17px 0 0;
+  color: var(--burgundy);
+  font-family: Georgia, "Noto Serif Tamil", serif;
+  font-size: clamp(16px, 1.7vw, 20px);
+  letter-spacing: .015em;
+  line-height: 1.6;
+}
+.hero-search-wrap {
+  position:relative;
+  max-width:900px;
+  margin-top:23px;
+  padding-top:18px;
+  border-radius:22px;
+}
+.hero-search-wrap .hero-search { position:relative; z-index:1; margin-top:0; }
+.hero-kolam-divider {
+  position:absolute;
+  top:-1px;
+  left:0;
+  width:100%;
+  height:27px;
+  color:var(--burgundy);
+  opacity:.45;
+  pointer-events:none;
+}
+.neighbourhood-chips {
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:20px;
+}
+.neighbourhood-chips > span {
+  flex-basis:100%;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.18em;
+}
+.neighbourhood-chips button {
+  border:1px solid #dfc9b8;
+  border-radius:999px;
+  background:rgba(255,250,242,.78);
+  color:var(--burgundy);
+  padding:9px 13px;
+  font-size:12px;
+  font-weight:700;
+}
+.neighbourhood-chips button:hover { border-color:var(--burgundy); background:#f4e6d9; }
+.temple-border { display:block; color:var(--burgundy); }
+.page-temple-border { max-width:360px; margin-top:22px; opacity:.65; }
+.category-kolam-footer { display:block; max-width:420px; height:26px; margin:34px auto 0; color:var(--burgundy); opacity:.55; }
+.categories-page { background-color:transparent; }
+.categories-page .page-title { position:relative; }
+.category-grid-large {
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:16px;
+}
+.category-card-wrap { min-width:0; }
+.category-card-visual {
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:flex-start;
+  width:100%;
+  min-height:220px;
+  aspect-ratio:auto;
+  overflow:hidden;
+  padding:19px;
+  border:1px solid #e3d1c0;
+  border-radius:17px;
+  background:linear-gradient(145deg,#fffaf2 0%,#f4e8d9 100%);
+  color:var(--burgundy);
+  text-align:left;
+  box-shadow:0 7px 18px rgba(67,39,28,.045);
+  transition:border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.category-card-visual::after {
+  content:"";
+  position:absolute;
+  inset:auto 0 0;
+  height:4px;
+  background:linear-gradient(90deg,var(--burgundy),#b98a61,var(--burgundy));
+  opacity:.8;
+}
+.category-card-visual:hover {
+  transform:translateY(-2px);
+  border-color:#bd8a8e;
+  box-shadow:0 10px 25px rgba(67,39,28,.09);
+}
+.category-card-number {
+  position:absolute;
+  top:13px;
+  right:14px;
+  color:#a58a77;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.12em;
+}
+.category-icon-disc {
+  display:grid;
+  place-items:center;
+  width:78px;
+  height:78px;
+  margin:7px 0 19px;
+  border:1px solid #e5cbb8;
+  border-radius:50%;
+  background:#fffaf2;
+  color:var(--burgundy);
+}
+.category-card-copy {
+  position:static;
+  display:grid;
+  gap:6px;
+  width:100%;
+  color:#342b27;
+  pointer-events:none;
+}
+.category-card-copy small {
+  color:var(--burgundy);
+  font-size:9px;
+  font-weight:850;
+  letter-spacing:.18em;
+}
+.category-card-copy strong {
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:clamp(17px,1.5vw,21px);
+  line-height:1.18;
+  font-weight:600;
+  text-shadow:none;
+  overflow-wrap:anywhere;
+}
+.category-card-copy span { color:#75675d; font-size:11px; line-height:1.4; }
+.category-card-arrow {
+  position:absolute;
+  right:14px;
+  bottom:15px;
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:#f0dfd0;
+  color:var(--burgundy);
+  box-shadow:none;
+  pointer-events:none;
+}
+@media(max-width:1000px) {
+  .category-grid-large { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .category-card-visual { min-height:205px; padding:16px; }
+}
+@media(max-width:700px) {
+  .hero { padding-top:39px; }
+  .hero-tamil { margin-top:12px; font-size:15px; }
+  .hero-search-wrap { margin-top:17px; padding-top:16px; }
+  .neighbourhood-chips { gap:7px; margin-top:16px; }
+  .neighbourhood-chips button { padding:8px 10px; font-size:11px; }
+  .category-grid-large { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .category-card-visual { min-height:190px; padding:13px; border-radius:14px; }
+  .category-icon-disc { width:61px; height:61px; margin:8px 0 14px; }
+  .category-icon-disc svg { width:36px; height:36px; }
+  .category-card-copy strong { font-size:clamp(14px,4.3vw,18px); }
+  .category-card-copy span { font-size:10px; max-width:85%; }
+  .category-card-arrow { right:9px; bottom:10px; width:25px; height:25px; }
+  .category-kolam-footer { margin-top:26px; }
+}
+@media(max-width:380px) {
+  .category-card-visual { min-height:176px; padding:11px; }
+  .category-icon-disc { width:55px; height:55px; margin-bottom:11px; }
+  .category-icon-disc svg { width:32px; height:32px; }
+  .category-card-copy strong { font-size:14px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .category-card-visual { transition:none; }
+}

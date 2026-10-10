@@ -18,6 +18,6 @@ export default function CategoryIcon({ category = "", size = 46, className = "" 
   else if (/photo|camera/.test(name)) art = <><path d="M6 15h8l3-5h12l3 5h8v23H6z"/><circle cx="23" cy="26" r="7"/><circle cx="23" cy="26" r="3"/><path d="M33 20h1"/></>;
   else if (/beauty|salon|skin/.test(name)) art = <><path d="M18 7h10v5l-2 4v21H17V16l-2-4V7z"/><path d="M18 12h10M17 22h9"/><path d="M31 10c6 5 7 12 3 18"/></>;
   else if (/service|repair|tutor|clean|consult/.test(name)) art = <><path d="M16 7h14v7H16z"/><path d="M12 14h22v24H12z"/><path d="m18 26 4 4 8-9"/><path d="M7 20v13m30-13v13"/></>;
-  else art = <><path d="M23 39s-15-12-15-23a9 9 0 0 1 15-6 9 9 0 0 1 15 6c0 11-15 23-15 23Z"/><circle cx="23" cy="16" r="4"/><path d="M23 20v6"/></>;
+  else art = <><path d="M23 40s-14-13-14-23a14 14 0 1 1 28 0c0 10-14 23-14 23Z"/><circle cx="23" cy="17" r="4.5"/></>;
   return <svg className={className} width={size} height={size} viewBox="0 0 46 46" aria-hidden="true" focusable="false" {...line}>{art}</svg>;
 }

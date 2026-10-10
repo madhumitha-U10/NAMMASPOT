@@ -90,4 +90,8 @@ export function formatHoursForDay(day) {
   const ranges=Array.isArray(day?.ranges)?day.ranges:[]; return ranges.map(r=>r.open+" – "+r.close).join(" · ");
 }
 
-export function sellerPublicUrl(slug) { return window.location.origin + "/s/" + encodeURIComponent(slug); }
+export function sellerPublicUrl(slug) {
+  const configuredOrigin = String(import.meta.env.VITE_PUBLIC_SITE_URL || "").trim().replace(/\/$/, "");
+  const origin = configuredOrigin || (window.location.hostname === "nammaspot.vercel.app" ? window.location.origin : "https://nammaspot.vercel.app");
+  return origin + "/s/" + encodeURIComponent(slug);
+}

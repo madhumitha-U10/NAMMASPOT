@@ -52,7 +52,7 @@ function ProductModal({product,onClose,onEnquire}){
       </div>
       {imgs.length>1&&<div className="microsite-gallery-count" aria-live="polite">{i+1} / {imgs.length}</div>}
       <div className="microsite-thumbs">{imgs.map((u,n)=><button key={u+n} className={n===i?"active":""} onClick={()=>setI(n)}><img src={u} alt=""/></button>)}</div>
-      <div className="microsite-product-copy"><div className="eyebrow">{product.category?.name||"CATALOGUE"}</div><h2>{esc(product.name||product.product_name)}</h2>{product.price!=null&&<strong className="microsite-price">₹{product.price}</strong>}<p>{esc(product.description)}</p><a className="primary-button full-button" href={onEnquire||undefined} target="_blank" rel="noreferrer" onClick={e=>{if(!onEnquire)e.preventDefault()}}><MessageCircle size={16}/> Enquire on WhatsApp</a></div>
+      <div className="microsite-product-copy"><div className="eyebrow">{product.category?.name||"CATALOGUE"}</div><h2>{esc(product.name||product.product_name)}</h2>{product.price!=null&&<strong className="microsite-price">₹{product.price}</strong>}<p>{esc(product.description)}</p><a className="primary-button full-button ns-whatsapp-action" style={{background:"#C62828",borderColor:"#C62828",color:"#FFFFFF",borderRadius:12,fontWeight:700,boxShadow:"0 3px 10px rgba(198,40,40,.18)"}} href={onEnquire||undefined} target="_blank" rel="noreferrer" onClick={e=>{if(!onEnquire)e.preventDefault()}}><MessageCircle size={16}/> Enquire on WhatsApp</a></div>
     </section>
   </div>;
 }
@@ -214,9 +214,9 @@ export default function SellerMicrositePage({go,slug}){
             <CalendarDays size={14}/>
             <div><small>{new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short"}).format(new Date())}</small><span>{esc(settings.tagline)}</span></div>
           </div>}
-          {wa&&<><a className="primary-button" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a><a className="secondary-button" href={wa} target="_blank" rel="noreferrer"><Send size={16}/> Enquire</a></>}
-          {seller.contact&&<a className="secondary-button" href={"tel:"+seller.contact}><Phone size={16}/> Call</a>}
-          <button className="secondary-button" onClick={share}><Share2 size={16}/> Share</button>
+          {wa&&<><a className="primary-button ns-whatsapp-action" style={{background:"#C62828",borderColor:"#C62828",color:"#FFFFFF",borderRadius:12,fontWeight:700,boxShadow:"0 3px 10px rgba(198,40,40,.18)",transition:"transform .18s ease,box-shadow .18s ease"}} href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a><a className="secondary-button ns-whatsapp-action" style={{background:"#C62828",borderColor:"#C62828",color:"#FFFFFF",borderRadius:12,fontWeight:650}} href={wa} target="_blank" rel="noreferrer"><Send size={16}/> Enquire</a></>}
+          {seller.contact&&<a className="secondary-button ns-phone-action" style={{background:"#E8F1FA",borderColor:"#C8DCEC",color:"#174A73",borderRadius:12,fontWeight:650}} href={"tel:"+seller.contact}><Phone size={16}/> Call</a>}
+          <button className="secondary-button ns-share-action" style={{background:"#F7F0E5",borderColor:"#E7D8C4",color:"#713B46",borderRadius:12,fontWeight:650}} onClick={share}><Share2 size={16}/> Share</button>
 
         </div>
       </section>
@@ -252,9 +252,9 @@ export default function SellerMicrositePage({go,slug}){
       <section className="ns-right-card ns-contact-card">
         <h3>Contact Seller</h3>
         <p>Have a question? Reach out directly to the seller.</p>
-        {wa&&<><a className="primary-button full-button" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a><a className="secondary-button full-button" href={wa} target="_blank" rel="noreferrer"><Send size={16}/> Enquire on WhatsApp</a></>}
-        {seller.contact&&<a className="secondary-button full-button" href={"tel:"+seller.contact}><Phone size={16}/> Call</a>}
-        <button className="secondary-button full-button" onClick={share}><Share2 size={16}/> Share</button>
+        {wa&&<><a className="primary-button full-button ns-whatsapp-action" style={{background:"#C62828",borderColor:"#C62828",color:"#FFFFFF",borderRadius:12,fontWeight:700,boxShadow:"0 3px 10px rgba(198,40,40,.18)"}} href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a><a className="secondary-button full-button ns-whatsapp-action" style={{background:"#C62828",borderColor:"#C62828",color:"#FFFFFF",borderRadius:12,fontWeight:650}} href={wa} target="_blank" rel="noreferrer"><Send size={16}/> Enquire on WhatsApp</a></>}
+        {seller.contact&&<a className="secondary-button full-button ns-phone-action" style={{background:"#E8F1FA",borderColor:"#C8DCEC",color:"#174A73",borderRadius:12,fontWeight:650}} href={"tel:"+seller.contact}><Phone size={16}/> Call</a>}
+        <button className="secondary-button full-button ns-share-action" style={{background:"#F7F0E5",borderColor:"#E7D8C4",color:"#713B46",borderRadius:12,fontWeight:650}} onClick={share}><Share2 size={16}/> Share</button>
       </section>
 
       <section className="ns-right-card" id="business-information">
@@ -471,4 +471,4 @@ function SellerShareModal({seller,url,onClose}){
   </div>;
 }
 
-function MiniProduct({p,onOpen,onEnquire}){return <article className="microsite-product-card" tabIndex="0" onClick={onOpen} onKeyDown={e=>{if(e.key==="Enter"||e.key===" ")onOpen()}}><div className="microsite-product-image">{p.image_url?<img src={p.image_url} alt={p.name||p.product_name} loading="lazy"/>:<span>{(p.name||p.product_name||"?").charAt(0)}</span>}</div><div><small>{p.category?.name||"Catalogue"}</small><h3>{esc(p.name||p.product_name)}</h3>{p.description&&<p>{esc(p.description).slice(0,120)}</p>}{p.price!=null&&<strong>₹{p.price}</strong>}{onEnquire&&<a className="secondary-button full-button ns-product-enquiry" href={onEnquire} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()}><MessageCircle size={15}/> Enquire on WhatsApp</a>}</div></article>}
+function MiniProduct({p,onOpen,onEnquire}){return <article className="microsite-product-card" tabIndex="0" onClick={onOpen} onKeyDown={e=>{if(e.key==="Enter"||e.key===" ")onOpen()}}><div className="microsite-product-image">{p.image_url?<img src={p.image_url} alt={p.name||p.product_name} loading="lazy"/>:<span>{(p.name||p.product_name||"?").charAt(0)}</span>}</div><div><small>{p.category?.name||"Catalogue"}</small><h3>{esc(p.name||p.product_name)}</h3>{p.description&&<p>{esc(p.description).slice(0,120)}</p>}{p.price!=null&&<strong>₹{p.price}</strong>}{onEnquire&&<a className="secondary-button full-button ns-product-enquiry ns-whatsapp-action" style={{background:"#C62828",borderColor:"#C62828",color:"#FFFFFF",borderRadius:12,fontWeight:650}} href={onEnquire} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()}><MessageCircle size={15}/> Enquire on WhatsApp</a>}</div></article>}

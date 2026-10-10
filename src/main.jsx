@@ -110,7 +110,7 @@ function App() {
       if (already) await removeFavourite(sellerId);
       else await saveFavourite(sellerId);
     } catch (error) {
-      setNotice(error instanceof BackendNotConfiguredError ? "Saved locally." : "Saved locally; sync failed for now.");
+      setNotice(error instanceof BackendNotConfiguredError ? "Saved on this device." : "Saved on this device; sync failed for now.");
     }
   };
 

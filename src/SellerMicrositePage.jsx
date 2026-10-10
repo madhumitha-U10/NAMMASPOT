@@ -195,7 +195,7 @@ export default function SellerMicrositePage({go,slug}){
       <section className="ns-reference-seller-head">
         <div className="ns-reference-avatar">{seller.profile_image_url?<img src={seller.profile_image_url} alt={seller.business_name+" logo"}/>:seller.business_name?.charAt(0)}</div>
         <div className="ns-reference-seller-copy">
-          <div className="eyebrow">{seller.category?.name||"LOCAL SELLER"}</div>
+          {seller.category?.name && <div className="eyebrow">{esc(seller.category.name)}</div>}
           <h1>{esc(seller.business_name)} {seller.verified&&<CheckCircle className="ns-inline-verified" size={17}/>}</h1>
           <div className="ns-handle">{seller.slug?("@"+seller.slug):"@local-seller"} <span className="ns-verified-pill">{seller.verified?"✓ Verified Seller":"NammaSpot Seller"}</span></div>
           <div className="ns-reference-location"><MapPin size={15}/>{esc(seller.location||"Chennai, Tamil Nadu")}</div>

@@ -1,5 +1,3 @@
-import React from "react";
-
 /** A quiet, repeating kolam-inspired dot divider. Decorative only. */
 export function KolamDivider({ className = "", title = "Kolam divider" }) {
   return (

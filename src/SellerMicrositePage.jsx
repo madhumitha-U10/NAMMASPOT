@@ -121,11 +121,11 @@ export default function SellerMicrositePage({go,slug}){
         <button className="active" onClick={()=>go("/")}><Home size={18}/> {isTamil?"முகப்பு":"Home"}</button>
         <button onClick={()=>go("/explore")}><Compass size={18}/> {isTamil?"தேடுக":"Explore"}</button>
         <button onClick={()=>go("/categories")}><Grid2X2 size={18}/> {isTamil?"வகைகள்":"Categories"}</button>
-        <button onClick={()=>go("/nearby")}><Navigation size={18}/> {isTamil?"அருகில்":"Nearby"}</button>
+        <button onClick={()=>go("/explore?near=1")}><Navigation size={18}/> {isTamil?"அருகில்":"Nearby"}</button>
         <button onClick={()=>go("/saved")}><Bookmark size={18}/> {isTamil?"சேமித்தவை":"Saved"}</button>
       </nav>
       <div className="ns-side-divider"/>
-      <button className="ns-side-account" onClick={()=>go("/account")}><UserRound size={18}/> {isTamil?"என் கணக்கு":"My Account"}</button>
+      <button className="ns-side-account" onClick={()=>go("/dashboard")}><UserRound size={18}/> {isTamil?"என் கணக்கு":"My Account"}</button>
       <button className="ns-language-toggle" type="button" onClick={()=>setLanguage(isTamil?"en":"ta")}>{isTamil?"English":"தமிழ்"}</button>
       <div className="ns-side-local-note">Support Local<br/>Discover Local ♡</div>
     </aside>

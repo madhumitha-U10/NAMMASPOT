@@ -512,8 +512,14 @@ export async function getMyEnquiries(sellerId) {
 }
 
 export async function updateEnquiryStatus(id,status) {
-  if (!supabase) { const state=demoState(); const item=state.enquiries.find((e)=>e.id===id); if(item)item.status=status; saveDemo(state); return; }
-  const client=needBackend(); const {error}=await client.from("enquiries").update({status}).eq("id",id); if(error) throw error;
+  const allowed = {new:"pending",pending:"pending",read:"viewed",viewed:"viewed",replied:"responded",responded:"responded",closed:"closed"};
+  const dbStatus = allowed[status];
+  if (!dbStatus) throw new Error("Choose a valid enquiry status.");
+  if (!supabase) { const state=demoState(); const item=state.enquiries.find((e)=>e.id===id); if(item)item.status=status==="new"?"pending":status; saveDemo(state); return; }
+  const client=needBackend();
+  const {data,error}=await client.from("enquiries").update({status:dbStatus}).eq("id",id).select("id,status").maybeSingle();
+  if(error) throw error;
+  if(!data) throw new Error("This enquiry could not be updated. Please refresh and try again.");
 }
 
 export async function listMyFavourites() {

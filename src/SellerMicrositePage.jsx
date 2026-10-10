@@ -146,7 +146,7 @@ export default function SellerMicrositePage({go,slug}){
       telephone:seller.contact||seller.phone||undefined,
       address:{"@type":"PostalAddress",addressLocality:seller.city||seller.location||"Tamil Nadu",addressRegion:"Tamil Nadu",addressCountry:"IN"},
       sameAs:seller.instagram_url?[seller.instagram_url]:undefined,
-      hasOfferCatalog:{"@type":"OfferCatalog",name:"Catalogue",itemListElement:(data.products||[]).slice(0,50).map(p=>({"@type":"Offer","itemOffered":{"@type":"Product",name:p.name||p.product_name||"Local product",image:p.image_url||undefined}}))}
+      hasOfferCatalog:{"@type":"OfferCatalog",name:"Catalogue",itemListElement:(data.products||[]).slice(0,50).map(p=>({"@type":"Offer","itemOffered":{"@type":"Product",name:p.name||p.product_name||"Product",image:p.image_url||undefined}}))}
     };
     const jsonScript=document.createElement("script");
     jsonScript.id=jsonId;

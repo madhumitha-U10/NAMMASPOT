@@ -83,8 +83,6 @@ function App() {
   const [path, setPath] = useState(() => location.pathname + location.search);
   const [query, setQuery] = useState("");
   const [menu, setMenu] = useState(false);
-  const [language, setLanguage] = useState(() => localStorage.getItem("nammaspot-language") === "ta" ? "ta" : "en");
-  const isTamil = language === "ta";
   const [saved, setSaved] = useState(() => readLocalSaved());
   const [profile, setProfile] = useState(null);
   const [notice, setNotice] = useState("");
@@ -99,10 +97,6 @@ function App() {
     localStorage.setItem("nammaspot-saved", JSON.stringify(saved));
   }, [saved]);
 
-  useEffect(() => {
-    localStorage.setItem("nammaspot-language", language);
-    document.documentElement.lang = language;
-  }, [language]);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return undefined;
@@ -206,22 +200,21 @@ function App() {
         <button className="brand" onClick={() => go("/")} aria-label="NammaSpot home"><span className="brand-mark">N</span><span>NammaSpot</span></button>
 
         <nav className={menu ? "desktop-nav open" : "desktop-nav"} aria-label="Primary navigation">
-          <button onClick={() => go("/")}>{isTamil ? "முகப்பு" : "Home"}</button>
-          <button className={route === "explore" ? "nav-active" : ""} onClick={() => go("/explore")}>{isTamil ? "தேடுக" : "Explore"}</button>
-          <button className={route === "categories" ? "nav-active" : ""} onClick={() => go("/categories")}>{isTamil ? "வகைகள்" : "Categories"}</button>
-          <button className={route === "saved" ? "nav-active" : ""} onClick={() => go("/saved")}>{isTamil ? "சேமித்தவை" : "Saved"}</button>
-          {profile?.role === "seller" && <button onClick={() => go("/dashboard")}><LayoutDashboard size={15}/> {isTamil ? "கட்டுப்பலகை" : "Dashboard"}</button>}
-          {profile?.role === "admin" && <button onClick={() => go("/nammaspot-control-panel/dashboard")}><ShieldCheck size={15}/> {isTamil ? "நிர்வாகம்" : "Admin Console"}</button>}
+          <button onClick={() => go("/")}>Home</button>
+          <button className={route === "explore" ? "nav-active" : ""} onClick={() => go("/explore")}>Explore</button>
+          <button className={route === "categories" ? "nav-active" : ""} onClick={() => go("/categories")}>Categories</button>
+          <button className={route === "saved" ? "nav-active" : ""} onClick={() => go("/saved")}>Saved</button>
+          {profile?.role === "seller" && <button onClick={() => go("/dashboard")}><LayoutDashboard size={15}/> Dashboard</button>}
+          {profile?.role === "admin" && <button onClick={() => go("/nammaspot-control-panel/dashboard")}><ShieldCheck size={15}/> Admin Console</button>}
           {profile ? (
-            <button onClick={onSignOut}><LogOut size={15}/> {isTamil ? "வெளியேறு" : "Sign out"}</button>
+            <button onClick={onSignOut}><LogOut size={15}/> Sign out</button>
           ) : (
-            <button onClick={() => go("/login")}><LogIn size={15}/> {isTamil ? "விற்பனையாளர் உள்நுழைவு" : "Seller login"}</button>
+            <button onClick={() => go("/login")}><LogIn size={15}/> Seller login</button>
           )}
-          <button className="seller-cta" onClick={() => go("/register")}>{isTamil ? "உங்கள் வணிகத்தைச் சேர்க்கவும்" : "List your business"}</button>
+          <button className="seller-cta" onClick={() => go("/register")}>List your business</button>
         </nav>
 
         <div className="header-actions">
-          <button className="language-toggle" type="button" onClick={() => setLanguage(isTamil ? "en" : "ta")} aria-label={isTamil ? "Switch language to English" : "மொழியை தமிழுக்கு மாற்றவும்"}>{isTamil ? "English" : "தமிழ்"}</button>
           <button className="icon-button" aria-label="Search" onClick={() => go("/explore")}><Search size={22}/></button>
           <button className="icon-button menu-toggle" aria-label={menu ? "Close menu" : "Open menu"} onClick={() => setMenu((value) => !value)}>
             {menu ? <X size={23}/> : <Menu size={23}/>}
@@ -245,7 +238,7 @@ function App() {
       {route === "website-editor" && <Suspense fallback={<main className="page" aria-live="polite">Loading settings…</main>}><WebsiteEditorPage go={go}/></Suspense>}
       {route === "not-found" && <main className="page"><Empty title="Page not found" text="That NammaSpot page does not exist." actionLabel="Back home" onAction={() => go("/")}/></main>}
 
-      <MobileBottomNav path={path} go={go} language={language}/>
+      <MobileBottomNav path={path} go={go}/>
     </div>
   );
 }
@@ -1394,14 +1387,13 @@ function Empty({ title,text,actionLabel,onAction }) {
   return <div className="empty-state"><Heart size={27}/><h2>{title}</h2><p>{text}</p>{actionLabel&&<button className="secondary-button" onClick={onAction}>{actionLabel}</button>}</div>;
 }
 
-function MobileBottomNav({ path,go,language="en" }) {
-  const isTamil = language === "ta";
+function MobileBottomNav({ path,go }) {
   return <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
-    <button className={path==="/"?"active":""} onClick={()=>go("/")}><Home size={22}/><span>{isTamil ? "முகப்பு" : "Home"}</span></button>
-    <button className={path.startsWith("/explore")?"active":""} onClick={()=>go("/explore")}><Compass size={22}/><span>{isTamil ? "தேடுக" : "Explore"}</span></button>
-    <button className={path.startsWith("/categories")?"active":""} onClick={()=>go("/categories")}><Grid2X2 size={22}/><span>{isTamil ? "வகைகள்" : "Categories"}</span></button>
-    <button className={path.startsWith("/explore?near")?"active":""} onClick={()=>go("/explore?near=Chennai")}><MapPin size={22}/><span>{isTamil ? "அருகில்" : "Near me"}</span></button>
-    <button className={path.startsWith("/featured")?"active":""} onClick={()=>go("/featured")}><Sparkles size={22}/><span>{isTamil ? "சிறப்பு" : "Featured"}</span></button>
+    <button className={path==="/"?"active":""} onClick={()=>go("/")}><Home size={22}/><span>Home</span></button>
+    <button className={path.startsWith("/explore")?"active":""} onClick={()=>go("/explore")}><Compass size={22}/><span>Explore</span></button>
+    <button className={path.startsWith("/categories")?"active":""} onClick={()=>go("/categories")}><Grid2X2 size={22}/><span>Categories</span></button>
+    <button className={path.startsWith("/explore?near")?"active":""} onClick={()=>go("/explore?near=Chennai")}><MapPin size={22}/><span>Near me</span></button>
+    <button className={path.startsWith("/featured")?"active":""} onClick={()=>go("/featured")}><Sparkles size={22}/><span>Featured</span></button>
   </nav>;
 }
 

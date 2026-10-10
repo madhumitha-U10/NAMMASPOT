@@ -1,5 +1,3 @@
-import React from "react";
-
 const line = { fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" };
 
 /** Small inline category illustrations; no external image requests. */

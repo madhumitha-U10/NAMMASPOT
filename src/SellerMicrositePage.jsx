@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useRef,useState} from "react";
-import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send,Heart,Home,Compass,Grid2X2,Bookmark,UserRound,Search,Navigation,Star,Package,Camera,CalendarDays} from "lucide-react";
+import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send,Heart,Home,Compass,Grid2X2,Bookmark,UserRound,Search,Navigation,Star,Camera,CalendarDays} from "lucide-react";
 import {QRCodeCanvas} from "qrcode.react";
 import {createReview,getPublicReviews} from "./lib/api";
 import {getMicrosite,sellerPublicUrl} from "./lib/microsite";

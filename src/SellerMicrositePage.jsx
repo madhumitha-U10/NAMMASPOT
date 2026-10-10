@@ -263,34 +263,77 @@ function SellerShareModal({seller,url,onClose}){
         output.width=1080;output.height=1350;
         const ctx=output.getContext("2d");
         if(!ctx)throw new Error("Your browser cannot create the share image.");
-        const roundRect=(x,y,w,h,r,fill,stroke)=>{
+        const roundRect=(x,y,w,h,r,fill,stroke,lineWidth=2)=>{
           ctx.beginPath();ctx.roundRect(x,y,w,h,r);
           if(fill){ctx.fillStyle=fill;ctx.fill()}
-          if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.stroke()}
+          if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lineWidth;ctx.stroke()}
         };
-        ctx.fillStyle="#fffaf3";ctx.fillRect(0,0,1080,1350);
-        roundRect(28,28,1024,1294,34,null,"#7e2424");
-        ctx.fillStyle="#7e2424";ctx.textAlign="center";ctx.textBaseline="alphabetic";
-        ctx.font="800 66px Arial, sans-serif";ctx.fillText("NammaSpot",540,150);
-        ctx.fillStyle="#76675e";ctx.font="500 27px Arial, sans-serif";ctx.fillText("LOCAL SELLERS · REAL PEOPLE",540,200);
-        ctx.fillStyle="#302622";ctx.font="700 48px Arial, sans-serif";
-        const words=shopName.split(/\s+/);let line="",lines=[];
-        for(const word of words){const test=line?line+" "+word:word;if(ctx.measureText(test).width>850&&line){lines.push(line);line=word}else line=test}
-        if(line)lines.push(line);
-        const shown=lines.slice(0,3);
-        let y=290;
-        shown.forEach(text=>{ctx.fillText(text,540,y);y+=60});
-        if(lines.length>3){ctx.font="500 28px Arial, sans-serif";ctx.fillText("…",540,y-8);y+=20}
-        const qrSize=450,qrX=(1080-qrSize)/2,qrY=Math.max(390,y+24);
-        roundRect(qrX-24,qrY-24,qrSize+48,qrSize+48,22,"#ffffff","#eadfd4");
+        const centered=(text,y,font,color)=>{
+          ctx.font=font;ctx.fillStyle=color;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(text,540,y);
+        };
+        const wrapText=(text,maxWidth,font,maxLines=2)=>{
+          ctx.font=font;
+          const words=String(text||"").trim().split(/\s+/).filter(Boolean);
+          const lines=[];let line="";
+          for(const word of words){
+            const candidate=line?line+" "+word:word;
+            if(ctx.measureText(candidate).width>maxWidth&&line){lines.push(line);line=word}else line=candidate;
+          }
+          if(line)lines.push(line);
+          if(lines.length>maxLines){
+            const trimmed=lines.slice(0,maxLines);
+            let last=trimmed[maxLines-1];
+            while(last&&ctx.measureText(last+"…").width>maxWidth)last=last.slice(0,-1);
+            trimmed[maxLines-1]=last.trimEnd()+"…";
+            return trimmed;
+          }
+          return lines;
+        };
+        const fitNameFont=(text,maxWidth)=>{
+          let size=58;
+          while(size>36){ctx.font="800 "+size+"px Arial, sans-serif";if(ctx.measureText(text).width<=maxWidth)break;size-=2}
+          return "800 "+size+"px Arial, sans-serif";
+        };
+        // Warm paper base and restrained burgundy editorial accents.
+        ctx.fillStyle="#FBF6EE";ctx.fillRect(0,0,1080,1350);
+        ctx.fillStyle="#F0E3D6";ctx.beginPath();ctx.arc(1010,95,170,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle="#E9D7CA";ctx.beginPath();ctx.arc(65,1280,120,0,Math.PI*2);ctx.fill();
+        roundRect(28,28,1024,1294,34,"#FFFCF7","#E5D4C8",3);
+        // Brand masthead.
+        roundRect(68,66,944,136,25,"#762C3A",null);
+        ctx.textAlign="left";ctx.textBaseline="middle";
+        ctx.fillStyle="#FFFFFF";ctx.font="800 54px Arial, sans-serif";ctx.fillText("NammaSpot",104,118);
+        ctx.fillStyle="#F7E7DB";ctx.font="500 22px Arial, sans-serif";ctx.fillText("LOCAL SELLERS  ·  REAL PEOPLE",106,160);
+        // Small editorial kicker.
+        centered("A LOCAL BUSINESS TO DISCOVER",250,"700 22px Arial, sans-serif","#8A4A51");
+        // Shop name, sized and wrapped for long real-world names.
+        const nameLines=wrapText(shopName,850,"800 58px Arial, sans-serif",3);
+        let nameY=nameLines.length===1?316:nameLines.length===2?300:282;
+        nameLines.forEach((line,index)=>{
+          centered(line,nameY,fitNameFont(line,850),"#302622");
+          nameY+=62;
+        });
+        const category=String(seller.category?.name||"LOCAL SHOP").trim().toUpperCase().slice(0,60);
+        const location=String(seller.location||seller.city||"").trim().replace(/\s+/g," ").slice(0,70);
+        const meta=location?category+"  ·  "+location:category;
+        centered(meta,Math.max(390,nameY+12),"600 21px Arial, sans-serif","#76675E");
+        // QR panel is deliberately plain, with a clear quiet zone and no overlay.
+        const qrSize=390,qrX=(1080-qrSize)/2,qrY=Math.max(445,nameY+52);
+        roundRect(qrX-28,qrY-28,qrSize+56,qrSize+56,28,"#FFFFFF","#E9DDD2",3);
         const qrImage=new Image();
         qrImage.onload=()=>{
           if(cancelled)return;
-          ctx.fillStyle="#ffffff";ctx.fillRect(qrX,qrY,qrSize,qrSize);
+          ctx.fillStyle="#FFFFFF";ctx.fillRect(qrX,qrY,qrSize,qrSize);
           ctx.drawImage(qrImage,qrX,qrY,qrSize,qrSize);
-          ctx.fillStyle="#7e2424";ctx.font="800 40px Arial, sans-serif";ctx.fillText("Scan to explore",540,qrY+qrSize+100);
-          ctx.fillStyle="#5d5149";ctx.font="500 28px Arial, sans-serif";ctx.fillText("Discover this shop on NammaSpot",540,qrY+qrSize+150);
-          ctx.fillStyle="#7e2424";ctx.font="700 24px Arial, sans-serif";ctx.fillText(new URL(url).hostname,540,1260);
+          // Clear action block with a strong, single next step.
+          const actionY=qrY+qrSize+70;
+          centered("SCAN TO EXPLORE",actionY,"800 34px Arial, sans-serif","#762C3A");
+          centered("Open the catalogue. Find something local.",actionY+43,"500 23px Arial, sans-serif","#65564E");
+          roundRect(148,actionY+83,784,72,18,"#F3E6DD",null);
+          centered("Discover this shop on NammaSpot",actionY+119,"700 25px Arial, sans-serif","#762C3A");
+          ctx.fillStyle="#DCC9BC";ctx.fillRect(150,1230,780,2);
+          centered(new URL(url).hostname,1267,"700 22px Arial, sans-serif","#762C3A");
+          centered("SHOP LOCAL  ·  SUPPORT YOUR COMMUNITY",1297,"500 15px Arial, sans-serif","#8A7A70");
           try{const result=output.toDataURL("image/png");if(!cancelled){setImageUrl(result);setState({loading:false,error:"",notice:""})}}
           catch{if(!cancelled)setState({loading:false,error:"Could not export the QR image in this browser.",notice:""})}
         };

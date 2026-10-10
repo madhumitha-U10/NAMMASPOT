@@ -243,7 +243,6 @@ function getRoute(path) {
   if (path.startsWith("/dashboard/website")) return "website-editor";
   if (path.startsWith("/dashboard/website")) return "website-editor";
   if (path.startsWith("/dashboard/website")) return "website-editor";
-  if (path.startsWith("/dashboard/website")) return "website-editor";
   if (path.startsWith("/dashboard")) return "dashboard";
   if (path.startsWith("/nammaspot-control-panel/login")) return "admin-login";
   if (path.startsWith("/nammaspot-control-panel/dashboard") || path.startsWith("/admin-console")) return "admin-dashboard";

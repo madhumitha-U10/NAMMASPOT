@@ -290,7 +290,7 @@ function SellerShareModal({seller,url,onClose}){
           ctx.drawImage(qrImage,qrX,qrY,qrSize,qrSize);
           ctx.fillStyle="#7e2424";ctx.font="800 40px Arial, sans-serif";ctx.fillText("Scan to explore",540,qrY+qrSize+100);
           ctx.fillStyle="#5d5149";ctx.font="500 28px Arial, sans-serif";ctx.fillText("Discover this shop on NammaSpot",540,qrY+qrSize+150);
-          ctx.fillStyle="#7e2424";ctx.font="700 24px Arial, sans-serif";ctx.fillText("nammaspot.vercel.app",540,1260);
+          ctx.fillStyle="#7e2424";ctx.font="700 24px Arial, sans-serif";ctx.fillText(new URL(url).hostname,540,1260);
           try{const result=output.toDataURL("image/png");if(!cancelled){setImageUrl(result);setState({loading:false,error:"",notice:""})}}
           catch{if(!cancelled)setState({loading:false,error:"Could not export the QR image in this browser.",notice:""})}
         };
@@ -301,10 +301,23 @@ function SellerShareModal({seller,url,onClose}){
     const timer=window.setTimeout(build,0);
     return()=>{cancelled=true;window.clearTimeout(timer)};
   },[url,shopName]);
+  const dialogRef=useRef(null);
   useEffect(()=>{
-    const onKey=e=>{if(e.key==="Escape")onClose()};
+    const previous=document.activeElement;
+    const dialog=dialogRef.current;
+    const focusable=()=>Array.from(dialog?.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),[tabindex]:not([tabindex="-1"])')||[]).filter(el=>el.offsetParent!==null);
+    focusable()[0]?.focus();
+    const onKey=e=>{
+      if(e.key==="Escape"){onClose();return}
+      if(e.key==="Tab"){
+        const items=focusable();if(!items.length){e.preventDefault();dialog?.focus();return}
+        const first=items[0],last=items[items.length-1];
+        if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
+        else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+      }
+    };
     window.addEventListener("keydown",onKey);
-    return()=>window.removeEventListener("keydown",onKey);
+    return()=>{window.removeEventListener("keydown",onKey);previous?.focus?.()};
   },[onClose]);
   const blobFromData=()=>{if(!imageUrl)throw new Error("The share image is still being prepared.");const parts=imageUrl.split(",");const bytes=atob(parts[1]);const array=new Uint8Array(bytes.length);for(let i=0;i<bytes.length;i++)array[i]=bytes.charCodeAt(i);return new Blob([array],{type:"image/png"})};
   const download=()=>{
@@ -316,7 +329,7 @@ function SellerShareModal({seller,url,onClose}){
       const blob=blobFromData(),file=new File([blob],"nammaspot-"+(seller.slug||"shop")+"-qr.png",{type:"image/png"});
       if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
         await navigator.share({files:[file],title:shopName+" · NammaSpot",text:"Discover this shop on NammaSpot"});
-        setState(s=>({...s,error:"",notice:"Share sheet opened. Choose an app to send the QR image."}));
+        setState(s=>({...s,error:"",notice:"QR image shared successfully."}));
       }else{
         download();
         setState(s=>({...s,error:"",notice:"Image sharing is not supported here, so the branded QR image was downloaded instead."}));
@@ -348,7 +361,7 @@ function SellerShareModal({seller,url,onClose}){
     }catch(error){setState(s=>({...s,error:error.message||"Could not open print view.",notice:""}))}
   };
   return <div className="modal-backdrop ns-share-backdrop" onMouseDown={e=>e.target===e.currentTarget&&onClose()}>
-    <section className="modal ns-share-modal" role="dialog" aria-modal="true" aria-labelledby="ns-share-title" aria-describedby="ns-share-description">
+    <section ref={dialogRef} tabIndex={-1} className="modal ns-share-modal" role="dialog" aria-modal="true" aria-labelledby="ns-share-title" aria-describedby="ns-share-description">
       <button type="button" className="modal-close" onClick={onClose} aria-label="Close QR sharing"><X size={19}/></button>
       <div className="eyebrow">SHARE YOUR SPOT</div>
       <h2 id="ns-share-title">Share your shop</h2>

@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useRef,useState} from "react";
 import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,Clock,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send,Heart,Home,Compass,Grid2X2,Bookmark,UserRound,Search,MoreHorizontal,Navigation,Star,Package,Camera,CalendarDays} from "lucide-react";
 import {QRCodeCanvas} from "qrcode.react";
-import {createEnquiry} from "./lib/api";
+import {createEnquiry,createReview,getPublicReviews} from "./lib/api";
 import {getMicrosite,sellerPublicUrl} from "./lib/microsite";
 
 const days=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -53,6 +53,50 @@ function Enquiry({seller,product,onClose}){
   const [s,setS]=useState({busy:false,error:"",ok:false});
   const submit=async e=>{e.preventDefault();setS({busy:true,error:"",ok:false});try{await createEnquiry({seller_id:seller.id,product_id:product?.id||null,customer_name:d.name.trim().slice(0,120),customer_contact:d.contact.trim().slice(0,160),message:d.message.trim().slice(0,1000)});setS({busy:false,error:"",ok:true})}catch(err){setS({busy:false,error:err.message||"Could not send enquiry. Please try again.",ok:false})}};
   return <div className="modal-backdrop"><section className="modal"><button className="modal-close" onClick={onClose} aria-label="Close"><X/></button>{s.ok?<div className="success-panel"><CheckCircle size={38}/><h2>Message sent.</h2><p>Your enquiry is now with the seller. They can use the contact details you provided to respond.</p><button className="primary-button" onClick={onClose}>Done</button></div>:<><div className="eyebrow">MESSAGE THIS SELLER</div><h2>Send an enquiry</h2><p className="muted-note">Ask about availability, timing, price, custom orders or anything you need to know.</p><form className="seller-form" onSubmit={submit}><label>Name *<input required maxLength={120} value={d.name} onChange={e=>setD({...d,name:e.target.value})}/></label><label>Phone / email *<input required maxLength={160} value={d.contact} onChange={e=>setD({...d,contact:e.target.value})}/></label><label>Message *<textarea required maxLength={1000} value={d.message} onChange={e=>setD({...d,message:e.target.value})}/></label>{s.error&&<div className="inline-error">{s.error}</div>}<button className="primary-button full-button" disabled={s.busy}>{s.busy?"Sending…":"Send message"}</button></form></>}</section></div>;
+}
+
+function ReviewPanel({seller}) {
+  const [reviews,setReviews]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [loadError,setLoadError]=useState("");
+  const [form,setForm]=useState({name:"",contact:"",rating:5,comment:""});
+  const [submitting,setSubmitting]=useState(false);
+  const [notice,setNotice]=useState("");
+  const [error,setError]=useState("");
+  useEffect(()=>{
+    let alive=true;
+    setLoading(true);setLoadError("");
+    getPublicReviews(seller.id).then(rows=>{if(alive)setReviews(rows)}).catch(err=>{if(alive)setLoadError(err.message||"Reviews are temporarily unavailable.")}).finally(()=>{if(alive)setLoading(false)});
+    return()=>{alive=false};
+  },[seller.id]);
+  const average=reviews.length?(reviews.reduce((sum,item)=>sum+Number(item.rating||0),0)/reviews.length).toFixed(1):null;
+  const submit=async event=>{
+    event.preventDefault();setSubmitting(true);setError("");setNotice("");
+    try{
+      await createReview({seller_id:seller.id,reviewer_name:form.name,reviewer_contact:form.contact,rating:form.rating,comment:form.comment});
+      setForm({name:"",contact:"",rating:5,comment:""});
+      setNotice("Thanks for sharing your experience. Your review is pending moderation and will appear after approval.");
+    }catch(err){setError(err.message||"Could not submit your review. Please try again.")}
+    finally{setSubmitting(false)}
+  };
+  return <div className="ns-review-panel">
+    <div className="ns-review-summary">
+      <div><div className="eyebrow">CUSTOMER FEEDBACK</div><h2>Reviews</h2><p>Help others discover local businesses with useful, respectful feedback.</p></div>
+      <div className="ns-review-average"><strong>{average||"—"}</strong><span aria-label={average?average+" out of 5 stars":"No ratings yet"}>{average?"★".repeat(Math.round(Number(average)))+"☆".repeat(5-Math.round(Number(average))):"☆☆☆☆☆"}</span><small>{reviews.length} approved {reviews.length===1?"review":"reviews"}</small></div>
+    </div>
+    {loading?<p className="muted-note">Loading reviews…</p>:loadError?<div className="inline-error" role="alert">{loadError}</div>:reviews.length?<div className="ns-review-list">{reviews.map(review=><article className="ns-review-card" key={review.id}><div className="ns-review-card-head"><strong>{esc(review.reviewer_name)}</strong><span className="ns-review-stars" aria-label={review.rating+" out of 5 stars"}>{"★".repeat(review.rating)}{"☆".repeat(5-review.rating)}</span></div><p>{esc(review.comment)}</p><small>{new Date(review.created_at).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})}</small></article>)}</div>:<div className="ns-review-empty"><strong>Be the first to leave a review</strong><p>There are no approved reviews yet. Your feedback can help the next customer.</p></div>}
+    <div className="ns-review-form-wrap"><h3>Share your experience</h3><p className="muted-note">Reviews are checked before publishing. Your phone/email is kept private and is only used to help prevent duplicate reviews.</p>
+      <form className="seller-form ns-review-form" onSubmit={submit}>
+        <label>Your name *<input required minLength={2} maxLength={80} value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Display name"/></label>
+        <label>Phone or email *<input required maxLength={160} value={form.contact} onChange={e=>setForm({...form,contact:e.target.value})} placeholder="Kept private" autoComplete="email"/></label>
+        <label>Rating *<select required value={form.rating} onChange={e=>setForm({...form,rating:Number(e.target.value)})}><option value={5}>★★★★★ — Excellent</option><option value={4}>★★★★☆ — Good</option><option value={3}>★★★☆☆ — Okay</option><option value={2}>★★☆☆☆ — Needs improvement</option><option value={1}>★☆☆☆☆ — Poor</option></select></label>
+        <label>Your review *<textarea required minLength={5} maxLength={1000} rows={4} value={form.comment} onChange={e=>setForm({...form,comment:e.target.value})} placeholder="What should other customers know?"/></label>
+        {error&&<div className="inline-error" role="alert">{error}</div>}
+        {notice&&<div className="inline-success" role="status">{notice}</div>}
+        <button className="primary-button" disabled={submitting}>{submitting?"Submitting…":"Submit review"}</button>
+      </form>
+    </div>
+  </div>;
 }
 
 export default function SellerMicrositePage({go,slug}){
@@ -195,9 +239,7 @@ export default function SellerMicrositePage({go,slug}){
       </section>
 
       <section id="reviews" className="ns-profile-section ns-reference-reviews">
-        <div className="eyebrow">CUSTOMER TRUST</div>
-        <h2>Reviews</h2>
-        <p>Customer reviews will appear here as NammaSpot gathers verified local feedback.</p>
+        <ReviewPanel seller={seller}/>
       </section>
 
       <footer className="microsite-footer">NammaSpot · Local sellers, catalogues & connections</footer>

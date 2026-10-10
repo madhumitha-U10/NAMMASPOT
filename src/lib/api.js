@@ -162,7 +162,30 @@ export async function getCategories() {
   return data ?? [];
 }
 
-export async function getPublicSellers({ query = "", category = "All", near = "" } = {}) {
+export const categoryAliases = {
+  "Food & Bakery": ["food", "bakery"],
+  "Mehendi": ["henna"],
+  "Bridal Makeup": ["makeup", "beauty"],
+  "Crochet & Handmade": ["crochet", "handmade", "crafts"],
+  "Jewellery": ["jewelry", "accessories", "accessory"],
+  "Boutique & Fashion": ["fashion", "boutique"],
+  "Home Decor": ["home & decor", "home", "decor"],
+  "Gifts": ["gift", "handmade"],
+  "Art": ["handmade", "crafts"],
+  "Photography": ["photo"],
+  "Beauty": ["makeup", "mehendi", "henna"],
+  "Services": ["service"],
+};
+
+function categoryMatches(sellerCategory, selectedCategory) {
+  if (selectedCategory === "All") return true;
+  const actual = String(sellerCategory || "").trim().toLowerCase();
+  const accepted = [selectedCategory, ...(categoryAliases[selectedCategory] || [])]
+    .map((value) => value.trim().toLowerCase());
+  return accepted.includes(actual);
+}
+
+async function getPublicSellers({ query = "", category = "All", near = "" } = {}) {
   if (!supabase) {
     const state = demoState();
     const q = query.trim().toLowerCase();
@@ -170,7 +193,7 @@ export async function getPublicSellers({ query = "", category = "All", near = ""
       ...s,
       products: state.products.filter((p) => p.seller_id === s.id),
     })).filter((s) => {
-      const categoryOk = category === "All" || s.category === category;
+      const categoryOk = categoryMatches(s.category, category);
       const nearOk = !near || (s.location || "").toLowerCase().includes(near.toLowerCase());
       const queryOk = !q || [s.name,s.category,s.location,s.description,...s.products.map((p) => p.name)].join(" ").toLowerCase().includes(q);
       return categoryOk && nearOk && queryOk;
@@ -181,7 +204,7 @@ export async function getPublicSellers({ query = "", category = "All", near = ""
   if (error) throw error;
   const q = query.trim().toLowerCase();
   return (data ?? []).map(sellerOf).filter((s) => {
-    const categoryOk = category === "All" || s.category === category;
+    const categoryOk = categoryMatches(s.category, category);
     const nearOk = !near || s.location.toLowerCase().includes(near.toLowerCase());
     const queryOk = !q || [s.name,s.category,s.location,s.description,...s.products.map((p) => p.name)].join(" ").toLowerCase().includes(q);
     return categoryOk && nearOk && queryOk;

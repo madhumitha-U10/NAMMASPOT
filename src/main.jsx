@@ -525,7 +525,9 @@ function SellerCard({ seller, index=0, go, toggleSave, saved, detailed=false }) 
   );
 }
 
-function _SellerPage({ go, slug, saved, toggleSave }) {
+// Legacy route component kept for compatibility; the active route uses SellerMicrositePage.
+// eslint-disable-next-line no-unused-vars
+function SellerPage({ go, slug, saved, toggleSave }) {
   const state = useAsync(() => getPublicSeller(slug), [slug]);
   const [enquiryProduct,setEnquiryProduct] = useState(null);
 

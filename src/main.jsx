@@ -210,6 +210,7 @@ function App() {
           <button onClick={() => go("/")}>Home</button>
           <button className={route === "explore" ? "nav-active" : ""} onClick={() => go("/explore")}>Explore</button>
           <button className={route === "categories" ? "nav-active" : ""} onClick={() => go("/categories")}>Categories</button>
+          <button className={route === "featured" ? "nav-active" : ""} onClick={() => go("/featured")}>Featured</button>
           <button className={route === "saved" ? "nav-active" : ""} onClick={() => go("/saved")}>Saved</button>
           {profile?.role === "seller" && <button onClick={() => go("/dashboard")}><LayoutDashboard size={15}/> Dashboard</button>}
           {profile?.role === "admin" && <button onClick={() => go("/nammaspot-control-panel/dashboard")}><ShieldCheck size={15}/> Admin Console</button>}
@@ -258,13 +259,6 @@ function getRoute(path) {
   if (path.startsWith("/saved")) return "saved";
   if (path.startsWith("/login")) return "login";
   if (path === "/register") return "register";
-  if (path.startsWith("/dashboard/website")) return "website-editor";
-  if (path.startsWith("/dashboard/website")) return "website-editor";
-  if (path.startsWith("/dashboard/website")) return "website-editor";
-  if (path.startsWith("/dashboard/website")) return "website-editor";
-  if (path.startsWith("/dashboard/website")) return "website-editor";
-  if (path.startsWith("/dashboard/website")) return "website-editor";
-  if (path.startsWith("/dashboard/website")) return "website-editor";
   if (path.startsWith("/dashboard/website")) return "website-editor";
   if (path.startsWith("/dashboard")) return "dashboard";
   if (path.startsWith("/nammaspot-control-panel/login")) return "admin-login";
@@ -318,12 +312,12 @@ function HomePage({ go, query, setQuery }) {
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              onKeyDown={(event) => event.key === "Enter" && go("/explore")}
+              onKeyDown={(event) => event.key === "Enter" && go(query.trim() ? "/explore?search=" + encodeURIComponent(query.trim()) : "/explore")}
               placeholder="Try 'bridal mehendi Adyar' or 'eggless cake'"
               aria-label="Search local sellers and products"
             />
           </div>
-          <button className="hero-search-button" onClick={() => go("/explore")}>Search</button>
+          <button className="hero-search-button" onClick={() => go(query.trim() ? "/explore?search=" + encodeURIComponent(query.trim()) : "/explore")}>Search</button>
           <div className="quick-chips">
             {popularCategories.map((category) => (
               <button key={category} onClick={() => go("/explore?search=" + encodeURIComponent(category))}>{category}</button>
@@ -370,7 +364,17 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
   const category = params.get("cat") || "All";
   const near = params.get("near") || "";
   const urlQuery = params.get("search") || "";
-  useEffect(() => { setQuery(urlQuery); }, [urlQuery, setQuery]);
+  useEffect(() => { if (urlQuery) setQuery(urlQuery); }, [urlQuery, setQuery]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const next = new URLSearchParams(location.search);
+      if (query.trim()) next.set("search", query.trim());
+      else next.delete("search");
+      const suffix = next.toString();
+      history.replaceState({}, "", location.pathname + (suffix ? "?" + suffix : "") + location.hash);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [query]);
   const options = useMemo(() => ({ query, category, near }), [query, category, near]);
   const state = useAsync(() => getPublicSellers(options), [options]);
 
@@ -648,14 +652,14 @@ function RegisterPage({ go }) {
     noSpace: !/\s/.test(data.password),
   };
   const validId = /^ns-[a-z0-9_-]{6,20}$/.test(idValue);
-  const validPhone = data.phone.replace(/\\D/g,"").length >= 10;
-  const validWhatsapp = data.whatsapp.replace(/\\D/g,"").length >= 10;
+  const validPhone = data.phone.replace(/\D/g,"").length >= 10;
+  const validWhatsapp = data.whatsapp.replace(/\D/g,"").length >= 10;
   const accountReady = validId && Object.values(passwordChecks).every(Boolean);
   const businessReady = Boolean(
     data.business.trim() &&
     data.owner.trim() &&
-    data.phone.trim() &&
-    data.whatsapp.trim() &&
+    validPhone &&
+    validWhatsapp &&
     data.location.trim()
   );
 
@@ -721,7 +725,7 @@ function RegisterPage({ go }) {
           {step===1 && <section className="signup-section">
             <div className="signup-section-heading"><span className="signup-number">1</span><div><h2>Create your login</h2><p>This is how you will access your seller dashboard later.</p></div></div>
             <label>Choose your NammaSpot ID <span className="required">*</span>
-              <input value={data.nammaspotId} onChange={e=>setData({...data,nammaspotId:e.target.value.toUpperCase().replace(/\s/g,"")})} placeholder="Example: ns-000001" maxLength={40} autoCapitalize="characters" spellCheck="false" required aria-describedby="id-help"/>
+              <input value={data.nammaspotId} onChange={e=>setData({...data,nammaspotId:e.target.value.toUpperCase().replace(/\s/g,"")})} placeholder="Example: ns-000001" maxLength={40} autoCapitalize="none" spellCheck="false" required aria-describedby="id-help"/>
               <small id="id-help">Your NammaSpot ID is your username for login. Use ns- followed by 6–20 lowercase letters, numbers, _ or -.</small>
             </label>
             <div className={idValue && !/^NS-[A-Z0-9_-]{6,20}$/.test(idValue) ? "field-feedback error":"field-feedback"}>{idValue ? (validId ? "✓ This ID format is ready to use" : "Use ns- followed by 6–20 lowercase letters, numbers, _ or -") : "Example: NS-000001"}</div>
@@ -809,7 +813,7 @@ function LoginPage({ go, onSignedIn }) {
           <Store size={20}/>
           <div><strong>NammaSpot seller login</strong><span>Use the NammaSpot ID you created during signup.</span></div>
         </div>
-        <label>NammaSpot ID<input value={data.nammaspotId} onChange={(e)=>setData({...data,nammaspotId:e.target.value.toUpperCase().replace(/\\s/g,"")})} placeholder="NS-000001" autoCapitalize="characters" required/></label>
+        <label>NammaSpot ID<input value={data.nammaspotId} onChange={(e)=>setData({...data,nammaspotId:e.target.value.toLowerCase().replace(/\s/g,"")})} placeholder="ns-000001" autoCapitalize="none" required/></label>
         <label>Password<input type="password" autoComplete="current-password" value={data.password} onChange={(e)=>setData({...data,password:e.target.value})} placeholder="Your password" required/></label>
         {state.error && <div className="inline-error" role="alert" aria-live="assertive"><AlertCircle size={17}/>{state.error}</div>}
         <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Signing in…" : <><LogIn size={17}/> Sign in</>}</button>
@@ -1404,7 +1408,7 @@ function MobileBottomNav({ path,go }) {
   return <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
     <button className={path==="/"?"active":""} onClick={()=>go("/")}><Home size={22}/><span>Home</span></button>
     <button className={path.startsWith("/explore")?"active":""} onClick={()=>go("/explore")}><Compass size={22}/><span>Explore</span></button>
-    <button className={path.startsWith("/categories")?"active":""} onClick={()=>go("/categories")}><Grid2X2 size={22}/><span>Categories</span></button>
+    <button className={path.startsWith("/saved")?"active":""} onClick={()=>go("/saved")}><Heart size={22}/><span>Saved</span></button>
     <button className={path.startsWith("/explore?near")?"active":""} onClick={()=>go("/explore?near=Chennai")}><MapPin size={22}/><span>Near me</span></button>
     <button className={path.startsWith("/featured")?"active":""} onClick={()=>go("/featured")}><Sparkles size={22}/><span>Featured</span></button>
   </nav>;

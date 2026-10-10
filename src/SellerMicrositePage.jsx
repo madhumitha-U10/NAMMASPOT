@@ -303,9 +303,9 @@ function SellerShareModal({seller,url,onClose}){
         roundRect(68,66,944,136,25,"#762C3A",null);
         ctx.textAlign="left";ctx.textBaseline="middle";
         ctx.fillStyle="#FFFFFF";ctx.font="800 54px Arial, sans-serif";ctx.fillText("NammaSpot",104,118);
-        ctx.fillStyle="#F7E7DB";ctx.font="500 22px Arial, sans-serif";ctx.fillText("LOCAL SELLERS  ·  REAL PEOPLE",106,160);
+        ctx.fillStyle="#F7E7DB";ctx.font="500 22px Arial, sans-serif";ctx.fillText("YOUR NEIGHBOURHOOD, ONLINE",106,160);
         // Small editorial kicker.
-        centered("A LOCAL BUSINESS TO DISCOVER",250,"700 22px Arial, sans-serif","#8A4A51");
+        centered("A SHOP WORTH DISCOVERING",250,"700 22px Arial, sans-serif","#8A4A51");
         // Shop name, sized and wrapped for long real-world names.
         const nameLines=wrapText(shopName,850,"800 58px Arial, sans-serif",3);
         let nameY=nameLines.length===1?316:nameLines.length===2?300:282;
@@ -328,12 +328,12 @@ function SellerShareModal({seller,url,onClose}){
           // Clear action block with a strong, single next step.
           const actionY=qrY+qrSize+70;
           centered("SCAN TO EXPLORE",actionY,"800 34px Arial, sans-serif","#762C3A");
-          centered("Open the catalogue. Find something local.",actionY+43,"500 23px Arial, sans-serif","#65564E");
+          centered("Browse the catalogue. Find your next favourite.",actionY+43,"500 23px Arial, sans-serif","#65564E");
           roundRect(148,actionY+83,784,72,18,"#F3E6DD",null);
           centered("Discover this shop on NammaSpot",actionY+119,"700 25px Arial, sans-serif","#762C3A");
           ctx.fillStyle="#DCC9BC";ctx.fillRect(150,1230,780,2);
           centered(new URL(url).hostname,1267,"700 22px Arial, sans-serif","#762C3A");
-          centered("SHOP LOCAL  ·  SUPPORT YOUR COMMUNITY",1297,"500 15px Arial, sans-serif","#8A7A70");
+          centered("GOOD FINDS START HERE",1297,"500 15px Arial, sans-serif","#8A7A70");
           try{const result=output.toDataURL("image/png");if(!cancelled){setImageUrl(result);setState({loading:false,error:"",notice:""})}}
           catch{if(!cancelled)setState({loading:false,error:"Could not export the QR image in this browser.",notice:""})}
         };

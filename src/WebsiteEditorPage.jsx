@@ -14,7 +14,6 @@ export default function WebsiteEditorPage({go}){
   const save=async()=>{setState(s=>({...s,busy:true,error:"",ok:""}));try{const loc=validateMap(seller.location_url);const clean={...data,social_facebook_url:data.social_facebook_url.trim(),social_youtube_url:data.social_youtube_url.trim()};await updateMySeller(seller.id,{business_name:seller.business_name,owner_name:seller.owner_name,category_id:seller.category_id,location:seller.location,location_url:loc,city:seller.city,description:seller.description,contact:seller.phone,whatsapp_phone:seller.whatsapp_phone,instagram_url:seller.instagram_url});await saveMicrosite(seller.id,clean);await saveHours(seller.id,hours);await saveSpecialDates(seller.id,specials);setState(s=>({...s,busy:false,ok:"Seller profile updates saved."}));}catch(e){setState(s=>({...s,busy:false,error:e.message||"Could not save updates."}))}};
   if(state.loading)return <main className="page"><div className="page-title"><h1>Loading seller settings…</h1></div></main>;
   if(state.error&&!seller)return <main className="page"><div className="page-title"><h1>Seller settings</h1><div className="inline-error">{state.error}</div></div></main>;
-  const updateHour=(i,patch)=>setHours(hours.map((h,n)=>n===i?{...h,...patch}:h));
   const addSpecial=()=>setSpecials([...specials,{special_date:"",label:"Special timing / customer update",is_closed:true,ranges:[]}]);
   return <main className="page dashboard-page website-editor-page">
     <button className="back-button" onClick={()=>go("/dashboard")}><ArrowLeft size={17}/> Dashboard</button>

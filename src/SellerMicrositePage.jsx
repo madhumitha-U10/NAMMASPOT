@@ -125,7 +125,7 @@ export default function SellerMicrositePage({go,slug}){
         <button onClick={()=>go("/saved")}><Bookmark size={18}/> {isTamil?"சேமித்தவை":"Saved"}</button>
       </nav>
       <div className="ns-side-divider"/>
-      <button className="ns-side-account" onClick={()=>go("/dashboard")}><UserRound size={18}/> {isTamil?"என் கணக்கு":"My Account"}</button>
+      <button className="ns-side-account" onClick={()=>go("/login")}><UserRound size={18}/> {isTamil?"என் கணக்கு":"My Account"}</button>
       <button className="ns-language-toggle" type="button" onClick={()=>setLanguage(isTamil?"en":"ta")}>{isTamil?"English":"தமிழ்"}</button>
       <div className="ns-side-local-note">Support Local<br/>Discover Local ♡</div>
     </aside>

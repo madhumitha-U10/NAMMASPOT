@@ -209,14 +209,15 @@ export default function SellerMicrositePage({go,slug}){
             <span><b>{seller.category?.name||"Local"}</b> Category</span>
           </div>
         </div>
-        <div className="ns-reference-actions">
+        <div className="ns-reference-actions" style={{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",gap:8,overflowX:"auto",maxWidth:"100%",paddingBottom:2}}>
           {settings.tagline && <div className="ns-daily-update" title="Seller daily update">
             <CalendarDays size={14}/>
             <div><small>{new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short"}).format(new Date())}</small><span>{esc(settings.tagline)}</span></div>
           </div>}
-          {wa&&<><a className="primary-button ns-whatsapp-action" style={{background:"#C62828",borderColor:"#C62828",color:"#FFFFFF",borderRadius:12,fontWeight:700,boxShadow:"0 3px 10px rgba(198,40,40,.18)",transition:"transform .18s ease,box-shadow .18s ease"}} href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a><a className="secondary-button ns-whatsapp-action" style={{background:"#C62828",borderColor:"#C62828",color:"#FFFFFF",borderRadius:12,fontWeight:650}} href={wa} target="_blank" rel="noreferrer"><Send size={16}/> Enquire</a></>}
-          {seller.contact&&<a className="secondary-button ns-phone-action" style={{background:"#E8F1FA",borderColor:"#C8DCEC",color:"#174A73",borderRadius:12,fontWeight:650}} href={"tel:"+seller.contact}><Phone size={16}/> Call</a>}
-          <button className="secondary-button ns-share-action" style={{background:"#F7F0E5",borderColor:"#E7D8C4",color:"#713B46",borderRadius:12,fontWeight:650}} onClick={share}><Share2 size={16}/> Share</button>
+          {wa&&<><a className="primary-button ns-whatsapp-action" style={{background:"#C62828",borderColor:"#C62828",color:"#FFFFFF",borderRadius:12,fontWeight:700,boxShadow:"0 3px 10px rgba(198,40,40,.18)",transition:"transform .18s ease,box-shadow .18s ease",flex:"0 0 auto",whiteSpace:"nowrap"}} href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a><a className="secondary-button ns-whatsapp-action" style={{background:"#C62828",borderColor:"#C62828",color:"#FFFFFF",borderRadius:12,fontWeight:650,flex:"0 0 auto",whiteSpace:"nowrap"}} href={wa} target="_blank" rel="noreferrer"><Send size={16}/> Enquire</a></>}
+          {seller.contact&&<a className="secondary-button ns-phone-action" style={{background:"#E8F1FA",borderColor:"#C8DCEC",color:"#174A73",borderRadius:12,fontWeight:650,flex:"0 0 auto",whiteSpace:"nowrap"}} href={"tel:"+seller.contact}><Phone size={16}/> Call</a>}
+          <button className="secondary-button ns-share-action" style={{background:"#F7F0E5",borderColor:"#E7D8C4",color:"#713B46",borderRadius:12,fontWeight:650,flex:"0 0 auto",whiteSpace:"nowrap"}} onClick={share}><Share2 size={16}/> Share</button>
+          {seller.location_url&&<a className="secondary-button ns-location-action" style={{background:"#EAF4EA",borderColor:"#C9E2C8",color:"#28633A",borderRadius:12,fontWeight:650,flex:"0 0 auto",whiteSpace:"nowrap"}} href={seller.location_url} target="_blank" rel="noreferrer"><MapPin size={16}/> Location</a>}
 
         </div>
       </section>

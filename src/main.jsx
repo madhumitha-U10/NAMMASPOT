@@ -50,6 +50,8 @@ import {
   adminDeleteCategory,
   adminStorageUsage,
   adminOtpUsageAlerts,
+  adminListReviews,
+  adminUpdateReviewStatus,
   uploadSellerMedia,
   getSellerStorageUsage
 } from "./lib/api";
@@ -1254,6 +1256,7 @@ function AdminPage() {
   const [loading,setLoading]=useState(true);
   const [storageUsage,setStorageUsage]=useState(null);
   const [otpAlerts,setOtpAlerts]=useState([]);
+  const [reviews,setReviews]=useState([]);
 
   const load=async()=>{
     setLoading(true);
@@ -1261,13 +1264,14 @@ function AdminPage() {
     try {
       const [ok,current] = await Promise.all([isCurrentUserAdmin(), getCurrentProfile()]);
       if (!ok) { setAllowed(false); setError("This account is not an approved NammaSpot admin."); return; }
-      const [s,c,u,otp]=await Promise.all([adminListSellers(),adminListCategories(),adminStorageUsage(),adminOtpUsageAlerts()]);
+      const [s,c,u,otp,r]=await Promise.all([adminListSellers(),adminListCategories(),adminStorageUsage(),adminOtpUsageAlerts(),adminListReviews()]);
       setAllowed(true);
       setAdminProfile(current);
       setSellers(s);
       setCategories(c);
       setStorageUsage(u);
       setOtpAlerts(otp);
+      setReviews(r);
       if (u && u.status !== "ok") {
         const key = "nammaspot-storage-alert-" + u.status;
         if (!window.sessionStorage.getItem(key)) {
@@ -1314,6 +1318,13 @@ function AdminPage() {
     finally{setBusy(false);}
   };
 
+  const moderateReview=async(id,next)=>{
+    setBusy(true);setError("");
+    try{await adminUpdateReviewStatus(id,next);setReviews(await adminListReviews())}
+    catch(error){setError(friendlyError(error))}
+    finally{setBusy(false)}
+  };
+
   const addCategory=async()=>{
     const name=window.prompt("Category name");
     if(!name) return;
@@ -1350,6 +1361,7 @@ function AdminPage() {
           <div className="admin-console-brand"><ShieldCheck size={22}/><div><strong>NammaSpot</strong><span>Admin Console</span></div></div>
           <div className="admin-console-nav">
             <button className={tab==="sellers"?"active":""} onClick={()=>setTab("sellers")}><Store size={17}/> Seller approvals</button>
+            <button className={tab==="reviews"?"active":""} onClick={()=>setTab("reviews")}><CheckCircle size={17}/> Reviews ({reviews.filter(item=>item.status==="pending").length})</button>
             <button className={tab==="categories"?"active":""} onClick={()=>setTab("categories")}><Grid2X2 size={17}/> Categories</button>
           </div>
           <div className="admin-console-sidebar-bottom">
@@ -1444,6 +1456,29 @@ function AdminPage() {
           </div>
         </>}
 
+      {tab==="reviews" &&
+        <section className="admin-review-queue">
+          <div className="dashboard-section-head"><div><h2>Customer review moderation</h2><p>Only approve feedback that is relevant, respectful and does not expose private information. Reviews become public after approval.</p></div><button className="secondary-button" onClick={async()=>{try{setReviews(await adminListReviews())}catch(error){setError(friendlyError(error))}}}>Refresh reviews</button></div>
+          <div className="category-row" aria-label="Review status summary">
+            <span className="status-pill status-warning">Pending {reviews.filter(item=>item.status==="pending").length}</span>
+            <span className="status-pill status-ok">Approved {reviews.filter(item=>item.status==="approved").length}</span>
+            <span className="status-pill">Rejected {reviews.filter(item=>item.status==="rejected").length}</span>
+          </div>
+          <div className="dashboard-list">
+            {reviews.length?reviews.map(review=><article className="dashboard-item admin-review-item" key={review.id}>
+              <div className="admin-review-copy">
+                <div className="enquiry-item-heading"><strong>{review.reviewer_name}</strong><span className={"status-pill "+(review.status==="pending"?"status-warning":review.status==="approved"?"status-ok":"")}>{review.status}</span></div>
+                <p className="admin-review-rating">{"★".repeat(Number(review.rating))}{"☆".repeat(5-Number(review.rating))} · {review.rating}/5</p>
+                <p>{review.comment}</p>
+                <small>For: {review.seller?.business_name||"Seller"} · {review.created_at?new Date(review.created_at).toLocaleString("en-IN"):"Date unavailable"}</small>
+              </div>
+              <div className="button-row">
+                {review.status!=="approved"&&<button disabled={busy} className="primary-button" onClick={()=>moderateReview(review.id,"approved")}>Approve</button>}
+                {review.status!=="rejected"&&<button disabled={busy} className="secondary-button" onClick={()=>moderateReview(review.id,"rejected")}>Reject</button>}
+              </div>
+            </article>):<Empty title="No reviews submitted yet" text="Customer feedback will appear here when someone submits a review from a seller page."/>}
+          </div>
+        </section>}
       {tab==="categories" &&
         <div className="dashboard-list">
           <button className="primary-button" onClick={addCategory}><Plus size={16}/> Add category</button>

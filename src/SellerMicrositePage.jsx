@@ -1,11 +1,21 @@
 import {useEffect,useMemo,useRef,useState} from "react";
-import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send,Heart,Home,Compass,Grid2X2,Bookmark,UserRound,Search,MoreHorizontal,Navigation,Star,Package,Camera,CalendarDays} from "lucide-react";
+import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send,Heart,Home,Compass,Grid2X2,Bookmark,UserRound,Search,Navigation,Star,Package,Camera,CalendarDays} from "lucide-react";
 import {QRCodeCanvas} from "qrcode.react";
-import {createEnquiry,createReview,getPublicReviews} from "./lib/api";
+import {createReview,getPublicReviews} from "./lib/api";
 import {getMicrosite,sellerPublicUrl} from "./lib/microsite";
 
 const days=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const esc=(v)=>String(v||"").replace(/[<>]/g,"");
+const whatsappUrl=(seller,product=null)=>{
+  const raw=String(seller?.whatsapp_phone||"").replace(/\D/g,"");
+  if(!raw)return null;
+  const phone=raw.length===10?"91"+raw:raw.startsWith("0")&&raw.length===11?"91"+raw.slice(1):raw;
+  const itemName=product?.name||product?.product_name;
+  const message=itemName
+    ? "Hi! I found "+itemName+" on NammaSpot at "+(seller.business_name||"this shop")+". I’d like to enquire about this product. Is it available?"
+    : "Hi! I found "+(seller.business_name||"your shop")+" on NammaSpot. I’d like to make an enquiry. Could you please share more details?";
+  return "https://wa.me/"+phone+"?text="+encodeURIComponent(message);
+};
 
 function nowStatus(hours,specialDates){
   const now=new Date(), date=now.toISOString().slice(0,10);
@@ -43,16 +53,9 @@ function ProductModal({product,onClose,onEnquire}){
       </div>
       {imgs.length>1&&<div className="microsite-gallery-count" aria-live="polite">{i+1} / {imgs.length}</div>}
       <div className="microsite-thumbs">{imgs.map((u,n)=><button key={u+n} className={n===i?"active":""} onClick={()=>setI(n)}><img src={u} alt=""/></button>)}</div>
-      <div className="microsite-product-copy"><div className="eyebrow">{product.category?.name||"CATALOGUE"}</div><h2>{esc(product.name||product.product_name)}</h2>{product.price!=null&&<strong className="microsite-price">₹{product.price}</strong>}<p>{esc(product.description)}</p><button className="primary-button full-button" onClick={onEnquire}><Send size={16}/> Ask about this product</button></div>
+      <div className="microsite-product-copy"><div className="eyebrow">{product.category?.name||"CATALOGUE"}</div><h2>{esc(product.name||product.product_name)}</h2>{product.price!=null&&<strong className="microsite-price">₹{product.price}</strong>}<p>{esc(product.description)}</p><a className="primary-button full-button" href={onEnquire||undefined} target="_blank" rel="noreferrer" onClick={e=>{if(!onEnquire)e.preventDefault()}}><MessageCircle size={16}/> Enquire on WhatsApp</a></div>
     </section>
   </div>;
-}
-
-function Enquiry({seller,product,onClose}){
-  const [d,setD]=useState({name:"",contact:"",message:"Hi, I’m interested in "+(product?.name||product?.product_name||seller.business_name)+"."});
-  const [s,setS]=useState({busy:false,error:"",ok:false});
-  const submit=async e=>{e.preventDefault();setS({busy:true,error:"",ok:false});try{await createEnquiry({seller_id:seller.id,product_id:product?.id||null,customer_name:d.name.trim().slice(0,120),customer_contact:d.contact.trim().slice(0,160),message:d.message.trim().slice(0,1000)});setS({busy:false,error:"",ok:true})}catch(err){setS({busy:false,error:err.message||"Could not send enquiry. Please try again.",ok:false})}};
-  return <div className="modal-backdrop"><section className="modal"><button className="modal-close" onClick={onClose} aria-label="Close"><X/></button>{s.ok?<div className="success-panel"><CheckCircle size={38}/><h2>Message sent.</h2><p>Your enquiry is now with the seller. They can use the contact details you provided to respond.</p><button className="primary-button" onClick={onClose}>Done</button></div>:<><div className="eyebrow">MESSAGE THIS SELLER</div><h2>Send an enquiry</h2><p className="muted-note">Ask about availability, timing, price, custom orders or anything you need to know.</p><form className="seller-form" onSubmit={submit}><label>Name *<input required maxLength={120} value={d.name} onChange={e=>setD({...d,name:e.target.value})}/></label><label>Phone / email *<input required maxLength={160} value={d.contact} onChange={e=>setD({...d,contact:e.target.value})}/></label><label>Message *<textarea required maxLength={1000} value={d.message} onChange={e=>setD({...d,message:e.target.value})}/></label>{s.error&&<div className="inline-error">{s.error}</div>}<button className="primary-button full-button" disabled={s.busy}>{s.busy?"Sending…":"Send message"}</button></form></>}</section></div>;
 }
 
 function ReviewPanel({seller}) {
@@ -103,7 +106,7 @@ export default function SellerMicrositePage({go,slug}){
   const [state,setState]=useState({loading:true,error:"",data:null});
   const [language,setLanguage]=useState(()=>localStorage.getItem("nammaspot-language")==="ta"?"ta":"en");
   const isTamil=language==="ta";
-  const [product,setProduct]=useState(null),[enquire,setEnquire]=useState(null),[saved,setSaved]=useState(false);
+  const [product,setProduct]=useState(null),[saved,setSaved]=useState(false);
   const [shareOpen,setShareOpen]=useState(false);
   useEffect(()=>{localStorage.setItem("nammaspot-language",language);document.documentElement.lang=language},[language]);
   useEffect(()=>{let alive=true;getMicrosite(slug).then(data=>alive&&setState({loading:false,error:"",data})).catch(e=>alive&&setState({loading:false,error:e.message||"Could not load this seller.",data:null}));return()=>{alive=false}},[slug]);
@@ -158,7 +161,8 @@ export default function SellerMicrositePage({go,slug}){
   if(!data)return <main className="page"><div className="empty-state"><h2>Seller not found</h2><p>This NammaSpot seller page is unavailable.</p></div></main>;
   const products=data.products||[];
   const share=()=>setShareOpen(true);
-  const wa=seller.whatsapp_phone?"https://wa.me/"+seller.whatsapp_phone.replace(/\D/g,""):null;
+  const wa=whatsappUrl(seller);
+  const productWa=p=>whatsappUrl(seller,p);
   return <main className="seller-microsite ns-seller-profile ns-reference-layout">
     <aside className="ns-left-sidebar">
       <button className="ns-side-brand" onClick={()=>go("/")}>NammaSpot</button>
@@ -202,7 +206,7 @@ export default function SellerMicrositePage({go,slug}){
           <p>{esc(seller.description||"Local seller on NammaSpot")}</p>
           <div className="ns-reference-stats">
             <span><b>{products.length}</b> Products</span>
-            <span><b>Local</b> Seller</span>
+            <span><b>{seller.category?.name||"Shop"}</b> Type</span>
             <span><b>{seller.category?.name||"Local"}</b> Category</span>
           </div>
         </div>
@@ -211,10 +215,10 @@ export default function SellerMicrositePage({go,slug}){
             <CalendarDays size={14}/>
             <div><small>{new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short"}).format(new Date())}</small><span>{esc(settings.tagline)}</span></div>
           </div>}
-          {wa&&<a className="primary-button" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a>}
+          {wa&&<><a className="primary-button" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a><a className="secondary-button" href={wa} target="_blank" rel="noreferrer"><Send size={16}/> Enquire</a></>}
           {seller.contact&&<a className="secondary-button" href={"tel:"+seller.contact}><Phone size={16}/> Call</a>}
           <button className="secondary-button" onClick={share}><Share2 size={16}/> Share</button>
-          <button className="icon-button ns-more-button" aria-label="More"><MoreHorizontal size={20}/></button>
+
         </div>
       </section>
 
@@ -229,7 +233,7 @@ export default function SellerMicrositePage({go,slug}){
           <div><h2>Our Catalogue</h2><p>Browse products and services from this local seller.</p></div>
           <div className="ns-catalogue-search"><Search size={15}/><input placeholder="Search products..." aria-label="Search products"/></div>
         </div>
-        {products.length?<div className="microsite-product-grid ns-reference-product-grid">{products.map(p=><MiniProduct key={p.id} p={p} onOpen={()=>setProduct(p)}/>)}</div>:<div className="empty-state"><h2>Catalogue coming soon</h2><p>This seller has not added products yet.</p></div>}
+        {products.length?<div className="microsite-product-grid ns-reference-product-grid">{products.map(p=><MiniProduct key={p.id} p={p} onOpen={()=>setProduct(p)} onEnquire={productWa(p)}/>)}</div>:<div className="empty-state"><h2>Catalogue coming soon</h2><p>This seller has not added products yet.</p></div>}
       </section>
 
       <section id="about" className="ns-profile-section ns-reference-about">
@@ -249,7 +253,7 @@ export default function SellerMicrositePage({go,slug}){
       <section className="ns-right-card ns-contact-card">
         <h3>Contact Seller</h3>
         <p>Have a question? Reach out directly to the seller.</p>
-        {wa&&<a className="primary-button full-button" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a>}
+        {wa&&<><a className="primary-button full-button" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a><a className="secondary-button full-button" href={wa} target="_blank" rel="noreferrer"><Send size={16}/> Enquire on WhatsApp</a></>}
         {seller.contact&&<a className="secondary-button full-button" href={"tel:"+seller.contact}><Phone size={16}/> Call</a>}
         <button className="secondary-button full-button" onClick={share}><Share2 size={16}/> Share</button>
       </section>
@@ -274,7 +278,7 @@ export default function SellerMicrositePage({go,slug}){
       <section className="ns-right-card ns-similar-card">
         <div className="ns-similar-head"><h3>Similar Sellers</h3><button onClick={()=>go("/explore")}>See all →</button></div>
         <div className="ns-similar-items">
-          <div><span><Package size={17}/></span><small>Local Seller</small><button>Follow</button></div>
+          
           <div><span><Star size={17}/></span><small>{seller.category?.name||"Local"}</small><button>Follow</button></div>
           <div><span><Heart size={17}/></span><small>Nearby Seller</small><button>Follow</button></div>
         </div>
@@ -282,8 +286,7 @@ export default function SellerMicrositePage({go,slug}){
     </aside>
 
     {shareOpen&&<SellerShareModal seller={seller} url={sellerPublicUrl(seller.slug)} onClose={()=>setShareOpen(false)}/>}
-    {product&&<ProductModal product={product} onClose={()=>setProduct(null)} onEnquire={()=>{setProduct(null);setEnquire(product)}}/>}
-    {enquire&&<Enquiry seller={seller} product={enquire==="general"?null:enquire} onClose={()=>setEnquire(null)}/>}
+    {product&&<ProductModal product={product} onClose={()=>setProduct(null)} onEnquire={productWa(product)}/>}
   </main>;
 }
 
@@ -469,4 +472,4 @@ function SellerShareModal({seller,url,onClose}){
   </div>;
 }
 
-function MiniProduct({p,onOpen}){return <article className="microsite-product-card" tabIndex="0" onClick={onOpen} onKeyDown={e=>{if(e.key==="Enter"||e.key===" ")onOpen()}}><div className="microsite-product-image">{p.image_url?<img src={p.image_url} alt={p.name||p.product_name} loading="lazy"/>:<span>{(p.name||p.product_name||"?").charAt(0)}</span>}</div><div><small>{p.category?.name||"Local"}</small><h3>{esc(p.name||p.product_name)}</h3>{p.description&&<p>{esc(p.description).slice(0,120)}</p>}{p.price!=null&&<strong>₹{p.price}</strong>}</div></article>}
+function MiniProduct({p,onOpen,onEnquire}){return <article className="microsite-product-card" tabIndex="0" onClick={onOpen} onKeyDown={e=>{if(e.key==="Enter"||e.key===" ")onOpen()}}><div className="microsite-product-image">{p.image_url?<img src={p.image_url} alt={p.name||p.product_name} loading="lazy"/>:<span>{(p.name||p.product_name||"?").charAt(0)}</span>}</div><div><small>{p.category?.name||"Catalogue"}</small><h3>{esc(p.name||p.product_name)}</h3>{p.description&&<p>{esc(p.description).slice(0,120)}</p>}{p.price!=null&&<strong>₹{p.price}</strong>}{onEnquire&&<a className="secondary-button full-button ns-product-enquiry" href={onEnquire} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()}><MessageCircle size={15}/> Enquire on WhatsApp</a>}</div></article>}

@@ -522,6 +522,65 @@ export async function updateEnquiryStatus(id,status) {
   if(!data) throw new Error("This enquiry could not be updated. Please refresh and try again.");
 }
 
+export async function createReview(values) {
+  if (!supabase) throw new BackendNotConfiguredError();
+  const reviewerName = text(values.reviewer_name, 80);
+  const rawContact = String(values.reviewer_contact || "").trim();
+  const reviewerContact = rawContact.includes("@")
+    ? normalizeEmail(rawContact)
+    : rawContact.replace(/[^0-9+]/g, "").slice(0, 40);
+  const rating = Number(values.rating);
+  const comment = text(values.comment, 1000);
+  if (reviewerName.length < 2) throw new Error("Enter your name (at least 2 characters).");
+  if (reviewerContact.length < 5) throw new Error("Enter a valid phone number or email.");
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) throw new Error("Choose a rating from 1 to 5 stars.");
+  if (comment.length < 5) throw new Error("Please write at least 5 characters about your experience.");
+  const { error } = await needBackend().from("reviews").insert({
+    seller_id: values.seller_id,
+    reviewer_name: reviewerName,
+    reviewer_contact: reviewerContact,
+    rating,
+    comment,
+    status: "pending"
+  });
+  if (error?.code === "23505") throw new Error("A review has already been submitted for this seller using those contact details.");
+  if (error) throw error;
+  return { status: "pending" };
+}
+
+export async function getPublicReviews(sellerId) {
+  if (!supabase) throw new BackendNotConfiguredError();
+  const { data, error } = await needBackend().from("public_reviews")
+    .select("id,seller_id,reviewer_name,rating,comment,created_at")
+    .eq("seller_id", sellerId)
+    .order("created_at", { ascending: false })
+    .limit(30);
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function adminListReviews() {
+  if (!supabase) throw new BackendNotConfiguredError();
+  const { data, error } = await needBackend().from("reviews")
+    .select("id,seller_id,reviewer_name,rating,comment,status,created_at,seller:sellers(business_name,slug)")
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function adminUpdateReviewStatus(id, status) {
+  if (!["approved", "rejected"].includes(status)) throw new Error("Choose approve or reject.");
+  const { data, error } = await needBackend().from("reviews")
+    .update({ status })
+    .eq("id", id)
+    .select("id,status")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("Review could not be updated. Refresh the page and try again.");
+  return data;
+}
+
 export async function listMyFavourites() {
   if (!supabase) { const user=currentDemoUser(); return user ? demoState().favourites.filter((x)=>x.user_id===user.id).map((x)=>x.seller_id) : []; }
   const client=needBackend(); const session=await getSession(); if(!session?.user)return []; const {data,error}=await client.from("favourites").select("seller_id").eq("user_id",session.user.id); if(error)throw error; return (data||[]).map((x)=>x.seller_id);

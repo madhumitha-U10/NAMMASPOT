@@ -310,7 +310,7 @@ function HomePage({ go, query, setQuery }) {
           <div className="neighbourhood-chips" aria-label="Explore Chennai neighbourhoods">
             <span>YOUR SIDE OF CHENNAI</span>
             {["Adyar", "T. Nagar", "Anna Nagar", "Mylapore", "Velachery", "OMR"].map((area) => (
-              <button key={area} onClick={() => go("/explore?area=" + encodeURIComponent(area))}>{area}</button>
+              <button key={area} onClick={() => { setQuery(""); go("/explore?area=" + encodeURIComponent(area)); }}>{area}</button>
             ))}
           </div>
           <div className="home-trust-row" aria-label="How NammaSpot works">

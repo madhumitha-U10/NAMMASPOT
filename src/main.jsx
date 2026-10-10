@@ -413,8 +413,13 @@ const chennaiCategories = [
 
 function CategoriesPage({ go }) {
   const state = useAsync(() => getCategories(), []);
+  const knownCategoryNames = new Set([
+    ...chennaiCategories, "Food", "Bakery", "Henna", "Makeup", "Crochet", "Handmade",
+    "Crafts", "Jewelry", "Accessories", "Accessory", "Boutique", "Fashion",
+    "Home & Decor", "Home", "Decor", "Gift", "Photo", "Service"
+  ].map((name) => name.toLowerCase()));
   const customCategories = (state.data || []).map((item) => item.name).filter((name) =>
-    !chennaiCategories.some((known) => known.toLowerCase() === String(name).trim().toLowerCase())
+    !knownCategoryNames.has(String(name).trim().toLowerCase())
   );
   const categories = [...chennaiCategories, ...customCategories];
   return (

@@ -1,5 +1,5 @@
 import {useEffect,useState} from "react";
-import {ArrowLeft,CheckCircle,Plus,Trash2,ExternalLink,MessageCircle,Clock} from "lucide-react";
+import {ArrowLeft,CheckCircle,Plus,Trash2,ExternalLink,Clock} from "lucide-react";
 import {getMySeller,updateMySeller,listMyProducts} from "./lib/api";
 import {getMyMicrosite,saveMicrosite,saveHours,saveSpecialDates,setProductFeatured,sellerPublicUrl} from "./lib/microsite";
 
@@ -15,8 +15,6 @@ export default function WebsiteEditorPage({go}){
   if(state.loading)return <main className="page"><div className="page-title"><h1>Loading seller settings…</h1></div></main>;
   if(state.error&&!seller)return <main className="page"><div className="page-title"><h1>Seller settings</h1><div className="inline-error">{state.error}</div></div></main>;
   const updateHour=(i,patch)=>setHours(hours.map((h,n)=>n===i?{...h,...patch}:h));
-  const addRange=i=>updateHour(i,{ranges:[...(hours[i].ranges||[]),{open:"09:00",close:"18:00"}]});
-  const updateRange=(i,n,key,value)=>updateHour(i,{ranges:(hours[i].ranges||[]).map((r,j)=>j===n?{...r,[key]:value}:r)});
   const addSpecial=()=>setSpecials([...specials,{special_date:"",label:"Special timing / customer update",is_closed:true,ranges:[]}]);
   return <main className="page dashboard-page website-editor-page">
     <button className="back-button" onClick={()=>go("/dashboard")}><ArrowLeft size={17}/> Dashboard</button>

@@ -214,11 +214,11 @@ export default function SellerMicrositePage({go,slug}){
             <CalendarDays size={14}/>
             <div><small>{new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short"}).format(new Date())}</small><span>{esc(settings.tagline)}</span></div>
           </div>}
-          <div className="ns-contact-action-row" aria-label="Contact and share seller" style={{display:"flex",flexWrap:"nowrap",alignItems:"center",gap:8,overflowX:"auto",maxWidth:"100%",paddingBottom:4}}>
-            {wa&&<a className="primary-button ns-unified-contact-button" href={wa} target="_blank" rel="noreferrer" style={{background:"#762C3A",color:"#fff",borderColor:"#762C3A",whiteSpace:"nowrap",display:"inline-flex",alignItems:"center",justifyContent:"center",gap:7,flex:"0 0 auto"}}><MessageCircle size={16}/> WhatsApp / Enquiry</a>}
-            {seller.contact&&<a className="primary-button ns-unified-contact-button" href={"tel:"+seller.contact} style={{background:"#762C3A",color:"#fff",borderColor:"#762C3A",whiteSpace:"nowrap",display:"inline-flex",alignItems:"center",justifyContent:"center",gap:7,flex:"0 0 auto"}}><Phone size={16}/> Call</a>}
-            <button type="button" className="primary-button ns-unified-contact-button" onClick={share} style={{background:"#762C3A",color:"#fff",borderColor:"#762C3A",whiteSpace:"nowrap",display:"inline-flex",alignItems:"center",justifyContent:"center",gap:7,flex:"0 0 auto"}}><Share2 size={16}/> Share QR</button>
-            <a className="primary-button ns-unified-contact-button" href={seller.location_url||("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(seller.location||seller.city||seller.business_name||"Tamil Nadu"))} target="_blank" rel="noreferrer" style={{background:"#762C3A",color:"#fff",borderColor:"#762C3A",whiteSpace:"nowrap",display:"inline-flex",alignItems:"center",justifyContent:"center",gap:7,flex:"0 0 auto"}}><MapPin size={16}/> Location</a>
+          <div className="ns-contact-action-row" aria-label="Contact and share seller">
+            {wa&&<a className="primary-button ns-unified-contact-button" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a>}
+            {seller.contact&&<a className="primary-button ns-unified-contact-button" href={"tel:"+seller.contact}><Phone size={16}/> Call</a>}
+            <button type="button" className="primary-button ns-unified-contact-button" onClick={share}><Share2 size={16}/> Share QR</button>
+            <a className="primary-button ns-unified-contact-button" href={seller.location_url||("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(seller.location||seller.city||seller.business_name||"Tamil Nadu"))} target="_blank" rel="noreferrer"><MapPin size={16}/> Location</a>
           </div>
 
         </div>

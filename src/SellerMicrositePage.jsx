@@ -355,7 +355,7 @@ function SellerShareModal({seller,url,onClose}){
       const win=window.open("","_blank");
       if(!win)throw new Error("Your browser blocked the print window. Allow pop-ups and try again.");
       const safeName=shopName.replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
-      win.document.write("<!doctype html><html><head><title>"+safeName+" · NammaSpot QR</title><meta name='viewport' content='width=device-width, initial-scale=1'><style>body{font-family:Arial,sans-serif;text-align:center;margin:24px;color:#302622}img{width:min(100%,600px);height:auto} @media print{body{margin:0}img{width:100%;max-width:180mm}}</style></head><body><img alt='NammaSpot QR code for "+safeName+"' src='"+imageUrl+"'><script>window.addEventListener("load",()=>window.print(),{once:true})<\/script></body></html>");
+      win.document.write("<!doctype html><html><head><title>"+safeName+" · NammaSpot QR</title><meta name='viewport' content='width=device-width, initial-scale=1'><style>body{font-family:Arial,sans-serif;text-align:center;margin:24px;color:#302622}img{width:min(100%,600px);height:auto} @media print{body{margin:0}img{width:100%;max-width:180mm}}</style></head><body><img alt='NammaSpot QR code for "+safeName+"' src='"+imageUrl+"'><script>window.addEventListener(\"load\",()=>window.print(),{once:true})<\/script></body></html>");
       win.document.close();
       setState(s=>({...s,error:"",notice:"Print window opened."}));
     }catch(error){setState(s=>({...s,error:error.message||"Could not open print view.",notice:""}))}

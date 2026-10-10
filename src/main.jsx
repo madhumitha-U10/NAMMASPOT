@@ -1115,19 +1115,57 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
 }
 
 function EnquiryManager({ enquiries,onChange }) {
+  const [filter,setFilter] = useState("all");
+  const [search,setSearch] = useState("");
+  const [busyId,setBusyId] = useState("");
+  const [error,setError] = useState("");
+  const [notice,setNotice] = useState("");
   const update=async(id,status)=>{
-    try { await updateEnquiryStatus(id,status); onChange(enquiries.map((item)=>item.id===id?{...item,status}:item)); }
-    catch { /* keep the existing state if the network call fails */ }
+    setBusyId(id); setError(""); setNotice("");
+    try {
+      await updateEnquiryStatus(id,status);
+      onChange(enquiries.map((item)=>item.id===id?{...item,status}:item));
+      setNotice("Enquiry status updated.");
+    } catch (e) {
+      setError(e?.message || "Could not update this enquiry. Check your connection and try again.");
+    } finally { setBusyId(""); }
   };
+  const normalStatus=(status)=>status==="pending"||status==="new"?"new":status==="viewed"?"read":status==="responded"?"replied":status;
+  const counts={all:enquiries.length,new:enquiries.filter(x=>normalStatus(x.status)==="new").length,read:enquiries.filter(x=>normalStatus(x.status)==="read").length,replied:enquiries.filter(x=>normalStatus(x.status)==="replied").length,closed:enquiries.filter(x=>normalStatus(x.status)==="closed").length};
+  const visible=enquiries.filter(item=>{
+    const status=normalStatus(item.status);
+    const matchesFilter=filter==="all"||status===filter;
+    const q=search.trim().toLowerCase();
+    const matchesSearch=!q||[item.customer_name,item.customer_contact,item.message,item.product?.product_name].some(v=>String(v||"").toLowerCase().includes(q));
+    return matchesFilter&&matchesSearch;
+  });
   return (
-    <div className="dashboard-list">
-      {enquiries.length ? enquiries.map((item)=>
-        <article className="dashboard-item" key={item.id}>
-          <div><strong>{item.customer_name} · {item.product?.product_name || "General enquiry"}</strong><p>{item.customer_contact}</p><small>{item.message}</small></div>
-          <select value={item.status} onChange={(event)=>update(item.id,event.target.value)}><option value="pending">Pending</option><option value="read">Read</option><option value="replied">Replied</option><option value="closed">Closed</option></select>
-        </article>
-      ) : <Empty title="No enquiries yet" text="Customer enquiries will appear here."/>}
-    </div>
+    <section className="enquiry-manager">
+      <div className="dashboard-section-head"><div><h2>Customer enquiries</h2><p>Reply to customers using the contact details they shared, then update the status so you know what needs attention.</p></div><button className="secondary-button" onClick={()=>{setSearch("");setFilter("all");setError("");setNotice("");}}>Reset</button></div>
+      <div className="enquiry-summary">
+        {[["all","All"],["new","New"],["read","Read"],["replied","Replied"],["closed","Closed"]].map(([key,label])=><button type="button" key={key} className={filter===key?"active":""} onClick={()=>setFilter(key)}><span>{label}</span><strong>{counts[key]}</strong></button>)}
+      </div>
+      <label className="enquiry-search-label">Search enquiries<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, contact, product or message…"/></label>
+      {error&&<div className="inline-error" role="alert">{error}</div>}
+      {notice&&<p className="inline-success" role="status">{notice}</p>}
+      <div className="dashboard-list">
+        {visible.length ? visible.map((item)=>{
+          const status=normalStatus(item.status);
+          const phone=String(item.customer_contact||"").replace(/[^+\\d]/g,"");
+          const date=item.enquiry_date||item.created_at;
+          return <article className="dashboard-item enquiry-item" key={item.id}>
+            <div className="enquiry-item-main">
+              <div className="enquiry-item-heading"><strong>{item.customer_name||"Customer"} · {item.product?.product_name||"General enquiry"}</strong><span className={"status-pill status-"+status}>{status==="new"?"New":status==="read"?"Read":status==="replied"?"Replied":"Closed"}</span></div>
+              <p className="enquiry-contact">{item.customer_contact||"No contact supplied"}</p>
+              <p className="enquiry-message">{item.message}</p>
+              {date&&<small className="muted-note">Received {new Intl.DateTimeFormat("en-IN",{dateStyle:"medium",timeStyle:"short"}).format(new Date(date))}</small>}
+              <div className="button-row enquiry-actions">{phone&&<a className="secondary-button" href={"https://wa.me/"+phone.replace(/^\\+/,"")} target="_blank" rel="noreferrer"><MessageCircle size={15}/> WhatsApp</a>}{item.customer_contact&&item.customer_contact.includes("@")&&<a className="secondary-button" href={"mailto:"+item.customer_contact}><Send size={15}/> Email</a>}</div>
+            </div>
+            <label className="enquiry-status-control">Status<select value={status} disabled={busyId===item.id} onChange={event=>update(item.id,event.target.value)}><option value="new">New</option><option value="read">Read</option><option value="replied">Replied</option><option value="closed">Closed</option></select>{busyId===item.id&&<small>Saving…</small>}</label>
+          </article>;
+        }) : <Empty title={enquiries.length?"No matching enquiries":"No enquiries yet"} text={enquiries.length?"Try another status or search term.":"New customer messages will appear here. Respond promptly and mark each one as replied or closed."}/>}
+      </div>
+    </section>
   );
 }
 

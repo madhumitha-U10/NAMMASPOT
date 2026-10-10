@@ -399,32 +399,48 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
 function CategoriesPage({ go }) {
   const state = useAsync(() => getCategories(), []);
   const categories = state.data?.length ? state.data.map((item) => item.name) : categoryNames;
+  const [likedCategories, setLikedCategories] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("nammaspot-liked-categories") || "[]"); }
+    catch { return []; }
+  });
+  const toggleCategoryLike = (category) => {
+    setLikedCategories((current) => {
+      const next = current.includes(category) ? current.filter((item) => item !== category) : [...current, category];
+      try { localStorage.setItem("nammaspot-liked-categories", JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
   return (
-    <main className="page">
+    <main className="page categories-page">
       <div className="page-title">
         <div className="eyebrow">BROWSE LOCAL</div>
         <h1>Find your kind of local.</h1>
-        <p>Start with a category. See real local sellers, their catalogues and the people behind them.</p>
+        <p>Explore thoughtful collections from neighbourhood shops, home businesses and local makers.</p>
       </div>
       {state.loading ? <CardSkeletonRow detailed/> :
         <div className="category-grid-large">
           {categories.map((category,index) => (
-            <button className="category-card-visual" key={category} onClick={() => go("/explore?cat=" + encodeURIComponent(category))} aria-label={"Explore " + category}>
-              <img src={categoryImage(category)} alt="" loading="lazy" />
-              <span className="category-card-shade" />
-              <span className="category-card-number">{String(index + 1).padStart(2,"0")}</span>
-              <span className="category-card-copy">
-                <strong>{category}</strong>
-                <small>Explore local {category.toLowerCase()}</small>
-              </span>
-              <span className="category-card-arrow"><ChevronRight size={19}/></span>
-            </button>
+            <article className="category-card-wrap" key={category}>
+              <button className="category-card-visual" onClick={() => go("/explore?cat=" + encodeURIComponent(category))} aria-label={"Explore " + category}>
+                <img src={categoryImage(category)} alt={category + " category"} loading="lazy" />
+                <span className="category-card-shade" />
+                <span className="category-card-number">{String(index + 1).padStart(2,"0")}</span>
+                <span className="category-card-copy">
+                  <small>DISCOVER</small>
+                  <strong>{category}</strong>
+                  <span>Explore local {category.toLowerCase()}</span>
+                </span>
+                <span className="category-card-arrow"><ChevronRight size={19}/></span>
+              </button>
+              <button className={likedCategories.includes(category) ? "category-like-button is-liked" : "category-like-button"} onClick={() => toggleCategoryLike(category)} aria-label={likedCategories.includes(category) ? "Unlike " + category : "Like " + category} aria-pressed={likedCategories.includes(category)} type="button">
+                <Heart size={19} fill={likedCategories.includes(category) ? "currentColor" : "none"}/>
+              </button>
+            </article>
           ))}
         </div>}
     </main>
   );
 }
-
 function FeaturedPage({ go, saved, toggleSave }) {
   const state = useAsync(() => getPublicSellers(), []);
   const items = (state.data || []).filter((seller) => seller.featured);

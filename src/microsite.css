@@ -2,3 +2,33 @@
 
 .ns-language-toggle{display:inline-flex;align-items:center;justify-content:center;min-height:36px;margin:8px 18px;padding:0 12px;border:1px solid #d8c4b8;border-radius:999px;background:#fffaf4;color:#7e2424;font-size:12px;font-weight:700;cursor:pointer}
 .ns-language-toggle:focus-visible{outline:3px solid #a85d5d;outline-offset:3px}
+
+
+/* Branded seller QR share modal — isolated styles; does not alter Share button sizing. */
+.ns-share-backdrop{z-index:90}
+.ns-share-modal{width:min(540px,100%);max-height:min(90vh,850px);padding:24px}
+.ns-share-modal h2{font-size:clamp(25px,5vw,32px);padding-right:42px}
+.ns-share-modal .muted-note{line-height:1.5;margin:7px 0 16px}
+.ns-share-preview{min-height:120px;max-height:42vh;overflow:auto;display:grid;place-items:center;border:1px solid #e5d9cd;border-radius:16px;background:#f6f0e7;padding:10px}
+.ns-share-preview img{display:block;width:auto;max-width:100%;max-height:40vh;object-fit:contain;border-radius:8px;box-shadow:0 5px 18px rgba(50,25,20,.08)}
+.ns-share-loading{display:flex;align-items:center;gap:10px;color:#6b5c53;font-size:13px}
+.ns-share-spinner{width:17px;height:17px;border:2px solid #e0c9bf;border-top-color:#7e2424;border-radius:50%;animation:ns-share-spin .7s linear infinite}
+@keyframes ns-share-spin{to{transform:rotate(360deg)}}
+.ns-share-url{display:grid;gap:5px;margin-top:13px;padding:11px 12px;border-radius:12px;background:#f8f3eb;border:1px solid #e7ded4}
+.ns-share-url span{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#7e2424}
+.ns-share-url code{font-size:12px;line-height:1.4;overflow-wrap:anywhere;color:#51443d}
+.ns-share-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.ns-share-actions button{min-width:0;min-height:42px;padding:10px 11px;font-size:13px;white-space:normal}
+.ns-share-actions button:disabled{opacity:.5;cursor:not-allowed}
+.ns-share-notice{margin:11px 0 0;font-size:12px;line-height:1.5;color:#65594f}
+.ns-share-qr-source{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;pointer-events:none}
+.ns-share-modal .inline-error{margin:0;font-size:12px}
+@media(max-width:560px){
+  .ns-share-backdrop{padding:10px;align-items:end}
+  .ns-share-modal{padding:20px 16px;border-radius:22px;max-height:92dvh}
+  .ns-share-preview{max-height:36vh}
+  .ns-share-preview img{max-height:34vh}
+  .ns-share-actions{grid-template-columns:1fr 1fr}
+  .ns-share-actions button{font-size:12px;gap:5px;padding:9px 7px}
+}
+@media(prefers-reduced-motion:reduce){.ns-share-spinner{animation:none}}

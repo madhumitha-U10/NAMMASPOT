@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useRef,useState} from "react";
-import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,Clock,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send,Heart,Home,Compass,Grid2X2,Bookmark,UserRound,Search,MoreHorizontal,Navigation,Star,Package,Camera,CalendarDays} from "lucide-react";
+import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send,Heart,Home,Compass,Grid2X2,Bookmark,UserRound,Search,MoreHorizontal,Navigation,Star,Package,Camera,CalendarDays} from "lucide-react";
 import {QRCodeCanvas} from "qrcode.react";
 import {createEnquiry,createReview,getPublicReviews} from "./lib/api";
 import {getMicrosite,sellerPublicUrl} from "./lib/microsite";
@@ -351,7 +351,7 @@ function SellerShareModal({seller,url,onClose}){
         // Shop name, sized and wrapped for long real-world names.
         const nameLines=wrapText(shopName,850,"800 58px Arial, sans-serif",3);
         let nameY=nameLines.length===1?316:nameLines.length===2?300:282;
-        nameLines.forEach((line,index)=>{
+        nameLines.forEach((line)=>{
           centered(line,nameY,fitNameFont(line,850),"#302622");
           nameY+=62;
         });
@@ -362,7 +362,7 @@ function SellerShareModal({seller,url,onClose}){
         // QR panel is deliberately plain, with a clear quiet zone and no overlay.
         const qrSize=390,qrX=(1080-qrSize)/2,qrY=Math.max(445,nameY+52);
         roundRect(qrX-28,qrY-28,qrSize+56,qrSize+56,28,"#FFFFFF","#E9DDD2",3);
-        const qrImage=new Image();
+        const qrImage=new window.Image();
         qrImage.onload=()=>{
           if(cancelled)return;
           ctx.fillStyle="#FFFFFF";ctx.fillRect(qrX,qrY,qrSize,qrSize);
@@ -404,14 +404,14 @@ function SellerShareModal({seller,url,onClose}){
     window.addEventListener("keydown",onKey);
     return()=>{window.removeEventListener("keydown",onKey);previous?.focus?.()};
   },[onClose]);
-  const blobFromData=()=>{if(!imageUrl)throw new Error("The share image is still being prepared.");const parts=imageUrl.split(",");const bytes=atob(parts[1]);const array=new Uint8Array(bytes.length);for(let i=0;i<bytes.length;i++)array[i]=bytes.charCodeAt(i);return new Blob([array],{type:"image/png"})};
+  const blobFromData=()=>{if(!imageUrl)throw new Error("The share image is still being prepared.");const parts=imageUrl.split(",");const bytes=window.atob(parts[1]);const array=new Uint8Array(bytes.length);for(let i=0;i<bytes.length;i++)array[i]=bytes.charCodeAt(i);return new window.Blob([array],{type:"image/png"})};
   const download=()=>{
     try{const blob=blobFromData(),blobUrl=URL.createObjectURL(blob),a=document.createElement("a");a.href=blobUrl;a.download="nammaspot-"+(seller.slug||"shop")+"-qr.png";document.body.appendChild(a);a.click();a.remove();window.setTimeout(()=>URL.revokeObjectURL(blobUrl),1500);setState(s=>({...s,error:"",notice:"Download started. Check your Downloads folder."}))}
     catch(error){setState(s=>({...s,error:error.message||"Could not download the image.",notice:""}))}
   };
   const shareImage=async()=>{
     try{
-      const blob=blobFromData(),file=new File([blob],"nammaspot-"+(seller.slug||"shop")+"-qr.png",{type:"image/png"});
+      const blob=blobFromData(),file=new window.File([blob],"nammaspot-"+(seller.slug||"shop")+"-qr.png",{type:"image/png"});
       if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
         await navigator.share({files:[file],title:shopName+" · NammaSpot",text:"Discover this shop on NammaSpot"});
         setState(s=>({...s,error:"",notice:"QR image shared successfully."}));

@@ -2733,3 +2733,33 @@ body { overflow-x:hidden; }
 .status-new{background:#fff0d6;color:#754c0c}.status-read{background:#e8efff;color:#294d8a}.status-replied{background:#e4f4e8;color:#21623a}.status-closed{background:#eee9e5;color:#62564e}
 .inline-success{padding:10px 12px;border-radius:9px;background:#e4f4e8;color:#21623a}
 @media(max-width:600px){.enquiry-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.enquiry-summary button:first-child{grid-column:span 2}.enquiry-item{grid-template-columns:1fr;gap:12px}.enquiry-status-control{max-width:none}.enquiry-manager .dashboard-section-head .secondary-button{width:100%}}
+
+/* NammaSpot review MVP */
+.ns-review-panel{display:grid;gap:22px}
+.ns-review-summary{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.ns-review-summary h2{margin:4px 0 6px}
+.ns-review-summary p,.ns-review-form-wrap>p{margin:0;max-width:620px;color:#71665f;line-height:1.6;font-size:13px}
+.ns-review-average{min-width:112px;display:grid;justify-items:center;gap:3px;padding:14px 18px;border:1px solid #eadbd2;border-radius:14px;background:#fffaf5}
+.ns-review-average strong{font-size:30px;line-height:1;color:#762c3a}
+.ns-review-average span,.ns-review-stars,.admin-review-rating{color:#9b6a31;letter-spacing:.08em}
+.ns-review-average small,.ns-review-card small{font-size:11px;color:#81766e}
+.ns-review-list{display:grid;gap:10px}
+.ns-review-card{padding:16px;border:1px solid #eadfd7;border-radius:14px;background:#fffdfa}
+.ns-review-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ns-review-card-head strong{color:#342923}
+.ns-review-card p{margin:9px 0;color:#554b45;line-height:1.65;font-size:13px;overflow-wrap:anywhere}
+.ns-review-empty{padding:22px;border:1px dashed #d9c6bb;border-radius:14px;background:#fffaf5}
+.ns-review-empty strong{color:#762c3a}
+.ns-review-empty p{margin:5px 0 0;color:#71665f;font-size:13px}
+.ns-review-form-wrap{padding:22px;border:1px solid #eadbd2;border-radius:16px;background:#fffaf5}
+.ns-review-form-wrap h3{margin:0 0 6px;font-size:18px}
+.ns-review-form{margin-top:16px;max-width:640px}
+.ns-review-form select{width:100%;min-height:44px;border:1px solid #ddcfc5;border-radius:10px;padding:10px 12px;background:white;color:#352822;font:inherit}
+.inline-success{padding:11px 13px;border:1px solid #b9d8c4;border-radius:10px;background:#eff8f1;color:#205a35;font-size:13px;line-height:1.5}
+.admin-review-queue{display:grid;gap:16px}
+.admin-review-item{grid-template-columns:minmax(0,1fr) auto}
+.admin-review-copy{min-width:0}
+.admin-review-copy>p{overflow-wrap:anywhere;line-height:1.6}
+.admin-review-copy>small{color:#71665f}
+.admin-review-rating{margin:8px 0!important;font-size:14px}
+@media(max-width:600px){.ns-review-form-wrap{padding:16px}.ns-review-summary{align-items:flex-start}.admin-review-item{grid-template-columns:1fr}.admin-review-item>.button-row{width:100%}.admin-review-item>.button-row button{flex:1}}

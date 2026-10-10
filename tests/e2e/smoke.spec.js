@@ -38,3 +38,15 @@ test("primary routes can be reached by direct URL and keyboard focus is visible"
   await page.goto("/categories");
   await expect(page.getByRole("button", { name: /nammaspot home/i })).toBeVisible();
 });
+
+
+test("home search submits the entered query and Explore keeps it in the URL", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto("/");
+  const search = page.getByRole("textbox", { name: /search local sellers and products/i });
+  await search.fill("mehendi");
+  await search.press("Enter");
+  await expect(page).toHaveURL(/\/explore\?search=mehendi/);
+  const exploreSearch = page.getByPlaceholder("Search sellers, products or places");
+  await expect(exploreSearch).toHaveValue("mehendi");
+});

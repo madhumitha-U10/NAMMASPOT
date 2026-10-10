@@ -201,7 +201,7 @@ export default function SellerMicrositePage({go,slug}){
         <div className="ns-reference-seller-copy">
           {seller.category?.name && <div className="eyebrow">{esc(seller.category.name)}</div>}
           <h1>{esc(seller.business_name)} {seller.verified&&<CheckCircle className="ns-inline-verified" size={17}/>}</h1>
-          <div className="ns-handle">{seller.slug?("@"+seller.slug):"@local-seller"} <span className="ns-verified-pill">{seller.verified?"✓ Verified Seller":"NammaSpot Seller"}</span></div>
+          <div className="ns-handle">{seller.slug?("@"+seller.slug):""} <span className="ns-verified-pill">{seller.verified?"✓ Verified Seller":"NammaSpot Seller"}</span></div>
           <div className="ns-reference-location"><MapPin size={15}/>{esc(seller.location||"Chennai, Tamil Nadu")}</div>
           <p>{esc(seller.description||"Local seller on NammaSpot")}</p>
           <div className="ns-reference-stats">

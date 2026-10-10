@@ -23,11 +23,7 @@ import {
   getMyEnquiries,
   signInSeller,
   signInAdmin,
-  setSellerPassword,
-  startSellerPasswordSetup,
-  verifySellerPasswordSetupOtp,
   startSellerRegistration,
-  verifySellerRegistrationOtp,
   signOut,
   updateMySeller,
   updateSellerImages,
@@ -528,7 +524,7 @@ function SellerCard({ seller, index=0, go, toggleSave, saved, detailed=false }) 
   );
 }
 
-function SellerPage({ go, slug, saved, toggleSave }) {
+function _SellerPage({ go, slug, saved, toggleSave }) {
   const state = useAsync(() => getPublicSeller(slug), [slug]);
   const [enquiryProduct,setEnquiryProduct] = useState(null);
 

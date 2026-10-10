@@ -315,46 +315,62 @@ function useAsync(loader, deps) {
 function HomePage({ go, query, setQuery }) {
   const state = useAsync(() => getPublicSellers(), []);
   const sellers = (state.data || []).slice(0, 3);
+  const search = () => go(query.trim() ? "/explore?search=" + encodeURIComponent(query.trim()) : "/explore");
 
   return (
     <main>
       <section className="hero">
         <div className="hero-inner">
-          <div className="eyebrow">CHENNAI · TAMIL NADU</div>
-          <h1>Namma Ooru.<br/>Namma People.<br/><em>Namma Spot.</em></h1>
-          <p className="hero-copy">
-            Discover the authentic flavours, crafts and talents of Chennai&apos;s vibrant creative scene.
-            Handcrafted by the community, for the community.
-          </p>
-          <div className="hero-search-wrap">
-            <div className="hero-search">
-              <Search size={24}/>
+          <div className="hero-copy-column">
+            <div className="eyebrow">CHENNAI · TAMIL NADU</div>
+            <h1>Namma Ooru.<br/>Namma People.<br/><em>Namma Spot.</em></h1>
+            <p className="hero-copy">
+              Discover thoughtful finds, handmade creations and talented independent sellers around you.
+            </p>
+            <div className="hero-search" role="search">
+              <Search size={21} aria-hidden="true"/>
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                onKeyDown={(event) => event.key === "Enter" && go(query.trim() ? "/explore?search=" + encodeURIComponent(query.trim()) : "/explore")}
-                placeholder="Try 'bridal mehendi Adyar' or 'eggless cake'"
+                onKeyDown={(event) => event.key === "Enter" && search()}
+                placeholder="Search cakes, crafts, mehendi…"
                 aria-label="Search sellers and products"
               />
+              <button className="hero-inline-search" onClick={search} aria-label="Search sellers and products"><Search size={19}/><span>Search</span></button>
+            </div>
+            <div className="hero-discovery">
+              <span className="hero-discovery-label">Popular</span>
+              <div className="quick-chips" aria-label="Popular categories">
+                {popularCategories.map((category) => (
+                  <button key={category} onClick={() => go("/explore?search=" + encodeURIComponent(category))}>{category}</button>
+                ))}
+              </div>
+            </div>
+            <div className="neighbourhood-chips" aria-label="Explore Chennai neighbourhoods">
+              <span>EXPLORE BY AREA</span>
+              {["Adyar", "T. Nagar", "Anna Nagar", "Mylapore", "Velachery", "OMR"].map((area) => (
+                <button key={area} onClick={() => { setQuery(""); go("/explore?area=" + encodeURIComponent(area)); }}>{area}</button>
+              ))}
+            </div>
+            <div className="home-trust-row" aria-label="How NammaSpot works">
+              <span><CheckCircle size={15}/> Discover sellers</span>
+              <span><Compass size={15}/> Browse catalogues</span>
+              <span><MessageCircle size={15}/> Contact directly</span>
             </div>
           </div>
-          <button className="hero-search-button" onClick={() => go(query.trim() ? "/explore?search=" + encodeURIComponent(query.trim()) : "/explore")}>Search</button>
-          <div className="quick-chips" aria-label="Popular categories">
-            {popularCategories.map((category) => (
-              <button key={category} onClick={() => go("/explore?search=" + encodeURIComponent(category))}>{category}</button>
-            ))}
-          </div>
-          <div className="neighbourhood-chips" aria-label="Explore Chennai neighbourhoods">
-            <span>YOUR SIDE OF CHENNAI</span>
-            {["Adyar", "T. Nagar", "Anna Nagar", "Mylapore", "Velachery", "OMR"].map((area) => (
-              <button key={area} onClick={() => { setQuery(""); go("/explore?area=" + encodeURIComponent(area)); }}>{area}</button>
-            ))}
-          </div>
-          <div className="home-trust-row" aria-label="How NammaSpot works">
-            <span><CheckCircle size={15}/> Real sellers</span>
-            <span><Compass size={15}/> Browse catalogues</span>
-            <span><MessageCircle size={15}/> Contact directly</span>
-          </div>
+          <aside className="hero-side-card" aria-label="Discover on NammaSpot">
+            <div className="hero-side-kicker"><Sparkles size={15}/> MADE TO BE DISCOVERED</div>
+            <div className="hero-side-art" aria-hidden="true">
+              <span className="hero-art-orbit orbit-one"></span>
+              <span className="hero-art-orbit orbit-two"></span>
+              <div className="hero-art-center"><Store size={38}/></div>
+              <span className="hero-art-tag tag-one">Handmade</span>
+              <span className="hero-art-tag tag-two">Made with care</span>
+            </div>
+            <h2>Good finds.<br/><em>Great people.</em></h2>
+            <p>Explore catalogues from makers, home businesses and independent sellers.</p>
+            <button className="hero-side-link" onClick={() => go("/explore")}>Explore sellers <ChevronRight size={17}/></button>
+          </aside>
         </div>
       </section>
 

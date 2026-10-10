@@ -726,7 +726,7 @@ function RegisterPage({ go }) {
           {step===1 && <section className="signup-section">
             <div className="signup-section-heading"><span className="signup-number">1</span><div><h2>Create your login</h2><p>This is how you will access your seller dashboard later.</p></div></div>
             <label>Choose your NammaSpot ID <span className="required">*</span>
-              <input value={data.nammaspotId} onChange={e=>setData({...data,nammaspotId:e.target.value.toUpperCase().replace(/\s/g,"")})} placeholder="Example: ns-000001" maxLength={40} autoCapitalize="none" spellCheck="false" required aria-describedby="id-help"/>
+              <input value={data.nammaspotId} onChange={e=>setData({...data,nammaspotId:e.target.value.toLowerCase().replace(/\s/g,"")})} placeholder="Example: ns-000001" maxLength={40} autoCapitalize="none" spellCheck="false" required aria-describedby="id-help"/>
               <small id="id-help">Your NammaSpot ID is your username for login. Use ns- followed by 6–20 lowercase letters, numbers, _ or -.</small>
             </label>
             <div className={idValue && !/^NS-[A-Z0-9_-]{6,20}$/.test(idValue) ? "field-feedback error":"field-feedback"}>{idValue ? (validId ? "✓ This ID format is ready to use" : "Use ns- followed by 6–20 lowercase letters, numbers, _ or -") : "Example: NS-000001"}</div>

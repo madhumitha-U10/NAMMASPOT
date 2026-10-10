@@ -77,7 +77,7 @@ export const seedSellers = [
 ];
 
 export function normalizeSeller(row) {
-  const category = row?.category?.name || row?.category || "Local";
+  const category = row?.category?.name || row?.category || "Shop";
   return {
     ...row,
     category,

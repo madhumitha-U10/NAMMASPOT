@@ -83,7 +83,7 @@ function ReviewPanel({seller}) {
   };
   return <div className="ns-review-panel">
     <div className="ns-review-summary">
-      <div><div className="eyebrow">CUSTOMER FEEDBACK</div><h2>Reviews</h2><p>Help others discover local businesses with useful, respectful feedback.</p></div>
+      <div><div className="eyebrow">CUSTOMER FEEDBACK</div><h2>Reviews</h2><p>Help others discover independent businesses with useful, respectful feedback.</p></div>
       <div className="ns-review-average"><strong>{average||"—"}</strong><span aria-label={average?average+" out of 5 stars":"No ratings yet"}>{average?"★".repeat(Math.round(Number(average)))+"☆".repeat(5-Math.round(Number(average))):"☆☆☆☆☆"}</span><small>{reviews.length} approved {reviews.length===1?"review":"reviews"}</small></div>
     </div>
     {loading?<p className="muted-note">Loading reviews…</p>:loadError?<div className="inline-error" role="alert">{loadError}</div>:reviews.length?<div className="ns-review-list">{reviews.map(review=><article className="ns-review-card" key={review.id}><div className="ns-review-card-head"><strong>{esc(review.reviewer_name)}</strong><span className="ns-review-stars" aria-label={review.rating+" out of 5 stars"}>{"★".repeat(review.rating)}{"☆".repeat(5-review.rating)}</span></div><p>{esc(review.comment)}</p><small>{new Date(review.created_at).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})}</small></article>)}</div>:<div className="ns-review-empty"><strong>Be the first to leave a review</strong><p>There are no approved reviews yet. Your feedback can help the next customer.</p></div>}
@@ -114,8 +114,8 @@ export default function SellerMicrositePage({go,slug}){
   useEffect(()=>{
     if(!seller)return;
     const url=sellerPublicUrl(seller.slug);
-    const title=(seller.business_name||"Local seller")+" · Catalogue · NammaSpot";
-    const desc=(seller.description||settings.tagline||"Discover this local seller and their catalogue on NammaSpot.").replace(/\s+/g," ").slice(0,155);
+    const title=(seller.business_name||"Seller")+" · Catalogue · NammaSpot";
+    const desc=(seller.description||settings.tagline||"Discover this seller and their catalogue on NammaSpot.").replace(/\s+/g," ").slice(0,155);
     const image=seller.cover_image_url||seller.profile_image_url||location.origin+"/og-image.svg";
     document.title=title;
     const setMeta=(selector,attribute,value)=>{let el=document.querySelector(selector);if(!el){el=document.createElement("meta");const [kind,key]=selector.match(/\[(name|property)="([^"]+)"\]/).slice(1);el.setAttribute(kind,key);document.head.appendChild(el)}el.setAttribute("content",value)};
@@ -139,7 +139,7 @@ export default function SellerMicrositePage({go,slug}){
       "@context":"https://schema.org",
       "@type":"LocalBusiness",
       "@id":url+"#business",
-      name:seller.business_name||"Local seller",
+      name:seller.business_name||"Seller",
       description:desc,
       url,
       image,
@@ -165,7 +165,7 @@ export default function SellerMicrositePage({go,slug}){
   return <main className="seller-microsite ns-seller-profile ns-reference-layout">
     <aside className="ns-left-sidebar">
       <button className="ns-side-brand" onClick={()=>go("/")}>NammaSpot</button>
-      <div className="ns-side-tagline">Local Sellers <span>•</span> Real People <span>•</span> Genuine Products</div>
+      <div className="ns-side-tagline">Independent Sellers <span>•</span> Real People <span>•</span> Genuine Products</div>
       <nav className="ns-side-nav" aria-label="NammaSpot navigation">
         <button className="active" onClick={()=>go("/")}><Home size={18}/> {isTamil?"முகப்பு":"Home"}</button>
         <button onClick={()=>go("/explore")}><Compass size={18}/> {isTamil?"தேடுக":"Explore"}</button>
@@ -176,7 +176,7 @@ export default function SellerMicrositePage({go,slug}){
       <div className="ns-side-divider"/>
       <button className="ns-side-account" onClick={()=>go("/login")}><UserRound size={18}/> {isTamil?"என் கணக்கு":"My Account"}</button>
       <button className="ns-language-toggle" type="button" onClick={()=>setLanguage(isTamil?"en":"ta")}>{isTamil?"English":"தமிழ்"}</button>
-      <div className="ns-side-local-note">Support Local<br/>Discover Local ♡</div>
+      <div className="ns-side-local-note">Support Sellers<br/>Discover Great Finds ♡</div>
     </aside>
 
     <section className="ns-center-column">
@@ -202,11 +202,11 @@ export default function SellerMicrositePage({go,slug}){
           <h1>{esc(seller.business_name)} {seller.verified&&<CheckCircle className="ns-inline-verified" size={17}/>}</h1>
           <div className="ns-handle">{seller.slug?("@"+seller.slug):""} <span className="ns-verified-pill">{seller.verified?"✓ Verified Seller":"NammaSpot Seller"}</span></div>
           <div className="ns-reference-location"><MapPin size={15}/>{esc(seller.location||"Chennai, Tamil Nadu")}</div>
-          <p>{esc(seller.description||"Local seller on NammaSpot")}</p>
+          <p>{esc(seller.description||"Seller on NammaSpot")}</p>
           <div className="ns-reference-stats">
             <span><b>{products.length}</b> Products</span>
             <span><b>{seller.category?.name||"Shop"}</b> Type</span>
-            <span><b>{seller.category?.name||"Local"}</b> Category</span>
+            <span><b>{seller.category?.name||"Shop"}</b> Category</span>
           </div>
         </div>
         <div className="ns-reference-actions">
@@ -232,7 +232,7 @@ export default function SellerMicrositePage({go,slug}){
 
       <section id="catalogue" className="ns-profile-section ns-reference-catalogue">
         <div className="ns-reference-section-head">
-          <div><h2>Our Catalogue</h2><p>Browse products and services from this local seller.</p></div>
+          <div><h2>Our Catalogue</h2><p>Browse products and services from this seller.</p></div>
           <div className="ns-catalogue-search"><Search size={15}/><input placeholder="Search products..." aria-label="Search products"/></div>
         </div>
         {products.length?<div className="microsite-product-grid ns-reference-product-grid">{products.map(p=><MiniProduct key={p.id} p={p} onOpen={()=>setProduct(p)} onEnquire={productWa(p)}/>)}</div>:<div className="empty-state"><h2>Catalogue coming soon</h2><p>This seller has not added products yet.</p></div>}
@@ -241,14 +241,14 @@ export default function SellerMicrositePage({go,slug}){
       <section id="about" className="ns-profile-section ns-reference-about">
         <div className="eyebrow">ABOUT THIS SELLER</div>
         <h2>About</h2>
-        <p>{esc(seller.description||"This local seller is part of the NammaSpot community.")}</p>
+        <p>{esc(seller.description||"This seller is part of the NammaSpot community.")}</p>
       </section>
 
       <section id="reviews" className="ns-profile-section ns-reference-reviews">
         <ReviewPanel seller={seller}/>
       </section>
 
-      <footer className="microsite-footer">NammaSpot · Local sellers, catalogues & connections</footer>
+      <footer className="microsite-footer">NammaSpot · Independent sellers, catalogues & connections</footer>
     </section>
 
     <aside className="ns-right-sidebar">
@@ -263,7 +263,7 @@ export default function SellerMicrositePage({go,slug}){
       <section className="ns-right-card" id="business-information">
         <h3>Business Information</h3>
         <div className="ns-right-label">About</div>
-        <p>{esc(seller.description||"Local seller on NammaSpot")}</p>
+        <p>{esc(seller.description||"Seller on NammaSpot")}</p>
         {seller.contact&&<a className="ns-right-contact" href={"tel:"+seller.contact}><Phone size={15}/>{seller.contact}</a>}
         {seller.whatsapp_phone&&<a className="ns-right-contact" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={15}/>{seller.whatsapp_phone}</a>}
         {seller.instagram_url&&<a className="ns-right-contact" href={seller.instagram_url} target="_blank" rel="noreferrer"><Camera size={15}/>Instagram</a>}
@@ -281,7 +281,7 @@ export default function SellerMicrositePage({go,slug}){
         <div className="ns-similar-head"><h3>Similar Sellers</h3><button onClick={()=>go("/explore")}>See all →</button></div>
         <div className="ns-similar-items">
           
-          <div><span><Star size={17}/></span><small>{seller.category?.name||"Local"}</small><button>Follow</button></div>
+          <div><span><Star size={17}/></span><small>{seller.category?.name||"Shop"}</small><button>Follow</button></div>
           <div><span><Heart size={17}/></span><small>Nearby Seller</small><button>Follow</button></div>
         </div>
       </section>
@@ -297,7 +297,7 @@ function SellerShareModal({seller,url,onClose}){
   const qrCanvasRef=useRef(null);
   const [imageUrl,setImageUrl]=useState("");
   const [state,setState]=useState({loading:true,error:"",notice:""});
-  const shopName=String(seller.business_name||"Local seller").trim().slice(0,180);
+  const shopName=String(seller.business_name||"Seller").trim().slice(0,180);
   useEffect(()=>{
     let cancelled=false;
     setState({loading:true,error:"",notice:""});

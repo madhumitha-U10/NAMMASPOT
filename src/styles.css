@@ -3181,3 +3181,56 @@ body { overflow-x:hidden; }
   .home-trust-row { display: grid; grid-template-columns: 1fr 1fr; }
   .home-trust-row span:last-child { grid-column: 1 / -1; }
 }
+
+
+/* Seller profile contact actions: wrap compactly instead of overflowing on phones */
+.ns-contact-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 7px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: visible;
+}
+.ns-contact-action-row .ns-unified-contact-button {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1 1 112px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 1px solid #762c3a;
+  border-radius: 10px;
+  background: #762c3a;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.ns-contact-action-row .ns-unified-contact-button svg {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+}
+@media (max-width: 480px) {
+  .ns-contact-action-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+  .ns-contact-action-row .ns-unified-contact-button {
+    width: 100%;
+    min-width: 0;
+    padding: 8px 6px;
+    gap: 5px;
+    font-size: 11px;
+  }
+}

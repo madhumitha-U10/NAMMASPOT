@@ -1,4 +1,16 @@
 -- NammaSpot customer reviews MVP: private contact data, public approved reviews, admin moderation.
+-- The connected production project may not have applied the original baseline migration.
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $fn$
+  select exists(select 1 from public.admins where user_id = auth.uid());
+$fn$;
+grant execute on function public.is_admin() to anon, authenticated;
+
 create table if not exists public.reviews (
   id uuid primary key default gen_random_uuid(),
   seller_id uuid not null references public.sellers(id) on delete cascade,

@@ -2709,3 +2709,27 @@ body { overflow-x:hidden; }
 @media(prefers-reduced-motion:reduce) {
   .category-card-visual { transition:none; }
 }
+
+
+/* MVP seller enquiry workflow */
+.enquiry-manager{display:grid;gap:16px}
+.enquiry-manager .dashboard-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.enquiry-manager .dashboard-section-head h2{margin:0 0 6px}
+.enquiry-manager .dashboard-section-head p{margin:0;max-width:680px;color:var(--muted,#71665f);line-height:1.5}
+.enquiry-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.enquiry-summary button{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px;border:1px solid var(--border,#e8ddd4);border-radius:12px;background:var(--surface,#fffaf5);color:inherit;cursor:pointer;text-align:left}
+.enquiry-summary button.active{border-color:var(--burgundy,#70283c);box-shadow:inset 0 0 0 1px var(--burgundy,#70283c);background:#f8edf0}
+.enquiry-summary strong{font-size:1rem}
+.enquiry-search-label{display:grid;gap:7px;font-size:.9rem;font-weight:600}
+.enquiry-search-label input{width:100%;min-height:44px;border:1px solid var(--border,#e8ddd4);border-radius:10px;padding:10px 12px;background:var(--surface,#fffaf5);color:inherit;font:inherit}
+.enquiry-item{display:grid;grid-template-columns:minmax(0,1fr) 150px;align-items:start;gap:20px}
+.enquiry-item-heading{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
+.enquiry-contact{margin:8px 0 5px;color:var(--muted,#71665f)}
+.enquiry-message{margin:8px 0 10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.enquiry-actions{margin-top:12px}
+.enquiry-status-control{display:grid;gap:7px;font-size:.85rem;font-weight:600}
+.enquiry-status-control select{width:100%;min-height:42px;border:1px solid var(--border,#e8ddd4);border-radius:9px;padding:8px;background:var(--surface,#fffaf5);color:inherit;font:inherit}
+.enquiry-status-control select:disabled{opacity:.65}
+.status-new{background:#fff0d6;color:#754c0c}.status-read{background:#e8efff;color:#294d8a}.status-replied{background:#e4f4e8;color:#21623a}.status-closed{background:#eee9e5;color:#62564e}
+.inline-success{padding:10px 12px;border-radius:9px;background:#e4f4e8;color:#21623a}
+@media(max-width:600px){.enquiry-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.enquiry-summary button:first-child{grid-column:span 2}.enquiry-item{grid-template-columns:1fr;gap:12px}.enquiry-status-control{max-width:none}.enquiry-manager .dashboard-section-head .secondary-button{width:100%}}

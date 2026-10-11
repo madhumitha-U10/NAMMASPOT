@@ -634,6 +634,19 @@ export async function adminStoragePlans() {
   const {data,error}=await needBackend().from("seller_storage_plans").select("code,name,quota_bytes,max_file_bytes,updated_at,updated_by").order("quota_bytes");
   if(error)throw error; return data||[];
 }
+export async function adminStorageFiles(sellerId) {
+  const {data,error}=await needBackend().rpc("admin_storage_files",{p_seller_id:sellerId});
+  if(error)throw error; return data||[];
+}
+export async function adminStorageEvents() {
+  const {data,error}=await needBackend().rpc("admin_storage_events");
+  if(error)throw error; return data||[];
+}
+export async function recordSellerStorageEvent(eventType,requestedBytes,message) {
+  if(!supabase)return;
+  const {error}=await needBackend().rpc("record_seller_storage_event",{p_event_type:eventType,p_requested_bytes:requestedBytes??null,p_message:message||""});
+  if(error)throw error;
+}
 export async function adminStorageSellers() {
   const {data,error}=await needBackend().rpc("admin_storage_sellers");
   if(error)throw error; return data||[];

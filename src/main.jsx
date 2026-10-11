@@ -50,6 +50,7 @@ import {
   adminStorageFiles,
   adminStorageEvents,
   adminStorageAudit,
+  adminStoragePlanAudit,
   adminPlatformStorageSettings,
   adminAssignSellerStorage,
   adminUpdateStoragePlan,
@@ -1559,6 +1560,7 @@ function AdminStorageManagement() {
   const [rows,setRows]=useState([]);
   const [plans,setPlans]=useState([]);
   const [audit,setAudit]=useState([]);
+  const [planAudit,setPlanAudit]=useState([]);
   const [events,setEvents]=useState([]);
   const [fileDetails,setFileDetails]=useState({});
   const [settings,setSettings]=useState(null);
@@ -1579,10 +1581,10 @@ function AdminStorageManagement() {
   const load=async()=>{
     setLoading(true);setError("");
     try {
-      const [nextRows,nextPlans,nextAudit,nextSettings,nextOverview,nextEvents]=await Promise.all([
-        adminStorageSellers(),adminStoragePlans(),adminStorageAudit(),adminPlatformStorageSettings(),adminStorageUsage(),adminStorageEvents()
+      const [nextRows,nextPlans,nextAudit,nextPlanAudit,nextSettings,nextOverview,nextEvents]=await Promise.all([
+        adminStorageSellers(),adminStoragePlans(),adminStorageAudit(),adminStoragePlanAudit(),adminPlatformStorageSettings(),adminStorageUsage(),adminStorageEvents()
       ]);
-      setRows(nextRows);setPlans(nextPlans);setAudit(nextAudit);setSettings(nextSettings);setOverview(Array.isArray(nextOverview)?nextOverview[0]:nextOverview);setEvents(nextEvents);
+      setRows(nextRows);setPlans(nextPlans);setAudit(nextAudit);setPlanAudit(nextPlanAudit);setSettings(nextSettings);setOverview(Array.isArray(nextOverview)?nextOverview[0]:nextOverview);setEvents(nextEvents);
       setPlanDrafts(Object.fromEntries(nextPlans.filter(p=>p.code!=="custom").map(p=>[p.code,{quota:bytesToMb(p.quota_bytes),max:bytesToMb(p.max_file_bytes)}])));
       setPlatformDraft({allowance:bytesToMb(nextSettings.configured_storage_allowance_bytes)/1000,warning:nextSettings.warning_percent,critical:nextSettings.critical_percent,emergency:nextSettings.emergency_percent});
       setEdits(Object.fromEntries(nextRows.map(r=>[r.seller_id,{planCode:r.plan_code,quota:bytesToMb(r.quota_bytes),max:bytesToMb(r.max_file_bytes),reason:""}])));
@@ -1734,10 +1736,18 @@ function AdminStorageManagement() {
       <section className="dashboard-item ns-storage-settings">
         <div><div className="eyebrow">AUDIT TRAIL</div><h3>Recent storage-plan changes</h3><p>Recent plan assignments, quota changes and the administrator account responsible.</p></div>
         <div className="dashboard-list">{audit.length?audit.map(item=><article className="dashboard-item" key={item.id}>
-          <strong>{rows.find(r=>r.seller_id===item.seller_id)?.business_name||"Deleted seller"} · {item.previous_plan_code||"none"} → {item.new_plan_code}</strong>
+          <strong>{item.business_name||rows.find(r=>r.seller_id===item.seller_id)?.business_name||"Deleted seller"} · {item.previous_plan_code||"none"} → {item.new_plan_code}</strong>
           <p>{formatBytes(item.previous_quota_bytes||0)} → {formatBytes(item.new_quota_bytes)} · max image {formatBytes(item.new_max_file_bytes)}</p>
-          <small>{new Date(item.created_at).toLocaleString("en-IN")} · admin ID {item.changed_by||"unknown"} · {item.reason||"No reason supplied"}</small>
+          <small>{new Date(item.created_at).toLocaleString("en-IN")} · admin {item.admin_email||item.changed_by||"unknown"} · {item.reason||"No reason supplied"}</small>
         </article>):<p className="muted-note">No plan changes have been recorded yet.</p>}</div>
+      </section>
+      <section className="dashboard-item ns-storage-settings">
+        <div><div className="eyebrow">SHARED PLAN AUDIT</div><h3>Plan configuration changes</h3><p>Changes to the Small, Medium and Large plan definitions.</p></div>
+        <div className="dashboard-list">{planAudit.length?planAudit.map(item=><article className="dashboard-item" key={item.id}>
+          <strong>{item.plan_code[0].toUpperCase()+item.plan_code.slice(1)} plan</strong>
+          <p>Quota: {formatBytes(item.previous_quota_bytes)} → {formatBytes(item.new_quota_bytes)} · max image: {formatBytes(item.previous_max_file_bytes)} → {formatBytes(item.new_max_file_bytes)}</p>
+          <small>{new Date(item.created_at).toLocaleString("en-IN")} · admin {item.admin_email||item.changed_by||"unknown"}</small>
+        </article>):<p className="muted-note">No shared plan definition changes have been recorded.</p>}</div>
       </section>
     </>}
   </div>;

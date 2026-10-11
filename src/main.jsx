@@ -45,6 +45,13 @@ import {
   adminRenameCategory,
   adminDeleteCategory,
   adminStorageUsage,
+  adminStoragePlans,
+  adminStorageSellers,
+  adminStorageAudit,
+  adminPlatformStorageSettings,
+  adminAssignSellerStorage,
+  adminUpdateStoragePlan,
+  adminUpdatePlatformStorageSettings,
   adminOtpUsageAlerts,
   adminListReviews,
   adminUpdateReviewStatus,
@@ -1128,9 +1135,9 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
       <form className="seller-form compact-form" onSubmit={submit}>
         <div className="product-manager-head"><div><div className="eyebrow">{editing ? "EDIT CATALOGUE ITEM" : "ADD TO CATALOGUE"}</div><h2>{editing ? "Update this product" : "Add a product"}</h2><p className="muted-note">{seller.verification_status === "pending" ? "You can prepare your catalogue now. It will become public after admin approval." : "Add the product name, price and image. Save it once and it will appear in your catalogue."}</p></div><span className="status-pill status-approved">{products.length} item{products.length===1?"":"s"}</span></div>
         {storageUsage && <div className={"storage-usage-card storage-" + storageUsage.status}>
-          <div className="storage-usage-head"><strong>Image storage</strong><span>{formatBytes(storageUsage.used_bytes)} / {SELLER_STORAGE_QUOTA_LABEL}</span></div>
+          <div className="storage-usage-head"><strong>Image storage · {storageUsage.plan_name || "Seller plan"}</strong><span>{formatBytes(storageUsage.used_bytes)} / {formatBytes(storageUsage.quota_bytes)}</span></div>
           <div className="storage-usage-track" role="progressbar" aria-valuenow={Math.min(100, Number(storageUsage.used_percent) || 0)} aria-valuemin="0" aria-valuemax="100"><span style={{width: Math.min(100, Number(storageUsage.used_percent) || 0) + "%"}} /></div>
-          <small>{storageUsage.status === "blocked" ? "Storage is full. Delete an old image before uploading another." : storageUsage.status === "warning" ? "You have used more than " + SELLER_STORAGE_WARNING_LABEL + ". Consider deleting unused images." : "Each stored image is compressed to " + MAX_SELLER_IMAGE_LABEL + " or less. Supported: JPG, PNG, WebP."}</small>
+          <small>{formatBytes(storageUsage.remaining_bytes)} remaining · Max per image {formatBytes(storageUsage.max_file_bytes)} · {storageUsage.status === "blocked" ? "Storage limit reached. Delete unused images or contact NammaSpot support to request an upgrade." : storageUsage.status === "critical" ? "Storage nearly full. Remove unused images or contact support." : storageUsage.status === "warning" ? "Storage is getting low. Consider removing unused images." : "Supported formats: JPG, PNG and WebP."}</small>
         </div>}
         <div className="form-grid">
           <label>Product name *<input value={form.product_name} onChange={(e)=>setForm({...form,product_name:e.target.value})} maxLength={160} required/></label>
@@ -1404,6 +1411,7 @@ function AdminPage() {
             <button className={tab==="sellers"?"active":""} onClick={()=>setTab("sellers")}><Store size={17}/> Seller approvals</button>
             <button className={tab==="reviews"?"active":""} onClick={()=>setTab("reviews")}><CheckCircle size={17}/> Reviews ({reviews.filter(item=>item.status==="pending").length})</button>
             <button className={tab==="categories"?"active":""} onClick={()=>setTab("categories")}><Grid2X2 size={17}/> Categories</button>
+            <button className={tab==="storage"?"active":""} onClick={()=>setTab("storage")}><ShieldCheck size={17}/> Seller Storage Management</button>
           </div>
           <div className="admin-console-sidebar-bottom">
             <button onClick={load} disabled={loading}>↻ Refresh data</button>
@@ -1520,6 +1528,7 @@ function AdminPage() {
             </article>):<Empty title="No reviews submitted yet" text="Customer feedback will appear here when someone submits a review from a seller page."/>}
           </div>
         </section>}
+      {tab==="storage" && <AdminStorageManagement />}
       {tab==="categories" &&
         <div className="dashboard-list">
           <button className="primary-button" onClick={addCategory}><Plus size={16}/> Add category</button>
@@ -1532,6 +1541,175 @@ function AdminPage() {
     </main>
   );
 }
+
+function AdminStorageManagement() {
+  const [rows,setRows]=useState([]);
+  const [plans,setPlans]=useState([]);
+  const [audit,setAudit]=useState([]);
+  const [settings,setSettings]=useState(null);
+  const [overview,setOverview]=useState(null);
+  const [loading,setLoading]=useState(true);
+  const [busy,setBusy]=useState(false);
+  const [error,setError]=useState("");
+  const [notice,setNotice]=useState("");
+  const [search,setSearch]=useState("");
+  const [planFilter,setPlanFilter]=useState("all");
+  const [usageFilter,setUsageFilter]=useState("all");
+  const [planDrafts,setPlanDrafts]=useState({});
+  const [platformDraft,setPlatformDraft]=useState(null);
+  const [edits,setEdits]=useState({});
+  const mbToBytes=(value)=>Math.round(Number(value)*1000000);
+  const bytesToMb=(value)=>Number(value||0)/1000000;
+
+  const load=async()=>{
+    setLoading(true);setError("");
+    try {
+      const [nextRows,nextPlans,nextAudit,nextSettings,nextOverview]=await Promise.all([
+        adminStorageSellers(),adminStoragePlans(),adminStorageAudit(),adminPlatformStorageSettings(),adminStorageUsage()
+      ]);
+      setRows(nextRows);setPlans(nextPlans);setAudit(nextAudit);setSettings(nextSettings);setOverview(Array.isArray(nextOverview)?nextOverview[0]:nextOverview);
+      setPlanDrafts(Object.fromEntries(nextPlans.filter(p=>p.code!=="custom").map(p=>[p.code,{quota:bytesToMb(p.quota_bytes),max:bytesToMb(p.max_file_bytes)}])));
+      setPlatformDraft({allowance:bytesToMb(nextSettings.configured_storage_allowance_bytes)/1000,warning:nextSettings.warning_percent,critical:nextSettings.critical_percent,emergency:nextSettings.emergency_percent});
+      setEdits(Object.fromEntries(nextRows.map(r=>[r.seller_id,{planCode:r.plan_code,quota:bytesToMb(r.quota_bytes),max:bytesToMb(r.max_file_bytes),reason:""}])));
+    } catch(e){setError(friendlyError(e));}
+    finally{setLoading(false);}
+  };
+  useEffect(()=>{load();},[]);
+
+  const visible=rows.filter(r=>{
+    const q=search.trim().toLowerCase();
+    const matchSearch=!q||[r.business_name,r.nammaspot_id,r.seller_id].some(v=>String(v||"").toLowerCase().includes(q));
+    const matchPlan=planFilter==="all"||r.plan_code===planFilter;
+    const pct=Number(r.used_percent||0);
+    const matchUsage=usageFilter==="all"||(usageFilter==="near"&&pct>=80&&pct<100)||(usageFilter==="over"&&pct>=100)||(usageFilter==="healthy"&&pct<80);
+    return matchSearch&&matchPlan&&matchUsage;
+  });
+  const totalUsed=rows.reduce((n,r)=>n+Number(r.used_bytes||0),0);
+  const totalQuota=rows.reduce((n,r)=>n+Number(r.quota_bytes||0),0);
+  const countPlan=(code)=>rows.filter(r=>r.plan_code===code).length;
+  const setEdit=(id,patch)=>setEdits(prev=>({...prev,[id]:{...prev[id],...patch}}));
+
+  const saveSeller=async(row)=>{
+    const draft=edits[row.seller_id];
+    if(!draft)return;
+    if(draft.planCode==="custom"&&(!(Number(draft.quota)>0)||!(Number(draft.max)>0)||Number(draft.max)>Number(draft.quota))){
+      setError("For a Custom plan, enter positive quota and image limits. The image limit cannot exceed total storage.");return;
+    }
+    const confirmed=window.confirm("Apply "+draft.planCode+" storage to "+row.business_name+"? Existing images will not be deleted. If the new quota is below current usage, uploads will be blocked until usage is reduced.");
+    if(!confirmed)return;
+    setBusy(true);setError("");setNotice("");
+    try{
+      await adminAssignSellerStorage({sellerId:row.seller_id,planCode:draft.planCode,
+        customQuotaBytes:draft.planCode==="custom"?mbToBytes(draft.quota):null,
+        customMaxFileBytes:draft.planCode==="custom"?mbToBytes(draft.max):null,reason:draft.reason});
+      setNotice("Storage plan updated for "+row.business_name+". Existing files were preserved and the change was audited.");
+      await load();
+    }catch(e){setError(friendlyError(e));}
+    finally{setBusy(false);}
+  };
+  const savePlan=async(code)=>{
+    const d=planDrafts[code];
+    if(!d||Number(d.quota)<=0||Number(d.max)<=0||Number(d.max)>Number(d.quota)){setError("Plan limits must be positive and the per-image limit cannot exceed the total quota.");return;}
+    if(!window.confirm("Update the shared "+code+" plan limits? All sellers assigned to this plan will receive the updated limits."))return;
+    setBusy(true);setError("");setNotice("");
+    try{await adminUpdateStoragePlan({planCode:code,quotaBytes:mbToBytes(d.quota),maxFileBytes:mbToBytes(d.max)});setNotice(code+" plan limits updated.");await load();}
+    catch(e){setError(friendlyError(e));}finally{setBusy(false);}
+  };
+  const savePlatform=async()=>{
+    if(!platformDraft)return;
+    if(!(Number(platformDraft.allowance)>0)||!(Number(platformDraft.warning)<Number(platformDraft.critical)&&Number(platformDraft.critical)<Number(platformDraft.emergency)&&Number(platformDraft.emergency)<=100)){
+      setError("Enter a positive capacity and ascending warning thresholds.");return;
+    }
+    if(!window.confirm("Save platform storage safety thresholds? This is a planning limit, not a live measurement of Supabase billing or bandwidth."))return;
+    setBusy(true);setError("");setNotice("");
+    try{await adminUpdatePlatformStorageSettings({allowanceBytes:mbToBytes(Number(platformDraft.allowance)*1000),warningPercent:Number(platformDraft.warning),criticalPercent:Number(platformDraft.critical),emergencyPercent:Number(platformDraft.emergency)});setNotice("Platform storage warning settings saved.");await load();}
+    catch(e){setError(friendlyError(e));}finally{setBusy(false);}
+  };
+
+  return <div className="ns-storage-admin">
+    <div className="dashboard-section-head"><div><div className="eyebrow">PLATFORM OPERATIONS</div><h2>Seller Storage Management</h2><p>Assign seller limits, monitor real stored objects, and protect NammaSpot's free-first launch.</p></div><button className="secondary-button" onClick={load} disabled={loading}>↻ Refresh</button></div>
+    {error&&<div className="inline-error" role="alert">{error}</div>}
+    {notice&&<div className="form-status" role="status">{notice}</div>}
+    {loading&&!rows.length?<CardSkeletonRow detailed/>:<>
+      <div className="ns-storage-stats">
+        <article className="dashboard-item"><small>Total sellers</small><strong>{rows.length}</strong></article>
+        <article className="dashboard-item"><small>Actual seller-media storage</small><strong>{formatBytes(totalUsed)}</strong></article>
+        <article className="dashboard-item"><small>Seller quotas assigned</small><strong>{formatBytes(totalQuota)}</strong></article>
+        <article className="dashboard-item"><small>Configured platform allowance</small><strong>{formatBytes(overview?.quota_bytes||settings?.configured_storage_allowance_bytes||0)}</strong></article>
+      </div>
+      <div className="ns-storage-plan-counts">
+        {["small","medium","large","custom"].map(code=><div className="dashboard-item" key={code}><small>{code[0].toUpperCase()+code.slice(1)} plan</small><strong>{countPlan(code)} sellers</strong></div>)}
+      </div>
+      <div className={"dashboard-item storage-"+(overview?.status||"ok")}>
+        <div><div className="eyebrow">PLATFORM STORAGE SAFETY</div><strong>{overview?.used_percent??"—"}% of configured allowance used</strong>
+          <div className="storage-usage-track" role="progressbar" aria-valuenow={Math.min(100,Number(overview?.used_percent||0))} aria-valuemin="0" aria-valuemax="100"><span style={{width:Math.min(100,Number(overview?.used_percent||0))+"%"}}/></div>
+          <p>{overview?.status==="blocked"?"Emergency threshold reached: new uploads are blocked by the database policy.":overview?.status==="critical"?"Critical storage warning. Review usage before adding more media.":overview?.status==="warning"?"Storage warning threshold reached.": "Within configured storage warning thresholds."}</p>
+          <small>Counts actual object metadata in the seller-media bucket. The allowance is admin-configured; Supabase's live account quota and bandwidth/egress are not exposed by this app integration.</small>
+        </div><span className={"status-pill status-"+(overview?.status||"ok")}>{overview?.status||"unknown"}</span>
+      </div>
+
+      <section className="dashboard-item ns-storage-settings">
+        <div><div className="eyebrow">EDITABLE SHARED PLANS</div><h3>Plan limits</h3><p>Units use decimal MB: 1 MB = 1,000,000 bytes. Existing sellers keep their current 50 MiB / 512 KB allowance until an admin changes it.</p></div>
+        <div className="ns-storage-plan-editor">{plans.filter(p=>p.code!=="custom").map(plan=>{
+          const d=planDrafts[plan.code]||{quota:bytesToMb(plan.quota_bytes),max:bytesToMb(plan.max_file_bytes)};
+          return <div className="ns-storage-plan-edit" key={plan.code}><strong>{plan.name}</strong>
+            <label>Total quota (MB)<input type="number" min="0.1" step="0.1" value={d.quota} onChange={e=>setPlanDrafts(prev=>({...prev,[plan.code]:{...d,quota:e.target.value}}))}/></label>
+            <label>Max image (MB)<input type="number" min="0.01" step="0.05" value={d.max} onChange={e=>setPlanDrafts(prev=>({...prev,[plan.code]:{...d,max:e.target.value}}))}/></label>
+            <button className="secondary-button" disabled={busy} onClick={()=>savePlan(plan.code)}>Save {plan.name}</button>
+          </div>;
+        })}</div>
+      </section>
+
+      <section className="dashboard-item ns-storage-settings">
+        <div><div className="eyebrow">PLATFORM WARNING SETTINGS</div><h3>Capacity safety thresholds</h3><p>This configurable allowance is a guardrail, not a live reading of Supabase plan capacity. Verify billing and egress in the Supabase dashboard.</p></div>
+        {platformDraft&&<div className="ns-platform-settings-grid">
+          <label>Configured allowance (GB)<input type="number" min="0.01" step="0.1" value={platformDraft.allowance} onChange={e=>setPlatformDraft({...platformDraft,allowance:e.target.value})}/></label>
+          <label>Warning %<input type="number" min="1" max="98" value={platformDraft.warning} onChange={e=>setPlatformDraft({...platformDraft,warning:e.target.value})}/></label>
+          <label>Critical %<input type="number" min="2" max="99" value={platformDraft.critical} onChange={e=>setPlatformDraft({...platformDraft,critical:e.target.value})}/></label>
+          <label>Emergency %<input type="number" min="3" max="100" value={platformDraft.emergency} onChange={e=>setPlatformDraft({...platformDraft,emergency:e.target.value})}/></label>
+          <button className="primary-button" disabled={busy} onClick={savePlatform}>Save platform thresholds</button>
+        </div>}
+      </section>
+
+      <section className="dashboard-item ns-storage-settings">
+        <div><div className="eyebrow">SELLER ALLOWANCES</div><h3>Search and manage sellers</h3></div>
+        <div className="ns-storage-filters">
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search business, NammaSpot ID or seller UUID" aria-label="Search sellers by name or ID"/>
+          <select value={planFilter} onChange={e=>setPlanFilter(e.target.value)} aria-label="Filter by plan"><option value="all">All plans</option>{["small","medium","large","custom"].map(p=><option key={p} value={p}>{p[0].toUpperCase()+p.slice(1)}</option>)}</select>
+          <select value={usageFilter} onChange={e=>setUsageFilter(e.target.value)} aria-label="Filter by storage usage"><option value="all">All usage</option><option value="healthy">Below 80%</option><option value="near">80–99%</option><option value="over">At/over quota</option></select>
+        </div>
+        <div className="dashboard-list">{visible.map(row=>{
+          const d=edits[row.seller_id]||{planCode:row.plan_code,quota:bytesToMb(row.quota_bytes),max:bytesToMb(row.max_file_bytes),reason:""};
+          const pct=Number(row.used_percent||0);
+          const over=pct>=100;
+          return <article className="dashboard-item ns-storage-seller" key={row.seller_id}>
+            <div className="ns-storage-seller-heading"><div><strong>{row.business_name}</strong><p>{row.nammaspot_id||row.seller_id} · {row.verification_status}</p></div><span className={"status-pill "+(over?"status-danger":pct>=80?"status-warning":"status-ok")}>{pct.toFixed(1)}%</span></div>
+            <div className="storage-usage-head"><strong>{formatBytes(row.used_bytes)} used</strong><span>{formatBytes(row.quota_bytes)} quota · {formatBytes(row.remaining_bytes)} remaining</span></div>
+            <div className="storage-usage-track" role="progressbar" aria-valuenow={Math.min(100,pct)} aria-valuemin="0" aria-valuemax="100"><span style={{width:Math.min(100,pct)+"%"}}/></div>
+            <small>{row.file_count} files · maximum {formatBytes(row.max_file_bytes)} per image · last plan change {row.last_plan_change?new Date(row.last_plan_change).toLocaleString("en-IN"):"not recorded"} · admin ID {row.last_changed_by||"migration"}</small>
+            {over&&<p className="inline-error">This seller is over quota. Existing images are preserved; new uploads are blocked until usage falls below the limit.</p>}
+            <div className="ns-storage-edit-grid">
+              <label>Plan<select value={d.planCode} onChange={e=>setEdit(row.seller_id,{planCode:e.target.value})}>{["small","medium","large","custom"].map(p=><option key={p} value={p}>{p[0].toUpperCase()+p.slice(1)}</option>)}</select></label>
+              {d.planCode==="custom"&&<><label>Total quota (MB)<input type="number" min="0.1" step="0.1" value={d.quota} onChange={e=>setEdit(row.seller_id,{quota:e.target.value})}/></label><label>Max image (MB)<input type="number" min="0.01" step="0.05" value={d.max} onChange={e=>setEdit(row.seller_id,{max:e.target.value})}/></label></>}
+              <label>Change reason (optional)<input maxLength="300" value={d.reason||""} onChange={e=>setEdit(row.seller_id,{reason:e.target.value})} placeholder="Reason for audit history"/></label>
+              <button className="primary-button" disabled={busy} onClick={()=>saveSeller(row)}>Apply plan</button>
+            </div>
+          </article>;
+        })}{!visible.length&&<Empty title="No sellers match" text="Change the search or filters to view sellers."/ >}</div>
+      </section>
+
+      <section className="dashboard-item ns-storage-settings">
+        <div><div className="eyebrow">AUDIT TRAIL</div><h3>Recent storage-plan changes</h3><p>Recent plan assignments, quota changes and the administrator account responsible.</p></div>
+        <div className="dashboard-list">{audit.length?audit.map(item=><article className="dashboard-item" key={item.id}>
+          <strong>{rows.find(r=>r.seller_id===item.seller_id)?.business_name||"Deleted seller"} · {item.previous_plan_code||"none"} → {item.new_plan_code}</strong>
+          <p>{formatBytes(item.previous_quota_bytes||0)} → {formatBytes(item.new_quota_bytes)} · max image {formatBytes(item.new_max_file_bytes)}</p>
+          <small>{new Date(item.created_at).toLocaleString("en-IN")} · admin ID {item.changed_by||"unknown"} · {item.reason||"No reason supplied"}</small>
+        </article>):<p className="muted-note">No plan changes have been recorded yet.</p>}</div>
+      </section>
+    </>}
+  </div>;
+}
+
 function CardSkeletonRow({ detailed=false }) {
   return <div className={detailed ? "seller-list" : "seller-preview-grid"}>{[1,2,3].map((item)=><div className="skeleton-card" key={item}><div className="skeleton-cover"/><div className="skeleton-body"><span/><span/><span/></div></div>)}</div>;
 }

@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useRef,useState} from "react";
-import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send,Heart,Home,Compass,Grid2X2,Bookmark,UserRound,Search,Navigation,Star,Camera,CalendarDays} from "lucide-react";
+import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send,Heart,Home,Compass,Grid2X2,Bookmark,UserRound,Search,Navigation,Star,Instagram,CalendarDays} from "lucide-react";
 import {QRCodeCanvas} from "qrcode.react";
 import {createReview,getPublicReviews} from "./lib/api";
 import {getMicrosite,sellerPublicUrl} from "./lib/microsite";
@@ -12,7 +12,8 @@ const whatsappUrl=(seller,product=null)=>{
   const phone=raw.length===10?"91"+raw:raw.startsWith("0")&&raw.length===11?"91"+raw.slice(1):raw;
   // Keep the opening message consistent for every seller and product.
   // Customers can freely continue in English, Tamil, or Tanglish.
-  const message = "Hi! 👋 Contacting you via NammaSpot.\nMy enquiry: ";
+  const itemName = String(product?.name || product?.product_name || "").trim();
+  const message = itemName ? `Hi! 👋 I found “${itemName}” on NammaSpot and would like to enquire about it.` : "Hi! 👋 Contacting you via NammaSpot. I would like to know more about your products.";
   return "https://wa.me/"+phone+"?text="+encodeURIComponent(message);
 };
 
@@ -106,6 +107,8 @@ export default function SellerMicrositePage({go,slug}){
   const [language,setLanguage]=useState(()=>localStorage.getItem("nammaspot-language")==="ta"?"ta":"en");
   const isTamil=language==="ta";
   const [product,setProduct]=useState(null),[saved,setSaved]=useState(false);
+  const [catalogueQuery,setCatalogueQuery]=useState("");
+  const [activeTab,setActiveTab]=useState("catalogue");
   const [shareOpen,setShareOpen]=useState(false);
   useEffect(()=>{localStorage.setItem("nammaspot-language",language);document.documentElement.lang=language},[language]);
   useEffect(()=>{let alive=true;getMicrosite(slug).then(data=>alive&&setState({loading:false,error:"",data})).catch(e=>alive&&setState({loading:false,error:e.message||"Could not load this seller.",data:null}));return()=>{alive=false}},[slug]);
@@ -162,7 +165,6 @@ export default function SellerMicrositePage({go,slug}){
   const share=()=>setShareOpen(true);
   const wa=whatsappUrl(seller);
   const productWa=p=>whatsappUrl(seller,p);
-  const [catalogueQuery,setCatalogueQuery]=useState("");
   const filteredProducts=products.filter(p=>String(p.name||"").toLowerCase().includes(catalogueQuery.toLowerCase()));
   return <main className="seller-microsite ns-seller-profile ns-reference-layout ns-mobile-redesign">
     <header className="ns-mobile-brandbar">
@@ -173,13 +175,13 @@ export default function SellerMicrositePage({go,slug}){
     <section className="ns-mobile-seller-head">
       <div className="ns-mobile-seller-avatar">{seller.profile_image_url?<img src={seller.profile_image_url} alt={seller.business_name+" logo"}/>:seller.business_name?.charAt(0)}</div>
       <div className="ns-mobile-seller-info">
-        <h1>{esc(seller.business_name)} {seller.verified&&<CheckCircle className="ns-inline-verified" size={20} aria-label="Verified seller"/>}</h1>
-        <p className="ns-mobile-verified-line">{seller.verified&&<span className="ns-mobile-verified-dot">✓</span>}Verified seller · {esc(seller.category?.name||"Local business")}</p>
+        <h1>{esc(seller.business_name)} {seller.verified&&<span className="ns-mobile-verified-dot" aria-label="Verified seller">✓</span>}</h1>
+        <p className="ns-mobile-verified-line">{seller.verified ? "Verified seller" : "Local seller"} · {esc(seller.category?.name||"Local business")}</p>
         <p className="ns-mobile-bio">{esc(seller.description||"Discover this local seller on NammaSpot.")}</p>
         <p className="ns-mobile-location"><MapPin size={16}/>{esc(seller.location||"Chennai, Tamil Nadu")}</p>
       </div>
     </section>
-    {settings.tagline&&<section className="ns-mobile-update"><CalendarDays size={24}/><div><small>UPDATE FROM SELLER · {new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short"}).format(new Date())}</small><p>{esc(settings.tagline)}</p></div></section>}
+    {(settings.tagline||settings.about)&&<section className="ns-mobile-update"><CalendarDays size={24}/><div><small>UPDATE FROM SELLER{settings.updated_at ? " · "+new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(settings.updated_at)) : ""}</small><p>{esc(settings.tagline||settings.about)}</p></div></section>}
     <section className="ns-mobile-stats" aria-label="Seller details">
       <div><b>{products.length}</b><span>Products</span></div><div><b>{esc(seller.category?.name||"Local")}</b><span>Category</span></div>
     </section>
@@ -187,20 +189,20 @@ export default function SellerMicrositePage({go,slug}){
       {wa&&<a className="ns-mobile-whatsapp" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={22}/> Enquiry on WhatsApp</a>}
       <div className="ns-mobile-contact-row">
         {seller.contact&&<a href={"tel:"+seller.contact}><Phone size={20}/><span>Call</span></a>}
-        {seller.instagram_url&&<a href={seller.instagram_url} target="_blank" rel="noreferrer"><Camera size={20}/><span>Instagram</span></a>}
+        {seller.instagram_url&&<a href={seller.instagram_url} target="_blank" rel="noreferrer"><Instagram size={20}/><span>Instagram</span></a>}
         <a href={seller.location_url||("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(seller.location||seller.city||seller.business_name||"Tamil Nadu"))} target="_blank" rel="noreferrer"><MapPin size={20}/><span>Directions</span></a>
         <button onClick={share}><Share2 size={20}/><span>Share</span></button>
       </div>
     </section>
-    <nav className="ns-mobile-tabs" aria-label="Seller page sections"><a className="active" href="#catalogue">Catalogue</a><a href="#about">About</a><a href="#reviews">Reviews</a></nav>
+    <nav className="ns-mobile-tabs" aria-label="Seller page sections"><a className={activeTab==="catalogue"?"active":""} href="#catalogue" onClick={()=>setActiveTab("catalogue")}>Catalogue</a><a className={activeTab==="about"?"active":""} href="#about" onClick={()=>setActiveTab("about")}>About</a><a className={activeTab==="reviews"?"active":""} href="#reviews" onClick={()=>setActiveTab("reviews")}>Reviews</a></nav>
     <section id="catalogue" className="ns-mobile-catalogue">
       <div className="ns-mobile-search"><Search size={19}/><input value={catalogueQuery} onChange={e=>setCatalogueQuery(e.target.value)} placeholder="Search products..." aria-label="Search products"/></div>
       {filteredProducts.length?<div className="ns-mobile-product-grid">{filteredProducts.map(p=><article className="ns-mobile-product" key={p.id}><button className="ns-mobile-product-image" onClick={()=>setProduct(p)} aria-label={"View "+p.name}>{p.image_url?<img src={p.image_url} alt={p.name} loading="lazy"/>:<span>{String(p.name||"").charAt(0)}</span>}</button><div className="ns-mobile-product-copy"><h3>{esc(p.name)}</h3><strong>₹{p.price}</strong>{productWa(p)&&<a href={productWa(p)} target="_blank" rel="noreferrer"><MessageCircle size={16}/> Enquire</a>}</div></article>)}
       <article className="ns-mobile-coming-soon"><span>✧</span><strong>More products<br/>coming soon</strong><small>♡</small></article></div>:<div className="ns-mobile-coming-soon ns-mobile-empty"><span>✧</span><strong>{catalogueQuery?"No matching products":"More products coming soon"}</strong><small>{catalogueQuery?"Try another search":"This seller will add more soon ♡"}</small></div>}
     </section>
-    <section id="about" className="ns-mobile-about"><h2>About</h2><p>{esc(seller.description||"This seller is part of the NammaSpot community.")}</p><p><MapPin size={16}/>{esc(seller.location||"Chennai, Tamil Nadu")}</p></section>
-    <section id="reviews" className="ns-mobile-reviews"><ReviewPanel seller={seller}/></section>
-    <nav className="ns-mobile-bottom-nav" aria-label="Main navigation"><button onClick={()=>go("/")}><Home size={21}/><span>Home</span></button><button onClick={()=>go("/explore")}><Compass size={21}/><span>Explore</span></button><button onClick={()=>go("/saved")}><Heart size={21}/><span>Saved</span></button><button onClick={()=>go("/explore?near=1")}><Navigation size={21}/><span>Near me</span></button><button onClick={()=>go("/featured")}><Star size={21}/><span>Featured</span></button></nav>
+    <section id="about" className="ns-mobile-about" onMouseEnter={()=>setActiveTab("about")}><h2>About</h2><p>{esc(seller.description||"This seller is part of the NammaSpot community.")}</p><p><MapPin size={16}/>{esc(seller.location||"Chennai, Tamil Nadu")}</p></section>
+    <section id="reviews" className="ns-mobile-reviews" onMouseEnter={()=>setActiveTab("reviews")}><ReviewPanel seller={seller}/></section>
+    <nav className="ns-mobile-bottom-nav" aria-label="Main navigation"><button className={location.pathname==="/"?"active":""} aria-current={location.pathname==="/"?"page":undefined} onClick={()=>go("/")}><Home size={21}/><span>Home</span></button><button className={location.pathname.startsWith("/explore")||location.pathname.startsWith("/categories")?"active":""} onClick={()=>go("/explore")}><Compass size={21}/><span>Explore</span></button><button className={location.pathname.startsWith("/saved")?"active":""} onClick={()=>go("/saved")}><Heart size={21}/><span>Saved</span></button><button className={location.search.includes("near=1")?"active":""} onClick={()=>go("/explore?near=1")}><Navigation size={21}/><span>Near me</span></button><button className={location.pathname.startsWith("/featured")?"active":""} onClick={()=>go("/featured")}><Star size={21}/><span>Featured</span></button></nav>
     {shareOpen&&<SellerShareModal seller={seller} url={sellerPublicUrl(seller.slug)} onClose={()=>setShareOpen(false)}/>}
     {product&&<ProductModal product={product} onClose={()=>setProduct(null)} onEnquire={productWa(product)}/>}
   </main>;

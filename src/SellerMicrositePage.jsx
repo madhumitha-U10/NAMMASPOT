@@ -137,7 +137,7 @@ export default function SellerMicrositePage({go,slug}){
     const url=sellerPublicUrl(seller.slug);
     const title=(seller.business_name||"Seller")+" · Catalogue · NammaSpot";
     const desc=(seller.description||settings.tagline||"Discover this seller and their catalogue on NammaSpot.").replace(/\s+/g," ").slice(0,155);
-    const image=seller.cover_image_url||seller.profile_image_url||location.origin+"/og-image.svg";
+    const image=seller.profile_image_url||location.origin+"/og-image.svg";
     document.title=title;
     const setMeta=(selector,attribute,value)=>{let el=document.querySelector(selector);if(!el){el=document.createElement("meta");const [kind,key]=selector.match(/\[(name|property)="([^"]+)"\]/).slice(1);el.setAttribute(kind,key);document.head.appendChild(el)}el.setAttribute("content",value)};
     setMeta('meta[name="description"]',"name",desc);

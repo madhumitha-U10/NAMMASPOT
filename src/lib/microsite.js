@@ -83,7 +83,22 @@ export async function addProductGalleryImage(productId,sellerId,url,sortOrder=0)
 }
 
 export async function deleteProductGalleryImage(id) {
-  const {error}=await supabase.from("product_images").delete().eq("id",id); if(error) throw error;
+  const {data:image,error:readError}=await supabase.from("product_images").select("id,image_url").eq("id",id).single();
+  if(readError) throw readError;
+  const {data:userResult}=await supabase.auth.getUser();
+  const userId=userResult?.user?.id;
+  const marker="/storage/v1/object/public/seller-media/";
+  const index=String(image?.image_url||"").indexOf(marker);
+  let path=null;
+  if(index>=0&&userId){
+    try{const candidate=decodeURIComponent(String(image.image_url).slice(index+marker.length));if(candidate.startsWith(userId+"/"))path=candidate;}catch{}
+  }
+  if(path){
+    const {error:storageError}=await supabase.storage.from("seller-media").remove([path]);
+    if(storageError) throw storageError;
+  }
+  const {error}=await supabase.from("product_images").delete().eq("id",id);
+  if(error) throw error;
 }
 
 export function formatHoursForDay(day) {

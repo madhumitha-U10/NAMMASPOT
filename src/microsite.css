@@ -47,3 +47,16 @@
 .ns-mobile-verified-dot{width:20px;height:20px;flex:none;vertical-align:middle;font-family:Arial,sans-serif;font-size:12px;line-height:1}
 .ns-mobile-verified-line{flex-wrap:wrap}
 .ns-mobile-seller-info h1 .ns-mobile-verified-dot{display:inline-grid;margin-left:4px;transform:translateY(-2px)}
+
+/* Branded cover page at the start of each seller catalogue */
+.ns-catalogue-cover{position:relative;isolation:isolate;min-height:320px;margin:14px 16px 0;border:1px solid #e3d3c0;border-radius:22px;overflow:hidden;background:radial-gradient(circle at 88% 12%,#ead4c3 0,transparent 34%),linear-gradient(135deg,#fbf5ec 0%,#f0dfd2 52%,#e8d9ca 100%);display:flex;align-items:center;justify-content:center;text-align:center;color:#6b1a22}
+.ns-catalogue-cover-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2}
+.ns-catalogue-cover-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(135deg,rgba(250,245,238,.94),rgba(250,245,238,.78) 55%,rgba(107,26,34,.16))}
+.ns-catalogue-cover-content{display:flex;flex-direction:column;align-items:center;padding:26px 18px 24px;width:100%}
+.ns-catalogue-cover-brand{font-size:10px;letter-spacing:.2em;font-weight:850;color:#8a4a51}
+.ns-catalogue-cover-logo{margin:18px 0 10px;width:68px;height:68px;border:2px solid rgba(107,26,34,.18);border-radius:20px;background:#fffdf9;display:grid;place-items:center;overflow:hidden;color:#6b1a22;font-family:Georgia,serif;font-size:34px;font-weight:700;box-shadow:0 6px 20px rgba(80,40,35,.09)}
+.ns-catalogue-cover-logo img{width:100%;height:100%;object-fit:contain}
+.ns-catalogue-cover-content h2{font-family:Georgia,"Times New Roman",serif;font-size:clamp(27px,7vw,40px);line-height:1.08;letter-spacing:-.025em;margin:5px 0 8px;color:#6b1a22;overflow-wrap:anywhere}
+.ns-catalogue-cover-content p{font-size:13px;margin:0;color:#705b54}
+.ns-catalogue-cover-label{margin-top:20px;border:1px solid #d9b9ad;border-radius:999px;padding:9px 15px;font-size:10px;font-weight:850;letter-spacing:.12em;color:#6b1a22;background:rgba(255,253,249,.68)}
+@media(min-width:801px){.ns-catalogue-cover{max-width:1180px;margin:24px auto 0;min-height:390px}.ns-catalogue-cover-content{padding:42px}.ns-catalogue-cover-logo{width:84px;height:84px}}

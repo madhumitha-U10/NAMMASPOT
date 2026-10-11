@@ -3300,3 +3300,40 @@ body { overflow-x:hidden; }
  .ns-platform-settings-grid .primary-button{width:100%}
  .ns-storage-plan-edit .secondary-button,.ns-storage-edit-grid .primary-button{width:100%}
 }
+
+
+/* Mobile bottom navigation: keep page content and the final controls above the fixed bar. */
+@media (max-width: 760px) {
+  .app-shell {
+    padding-bottom: 0;
+  }
+  .app-shell:has(.mobile-bottom-nav) {
+    padding-bottom: calc(86px + env(safe-area-inset-bottom));
+  }
+  .mobile-bottom-nav {
+    min-height: calc(70px + env(safe-area-inset-bottom));
+    padding: 6px 5px calc(6px + env(safe-area-inset-bottom));
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
+    box-sizing: border-box;
+  }
+  .mobile-bottom-nav button {
+    min-width: 0;
+    min-height: 52px;
+    padding: 3px 1px;
+    gap: 3px;
+    line-height: 1.15;
+  }
+  .mobile-bottom-nav span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .home-section,
+  .page,
+  .dashboard-page,
+  .admin-page,
+  .admin-console-page {
+    scroll-margin-bottom: calc(100px + env(safe-area-inset-bottom));
+  }
+}

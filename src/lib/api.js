@@ -492,7 +492,11 @@ export async function deleteProduct(productId) {
   const client=needBackend();
   const { data: product, error: fetchError } = await client.from("products").select("id,image_url").eq("id",productId).single();
   if (fetchError) throw fetchError;
-  if (product?.image_url) await removeOwnedSellerMedia(product.image_url);
+  const { data: gallery, error: galleryError } = await client.from("product_images").select("image_url").eq("product_id",productId);
+  if (galleryError) throw galleryError;
+  for (const url of [product?.image_url, ...(gallery||[]).map(item=>item.image_url)].filter(Boolean)) {
+    try { await removeOwnedSellerMedia(url); } catch (error) { throw new Error("Could not safely remove a catalogue image. Please retry before deleting the product."); }
+  }
   const {error}=await client.from("products").delete().eq("id",productId);
   if(error) throw error;
 }

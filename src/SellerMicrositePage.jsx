@@ -52,7 +52,7 @@ function nowStatus(hours,specialDates){
 }
 
 function ProductModal({product,onClose,onEnquire}){
-  const imgs=[product.image_url,...(product.images||[]).map(x=>x.image_url)].filter(Boolean);
+  const imgs=[...new Set([product.image_url,...(product.images||[]).map(x=>x.image_url)].map(x=>String(x||"").trim()).filter(Boolean))];
   const [i,setI]=useState(0);
   const touchStart=useRef(null);
   const previous=()=>setI(v=>Math.max(0,v-1));

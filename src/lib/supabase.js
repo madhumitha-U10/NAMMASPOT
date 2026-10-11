@@ -16,12 +16,12 @@ export const supabase = isSupabaseConfigured
     })
   : null;
 
-const MAX_IMAGE_BYTES = 512000;
+const DEFAULT_MAX_IMAGE_BYTES = 1000000;
 const MAX_IMAGE_DIMENSION = 1600;
 const MAX_SOURCE_IMAGE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-async function compressImage(file) {
+async function compressImage(file, maxImageBytes = DEFAULT_MAX_IMAGE_BYTES) {
   if (!file || !ALLOWED_IMAGE_TYPES.includes(file.type)) {
     throw new Error("Unsupported image format. Use JPG, PNG or WebP.");
   }
@@ -29,7 +29,7 @@ async function compressImage(file) {
     throw new Error("This image is over 10 MB. Please choose a smaller image.");
   }
 
-  if (file.size <= MAX_IMAGE_BYTES && file.type === "image/webp") return file;
+  if (file.size <= maxImageBytes && file.type === "image/webp") return file;
 
   if (!window.createImageBitmap) {
     throw new Error("This browser cannot optimize the image. Please use JPG, PNG or WebP under 500 KB.");
@@ -50,7 +50,7 @@ async function compressImage(file) {
 
   let quality = 0.82;
   let blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", quality));
-  while (blob && blob.size > MAX_IMAGE_BYTES && quality > 0.45) {
+  while (blob && blob.size > maxImageBytes && quality > 0.35) {
     quality -= 0.08;
     blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", quality));
   }
@@ -73,10 +73,10 @@ export async function uploadSellerMedia(file, userId, bucket = "seller-media") {
     if (data !== true) {
       const { data: usage } = await supabase.rpc("seller_storage_usage");
       if (usage?.[0]?.status === "blocked") {
-        throw new Error("Your NammaSpot image storage is full (50 MB). Delete an old image before uploading another.");
+        throw new Error("Your catalogue storage is full. Delete unused images or contact NammaSpot support to request a storage upgrade.");
       }
       if (usage?.[0]?.status === "warning") {
-        throw new Error("Your NammaSpot image storage is nearly full (40 MB+ of 50 MB). Delete an old image or choose a smaller image.");
+        throw new Error("Your catalogue storage is nearly full. Delete unused images or contact NammaSpot support to request a storage upgrade.");
       }
       throw new Error("This image cannot be uploaded because the NammaSpot storage limit has been reached.");
     }
@@ -93,7 +93,7 @@ export async function uploadSellerMedia(file, userId, bucket = "seller-media") {
 
   if (error) {
     if (error.statusCode === "413" || error.message?.toLowerCase().includes("too large")) {
-      throw new Error("This image exceeds the 500 KB upload limit. Please choose a smaller image.");
+      throw new Error("This image exceeds your assigned per-image limit. Please choose a smaller image.");
     }
     throw error;
   }
@@ -106,5 +106,5 @@ export async function getSellerStorageUsage() {
   if (!supabase) return null;
   const { data, error } = await supabase.rpc("seller_storage_usage");
   if (error) throw error;
-  return data?.[0] ?? null;
+  return Array.isArray(data) ? data[0] ?? null : data ?? null;
 }

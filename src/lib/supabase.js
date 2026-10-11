@@ -45,6 +45,16 @@ async function compressImage(file, maxImageBytes = DEFAULT_MAX_IMAGE_BYTES) {
   return new window.File([blob], "image.webp", { type: "image/webp" });
 }
 
+async function recordUploadEvent(eventType, requestedBytes, message) {
+  try {
+    await supabase.rpc("record_seller_storage_event", {
+      p_event_type: eventType,
+      p_requested_bytes: requestedBytes ?? null,
+      p_message: String(message || "").slice(0, 240),
+    });
+  } catch {}
+}
+
 function formatByteMessage(bytes) {
   if (bytes < 1000000) return Math.max(0, Math.round(bytes / 1000)) + " KB";
   return (bytes / 1000000).toFixed(1) + " MB";
@@ -70,10 +80,10 @@ export async function uploadSellerMedia(file, userId, bucket = "seller-media") {
     if (data !== true) {
       const { data: rows } = await supabase.rpc("seller_storage_usage");
       const usage = Array.isArray(rows) ? rows[0] : rows;
-      if (usage?.status === "blocked") throw new Error("Your catalogue storage is full. Delete unused images or contact NammaSpot support to request a storage upgrade.");
-      if (Number(usage?.remaining_bytes) < compressed.size) throw new Error("This image cannot be uploaded because it exceeds your remaining storage. You have " + formatByteMessage(Number(usage?.remaining_bytes) || 0) + " available.");
-      if (compressed.size > Number(usage?.max_file_bytes)) throw new Error("This image exceeds your assigned per-image limit. Please choose a smaller image.");
-      throw new Error("This image cannot be uploaded because the NammaSpot storage limit has been reached.");
+      if (usage?.status === "blocked") { await recordUploadEvent("quota_exceeded",compressed.size,"Seller storage quota is full."); throw new Error("Your catalogue storage is full. Delete unused images or contact NammaSpot support to request a storage upgrade."); }
+      if (Number(usage?.remaining_bytes) < compressed.size) { await recordUploadEvent("quota_exceeded",compressed.size,"Upload exceeds remaining seller storage."); throw new Error("This image cannot be uploaded because it exceeds your remaining storage. You have " + formatByteMessage(Number(usage?.remaining_bytes) || 0) + " available."); }
+      if (compressed.size > Number(usage?.max_file_bytes)) { await recordUploadEvent("file_too_large",compressed.size,"Image exceeds assigned per-image limit."); throw new Error("This image exceeds your assigned per-image limit. Please choose a smaller image."); }
+      await recordUploadEvent("quota_exceeded",compressed.size,"Upload rejected by storage quota preflight.");\n      throw new Error("This image cannot be uploaded because the NammaSpot storage limit has been reached.");
     }
   }
 

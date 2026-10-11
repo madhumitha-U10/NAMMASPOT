@@ -3845,3 +3845,42 @@ body { overflow-x:hidden; }
 .ns-crop-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:14px}
 .ns-crop-actions button{min-height:44px}
 @media(max-width:560px){.ns-crop-backdrop{padding:8px;align-items:center}.ns-crop-dialog{padding:16px;border-radius:18px;max-height:96dvh}.ns-crop-preview{min-height:160px;max-height:35dvh}.ns-crop-head h2{font-size:22px}}
+
+
+/* Admin usability: clear task-led seller controls and storage cleanup. */
+.admin-console-brand strong{letter-spacing:-.02em}
+.admin-console-nav button{gap:10px;min-height:46px}
+.admin-sellers-heading{align-items:center;gap:18px}
+.admin-sellers-heading h2{margin:0 0 6px}
+.admin-sellers-heading p{max-width:620px;line-height:1.55}
+.admin-seller-status-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.admin-seller-status-tabs button{min-width:0;min-height:64px;padding:10px 12px;border:1px solid #e5d8ce;border-radius:14px;background:#fffdf8;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;color:#51433d}
+.admin-seller-status-tabs button span{font-size:12px;font-weight:750;line-height:1.3}
+.admin-seller-status-tabs button b{display:grid;place-items:center;min-width:27px;height:27px;padding:0 6px;border-radius:9px;background:#f3e8df;color:#6b1a22;font-size:12px}
+.admin-seller-status-tabs button.active{border-color:#7e2424;background:#f9eee8;box-shadow:0 0 0 1px rgba(126,36,36,.08)}
+.admin-seller-results-line{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:16px 0 10px}
+.admin-seller-results-line span{color:#777068;font-size:12px}
+.admin-seller-card{align-items:flex-start;gap:18px}
+.admin-seller-details{min-width:0;flex:1}
+.admin-seller-title-row{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-bottom:10px}
+.admin-seller-title-row>strong{font-size:16px;line-height:1.35}
+.admin-seller-details p{display:grid;grid-template-columns:76px minmax(0,1fr);gap:8px;line-height:1.45;overflow-wrap:anywhere}
+.admin-seller-details p>span{color:#81756d;font-size:12px}
+.admin-seller-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;max-width:250px}
+.ns-storage-cleanup-card{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:18px 0;padding:18px 20px;border:1px solid #e7d6ca;border-radius:18px;background:linear-gradient(135deg,#fffaf3,#f8eee6)}
+.ns-storage-cleanup-copy{min-width:0}
+.ns-storage-cleanup-copy .eyebrow{font-size:10px}
+.ns-storage-cleanup-copy h3{margin:6px 0 5px;font-size:17px;line-height:1.3;color:#392722}
+.ns-storage-cleanup-copy p{max-width:690px;margin:0;color:#76685e;font-size:13px;line-height:1.55}
+.ns-storage-cleanup-card>.danger-button{flex:0 0 auto;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+@media(max-width:760px){
+ .admin-seller-status-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .admin-seller-status-tabs button:last-child{grid-column:1/-1}
+ .admin-seller-card{display:flex;flex-direction:column;gap:12px}
+ .admin-seller-actions{width:100%;max-width:none;justify-content:flex-start}
+ .admin-seller-actions button{flex:1 1 145px}
+ .ns-storage-cleanup-card{align-items:stretch;flex-direction:column;gap:14px;padding:16px}
+ .ns-storage-cleanup-card>.danger-button{width:100%}
+ .admin-sellers-heading{align-items:flex-start}
+ .admin-seller-total{flex:0 0 auto}
+}

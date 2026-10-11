@@ -64,7 +64,9 @@ export async function uploadSellerMedia(file, userId, bucket = "seller-media") {
   if (!supabase && import.meta.env.PROD) {
     throw new Error("NammaSpot cannot upload because production Supabase configuration is missing. Contact support.");
   }
-  if (!supabase || !file || !userId) return null;
+  if (!file) return null;
+  if (!supabase) throw new Error("Image upload is unavailable because NammaSpot storage is not configured.");
+  if (!userId) throw new Error("Your seller session could not be verified. Sign in again, then upload the image.");
   let maxImageBytes = DEFAULT_MAX_IMAGE_BYTES;
   if (bucket === "seller-media") {
     const { data: rows, error: usageError } = await supabase.rpc("seller_storage_usage");
@@ -106,6 +108,10 @@ export async function uploadSellerMedia(file, userId, bucket = "seller-media") {
   }
 
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  if (!data?.publicUrl) {
+    try { await supabase.storage.from(bucket).remove([path]); } catch {}
+    throw new Error("The image uploaded, but NammaSpot could not create its catalogue URL. Please try again.");
+  }
   return data.publicUrl;
 }
 

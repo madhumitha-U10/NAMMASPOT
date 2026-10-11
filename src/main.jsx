@@ -1450,12 +1450,12 @@ function AdminPage() {
         <div className="dashboard-item" role="status" aria-live="polite">
           <div>
             <div className="eyebrow">STORAGE SAFETY</div>
-            <strong>{storageUsage.used_percent}% of 1 GB used</strong>
+            <strong>{storageUsage.used_percent}% of {formatBytes(storageUsage.quota_bytes)} configured allowance used</strong>
             <p>
               {storageUsage.status === "ok" && "Everything is within the safe range."}
-              {storageUsage.status === "warning" && "Warning: storage has crossed 80%. Review unused images soon."}
-              {storageUsage.status === "critical" && "Critical: storage has crossed 90%. New uploads will be blocked at the safety cutoff."}
-              {storageUsage.status === "blocked" && "Safety cutoff reached. New image uploads are paused to protect the Free-plan quota."}
+              {storageUsage.status === "warning" && "Warning: configured storage warning threshold has been reached. Review unused images soon."}
+              {storageUsage.status === "critical" && "Critical: configured storage threshold has been reached. New uploads may be blocked at the emergency cutoff."}
+              {storageUsage.status === "blocked" && "Emergency threshold reached. New uploads are blocked by the database safety policy."}
             </p>
           </div>
           <span className={"status-pill status-" + storageUsage.status}>{storageUsage.status}</span>
@@ -1696,7 +1696,7 @@ function AdminStorageManagement() {
               <button className="primary-button" disabled={busy} onClick={()=>saveSeller(row)}>Apply plan</button>
             </div>
           </article>;
-        })}{!visible.length&&<Empty title="No sellers match" text="Change the search or filters to view sellers."/ >}</div>
+        })}{!visible.length&&<Empty title="No sellers match" text="Change the search or filters to view sellers." />}</div>
       </section>
 
       <section className="dashboard-item ns-storage-settings">

@@ -44,9 +44,9 @@ The connected Supabase project records these storage-management migrations:
 - `20261011045332 enforce_storage_quota_on_object_replacement`
 - `20261011045528 seller_storage_files_and_upload_event_audit`
 - `20261011045733 support_custom_storage_image_limits`
-- `20261011050000 cap_configured_shared_image_size`
-- `20261011050001 index_seller_storage_management_foreign_keys`
-- `20261011050002 audit_storage_plan_configuration_changes`
+- `20261011045859 cap_configured_shared_image_size`
+- `20261011045921 index_seller_storage_management_foreign_keys`
+- `20261011045938 audit_storage_plan_configuration_changes`
 
 ## Verified project snapshot (2026-10-11)
 

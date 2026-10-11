@@ -22,29 +22,55 @@ const MAX_SOURCE_IMAGE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 async function compressImage(file, maxImageBytes = DEFAULT_MAX_IMAGE_BYTES) {
-  if (!file || !ALLOWED_IMAGE_TYPES.includes(file.type)) throw new Error("This image format is not supported. Please upload JPG, PNG or WebP.");
-  if (file.size > MAX_SOURCE_IMAGE_BYTES) throw new Error("This image is over 10 MB. Please choose a smaller image.");
-  if (file.size <= maxImageBytes && file.type === "image/webp") return file;
-  if (!window.createImageBitmap) throw new Error("This browser cannot optimize the image. Please use JPG, PNG or WebP under your assigned image limit.");
-  const bitmap = await window.createImageBitmap(file);
-  const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-  const ctx = canvas.getContext("2d");
-  if (!ctx) { bitmap.close(); throw new Error("Image processing is not available in this browser."); }
-  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-  let quality = 0.86;
-  let blob = await new Promise(resolve => canvas.toBlob(resolve, "image/webp", quality));
-  while (blob && blob.size > maxImageBytes && quality > 0.30) {
-    quality -= 0.07;
-    blob = await new Promise(resolve => canvas.toBlob(resolve, "image/webp", quality));
+  if (!file || !ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    throw new Error("This image format is not supported. Please upload JPG, PNG or WebP.");
   }
-  if (!blob || blob.size > maxImageBytes) throw new Error("This image exceeds your assigned per-image limit after compression. Please choose a smaller image.");
-  return new window.File([blob], "image.webp", { type: "image/webp" });
-}
+  if (file.size > MAX_SOURCE_IMAGE_BYTES) {
+    throw new Error("This image is over 10 MB. Please choose a smaller image.");
+  }
+  if (file.size <= maxImageBytes && file.type === "image/webp") return file;
+  if (!window.createImageBitmap) {
+    throw new Error("This browser cannot optimize the image. Please use JPG, PNG or WebP under your assigned image limit.");
+  }
 
+  let bitmap;
+  try {
+    bitmap = await window.createImageBitmap(file);
+    const sourceMax = Math.max(bitmap.width, bitmap.height);
+    const dimensionSteps = [1600, 1400, 1200, 1000, 800, 640, 480];
+    const targets = dimensionSteps.filter((size) => size < sourceMax);
+    targets.unshift(Math.min(MAX_IMAGE_DIMENSION, sourceMax));
+    const uniqueTargets = [...new Set(targets)];
+    const qualities = [0.82, 0.72, 0.62, 0.52, 0.42, 0.32, 0.25];
+
+    for (const maxDimension of uniqueTargets) {
+      const scale = Math.min(1, maxDimension / sourceMax);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Image processing is not available in this browser.");
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+      for (const quality of qualities) {
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", quality));
+        if (blob && blob.size > 0 && blob.size <= maxImageBytes) {
+          return new window.File([blob], "image.webp", { type: "image/webp" });
+        }
+      }
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message) throw error;
+    throw new Error("NammaSpot could not process this image. Please try another JPG, PNG or WebP image.");
+  } finally {
+    bitmap?.close?.();
+  }
+
+  throw new Error(
+    "This image could not be compressed below your " + formatByteMessage(maxImageBytes) +
+    " per-image limit. Try cropping it or choose a smaller image."
+  );
+}
 async function recordUploadEvent(eventType, requestedBytes, message) {
   try {
     await supabase.rpc("record_seller_storage_event", {

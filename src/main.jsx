@@ -1106,6 +1106,7 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
   const [editing,setEditing]=useState(null);
   const [state,setState]=useState({loading:false,error:""});
   const [galleryBusy,setGalleryBusy]=useState(false);
+  const [primaryImageBusy,setPrimaryImageBusy]=useState(false);
 
   useEffect(() => {
     getSellerStorageUsage().then(onStorageUsageChange).catch(() => {});
@@ -1165,20 +1166,26 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
   };
 
   const upload = async (event) => {
-    const file=event.target.files?.[0];
+    const input = event.target;
+    const file = input.files?.[0];
+    input.value = "";
     if (!file) return;
     if (!["image/jpeg","image/png","image/webp"].includes(file.type)) { setState({loading:false,error:"Unsupported image format. Use JPG, PNG or WebP."}); return; }
     if (file.size > 10*1024*1024) { setState({loading:false,error:"This image is over 10 MB. Please choose a smaller image."}); return; }
+    setPrimaryImageBusy(true);
+    setState({loading:false,error:""});
     try {
       const session = await getCurrentProfile();
+      if (!session?.id) throw new Error("Your seller session has expired. Sign in again before uploading an image.");
       const url = await uploadSellerMedia(file, session.id);
-      if (url) {
-        setForm((current)=>({...current,image_url:url}));
-        try { onStorageUsageChange(await getSellerStorageUsage()); } catch {}
-        setState({loading:false,error:""});
-      }
+      if (!url || !/^https:\/\//i.test(url)) throw new Error("NammaSpot could not confirm the uploaded image URL. Please try again.");
+      setForm((current)=>({...current,image_url:url}));
+      try { onStorageUsageChange(await getSellerStorageUsage()); } catch {}
+      setState({loading:false,error:""});
     } catch (error) {
       setState({loading:false,error:friendlyError(error)});
+    } finally {
+      setPrimaryImageBusy(false);
     }
   };
 
@@ -1196,7 +1203,7 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
           <label>Price ₹ *<input type="number" min="0" step="0.01" value={form.price} onChange={(e)=>setForm({...form,price:e.target.value})} required/></label>
           <label>Category<select value={form.category_id} onChange={(e)=>setForm({...form,category_id:e.target.value})}><option value="">Optional</option>{categories.map((c)=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
           <label>Image URL<input type="url" value={form.image_url} onChange={(e)=>setForm({...form,image_url:e.target.value})} placeholder="https://…"/></label>
-          <label>Upload primary image<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={upload}/><small className="field-help">This is the main catalogue image. JPG, PNG or WebP · selected file up to 10 MB · optimized to your assigned per-image limit.</small></label>
+          <label>Upload primary image<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={upload} disabled={primaryImageBusy||galleryBusy}/><small className="field-help">{primaryImageBusy ? "Uploading and optimizing your image…" : "This is the main catalogue image. JPG, PNG or WebP · selected file up to 10 MB · optimized to your assigned per-image limit."}</small></label>
         </div>
         <label>Description<textarea value={form.description} onChange={(e)=>setForm({...form,description:e.target.value})} maxLength={1000}/></label>
         <label className="check-row"><input type="checkbox" checked={form.availability} onChange={(e)=>setForm({...form,availability:e.target.checked})}/> Available</label>
@@ -1207,7 +1214,7 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
           </div>
         </div>}
         {state.error && <div className="inline-error" role="alert" aria-live="assertive"><AlertCircle size={17}/>{state.error}</div>}
-        <div className="button-row"><button className="primary-button" type="submit" disabled={state.loading}>{state.loading ? "Saving…" : editing ? "Update product" : "Add product"}</button>{editing&&<button type="button" className="secondary-button" onClick={()=>{setEditing(null);setForm(blank);}}>Cancel</button>}</div>
+        <div className="button-row"><button className="primary-button" type="submit" disabled={state.loading||primaryImageBusy||galleryBusy}>{primaryImageBusy ? "Uploading image…" : state.loading ? "Saving…" : editing ? "Update product" : "Add product"}</button>{editing&&<button type="button" className="secondary-button" onClick={()=>{setEditing(null);setForm(blank);}}>Cancel</button>}</div>
       </form>
       <div className="dashboard-list">
         {products.length ? products.map((product)=>

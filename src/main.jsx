@@ -1014,7 +1014,7 @@ function ProfileEditor({ seller,categories,onSaved }) {
     location:seller.location || "", location_url:seller.location_url || "", city:seller.city || "Chennai",
     description:seller.description || "", contact:seller.phone || "", whatsapp_phone:seller.whatsapp_phone || "",
     instagram_handle:instagramHandle(seller.instagram_url || ""), opening_time:seller.opening_time || "", closing_time:seller.closing_time || "",
-    profile_image_url:seller.profile_image_url || "", cover_image_url:seller.cover_image_url || ""
+    profile_image_url:seller.profile_image_url || ""
   });
   const [state,setState] = useState({saving:false,error:"",success:"",imageBusy:""});
   const [dailyUpdate,setDailyUpdate] = useState("");
@@ -1036,10 +1036,10 @@ function ProfileEditor({ seller,categories,onSaved }) {
       const profile=await getCurrentProfile();
       const url=await uploadSellerMedia(file,profile.id);
       if(!url) throw new Error("Could not upload the image.");
-      const next=await updateSellerImages(seller.id,kind==="profile"?{profile_image_url:url}:{cover_image_url:url});
+      const next=await updateSellerImages(seller.id,{profile_image_url:url});
       setData(d=>({...d,...next}));
       onSaved(next);
-      setState(s=>({...s,imageBusy:"",success:kind==="profile"?"Logo/profile image updated.":"Cover image updated."}));
+      setState(s=>({...s,imageBusy:"",success:"Logo/profile image updated."}));
     }catch(error){setState(s=>({...s,imageBusy:"",error:friendlyError(error),success:""}));}
   };
   const save = async (event) => {
@@ -1063,11 +1063,6 @@ function ProfileEditor({ seller,categories,onSaved }) {
           <div className="profile-media-preview">{data.profile_image_url?<img src={data.profile_image_url} alt="Business logo" />:<Store size={34}/>}</div>
           <div><strong>Business logo / profile image</strong><small>Shown beside your business name on your public NammaSpot seller profile.</small></div>
           <label className="secondary-button upload-button">{state.imageBusy==="profile"?"Uploading…":"Upload logo"}<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e,"profile")} hidden disabled={Boolean(state.imageBusy)}/></label>
-        </div>
-        <div className="profile-media-card profile-cover-card">
-          <div className="profile-cover-preview">{data.cover_image_url?<img src={data.cover_image_url} alt="Business cover" />:<span>Cover image preview</span>}</div>
-          <div><strong>NammaSpot profile cover image</strong><small>Shown at the top of your NammaSpot seller profile.</small></div>
-          <label className="secondary-button upload-button">{state.imageBusy==="cover"?"Uploading…":"Upload cover"}<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e,"cover")} hidden disabled={Boolean(state.imageBusy)}/></label>
         </div>
       </div>
       <div className="image-upload-note">JPG, PNG or WebP · selected file up to 10 MB · automatically optimized before storage.</div>

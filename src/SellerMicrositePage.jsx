@@ -215,10 +215,10 @@ export default function SellerMicrositePage({go,slug}){
             <div><small>{new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short"}).format(new Date())}</small><span>{esc(settings.tagline)}</span></div>
           </div>}
           <div className="ns-contact-action-row" aria-label="Contact and share seller">
-            {wa&&<a className="primary-button ns-unified-contact-button" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a>}
-            {seller.contact&&<a className="primary-button ns-unified-contact-button" href={"tel:"+seller.contact}><Phone size={16}/> Call</a>}
-            <button type="button" className="primary-button ns-unified-contact-button" onClick={share}><Share2 size={16}/> Share QR</button>
-            <a className="primary-button ns-unified-contact-button" href={seller.location_url||("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(seller.location||seller.city||seller.business_name||"Tamil Nadu"))} target="_blank" rel="noreferrer"><MapPin size={16}/> Location</a>
+            {wa&&<a className="ns-contact-tile" href={wa} target="_blank" rel="noreferrer"><span className="ns-contact-tile-icon"><MessageCircle size={22}/></span><span>Enquire on WhatsApp</span></a>}
+            {seller.contact&&<a className="ns-contact-tile" href={"tel:"+seller.contact}><span className="ns-contact-tile-icon"><Phone size={22}/></span><span>Call</span></a>}
+            <a className="ns-contact-tile" href={seller.location_url||("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(seller.location||seller.city||seller.business_name||"Tamil Nadu"))} target="_blank" rel="noreferrer"><span className="ns-contact-tile-icon"><MapPin size={22}/></span><span>Location</span></a>
+            <button type="button" className="ns-contact-tile" onClick={share}><span className="ns-contact-tile-icon"><Share2 size={22}/></span><span>Share</span></button>
           </div>
 
         </div>

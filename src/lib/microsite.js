@@ -30,7 +30,16 @@ export async function getMicrosite(slug) {
   const ids=(products||[]).map(p=>p.id);
   let images=[];
   if(ids.length){ const r=await supabase.from("product_images").select("id,product_id,image_url,sort_order").in("product_id",ids).order("sort_order"); if(r.error) throw r.error; images=r.data||[]; }
-  return {seller,settings:settings||null,hours:hours||[],specialDates:specialDates||[],products:(products||[]).map(p=>({...p,images:images.filter(i=>i.product_id===p.id)}))};
+  // Collapse duplicate photo references so a catalogue never repeats the same image.
+  const imagesByProduct=new Map();
+  for(const image of images){
+    const url=String(image.image_url||"").trim();
+    if(!url) continue;
+    const list=imagesByProduct.get(image.product_id)||[];
+    if(!list.some(existing=>existing.image_url===url)) list.push({...image,image_url:url});
+    imagesByProduct.set(image.product_id,list);
+  }
+  return {seller,settings:settings||null,hours:hours||[],specialDates:specialDates||[],products:(products||[]).map(p=>({...p,images:imagesByProduct.get(p.id)||[]}))};
 }
 
 export async function getMyMicrosite(sellerId) {
@@ -83,22 +92,24 @@ export async function addProductGalleryImage(productId,sellerId,url,sortOrder=0)
 }
 
 export async function deleteProductGalleryImage(id) {
-  const {data:image,error:readError}=await supabase.from("product_images").select("id,image_url").eq("id",id).single();
+  const {data:image,error:readError}=await supabase.from("product_images").select("id,product_id,image_url").eq("id",id).single();
   if(readError) throw readError;
   const {data:userResult}=await supabase.auth.getUser();
   const userId=userResult?.user?.id;
   const marker="/storage/v1/object/public/seller-media/";
-  const index=String(image?.image_url||"").indexOf(marker);
+  const imageUrl=String(image?.image_url||"").trim();
+  const index=imageUrl.indexOf(marker);
   let path=null;
   if(index>=0&&userId){
-    try{const candidate=decodeURIComponent(String(image.image_url).slice(index+marker.length));if(candidate.startsWith(userId+"/"))path=candidate;}catch{}
+    try{const candidate=decodeURIComponent(imageUrl.slice(index+marker.length));if(candidate.startsWith(userId+"/"))path=candidate;}catch{}
   }
+  // Remove every duplicate row for this same gallery photo, not just one reference.
+  const {error}=await supabase.from("product_images").delete().eq("product_id",image.product_id).eq("image_url",imageUrl);
+  if(error) throw error;
   if(path){
     const {error:storageError}=await supabase.storage.from("seller-media").remove([path]);
     if(storageError) throw storageError;
   }
-  const {error}=await supabase.from("product_images").delete().eq("id",id);
-  if(error) throw error;
 }
 
 export function formatHoursForDay(day) {

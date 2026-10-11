@@ -521,19 +521,12 @@ function CategoriesPage({ go }) {
       </div>
       {state.loading ? <CardSkeletonRow detailed/> :
         <div className="category-grid-large">
-          {categories.map((category,index) => (
-            <div className="category-card-wrap" key={category}>
-              <button className="category-card-visual" onClick={() => go("/explore?cat=" + encodeURIComponent(category))} aria-label={"Explore " + category}>
-                <span className="category-card-number">{String(index + 1).padStart(2,"0")}</span>
-                <span className="category-icon-disc"><CategoryIcon category={category} size={46}/></span>
-                <span className="category-card-copy">
-                  <small>FRESH FINDS</small>
-                  <strong>{category}</strong>
-                  <span>Made with care, ready to discover</span>
-                </span>
-                <span className="category-card-arrow"><ChevronRight size={19}/></span>
-              </button>
-            </div>
+          {categories.map((category) => (
+            <button className="category-tile" key={category} onClick={() => go("/explore?cat=" + encodeURIComponent(category))} aria-label={"Browse " + category}>
+              <span className="category-tile-icon"><CategoryIcon category={category} size={34}/></span>
+              <span className="category-tile-name">{category}</span>
+              <span className="category-tile-arrow" aria-hidden="true"><ChevronRight size={15}/></span>
+            </button>
           ))}
         </div>}
     </main>

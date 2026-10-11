@@ -32,3 +32,18 @@
   .ns-share-actions button{font-size:12px;gap:5px;padding:9px 7px}
 }
 @media(prefers-reduced-motion:reduce){.ns-share-spinner{animation:none}}
+
+/* Active-state and accessibility finishing pass for seller mobile profile */
+@media(max-width:760px){
+ .ns-mobile-bottom-nav button{min-width:44px;min-height:54px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+ .ns-mobile-bottom-nav button.active{color:#6B1A22;font-weight:800}
+ .ns-mobile-bottom-nav button.active svg{background:#6B1A22;color:#fff;padding:5px;width:30px;height:30px;border-radius:12px}
+ .ns-mobile-bottom-nav button:not(.active) svg{background:transparent;color:#876e62;padding:0;width:21px;height:21px;border-radius:0}
+ .ns-mobile-tabs a{min-height:49px;scroll-margin-top:0}
+ .ns-mobile-product-copy>a{min-height:44px}
+ .ns-mobile-contact-row a,.ns-mobile-contact-row button{min-height:64px}
+ .ns-mobile-whatsapp{min-height:52px}
+}
+.ns-mobile-verified-dot{width:20px;height:20px;flex:none;vertical-align:middle;font-family:Arial,sans-serif;font-size:12px;line-height:1}
+.ns-mobile-verified-line{flex-wrap:wrap}
+.ns-mobile-seller-info h1 .ns-mobile-verified-dot{display:inline-grid;margin-left:4px;transform:translateY(-2px)}

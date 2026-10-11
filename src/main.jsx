@@ -229,7 +229,7 @@ function App() {
       {route === "website-editor" && <Suspense fallback={<main className="page" aria-live="polite">Loading settings…</main>}><WebsiteEditorPage go={go}/></Suspense>}
       {route === "not-found" && <main className="page"><Empty title="Page not found" text="That NammaSpot page does not exist." actionLabel="Back home" onAction={() => go("/")}/></main>}
 
-      <MobileBottomNav path={path} go={go}/>
+      <MobileBottomNav path={path} go={go} profile={profile}/>
     </div>
   );
 }
@@ -1773,13 +1773,16 @@ function Empty({ title,text,actionLabel,onAction }) {
   return <div className="empty-state"><Heart size={27}/><h2>{title}</h2><p>{text}</p>{actionLabel&&<button className="secondary-button" onClick={onAction}>{actionLabel}</button>}</div>;
 }
 
-function MobileBottomNav({ path,go }) {
-  // Keep customer discovery navigation out of seller/admin workspaces and focused flows.
-  // The fixed mobile bar can otherwise cover dashboard controls, forms, and seller catalogues.
+function MobileBottomNav({ path,go,profile }) {
+  // Keep the main bar focused on the actions customers use most often.
+  // Secondary destinations live in the compact More sheet to avoid a crowded tab bar.
+  const [moreOpen, setMoreOpen] = useState(false);
   const normalizedPath = (path || "/").split("?")[0];
+  const isNearby = (path || "").startsWith("/explore?near");
   const hideOnPath = [
     "/dashboard",
     "/admin",
+    "/nammaspot-control-panel",
     "/login",
     "/register",
     "/s/",
@@ -1788,13 +1791,75 @@ function MobileBottomNav({ path,go }) {
   ];
   if (hideOnPath.some((prefix) => normalizedPath.startsWith(prefix))) return null;
 
-  return <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
-    <button className={normalizedPath==="/"?"active":""} aria-current={normalizedPath==="/"?"page":undefined} onClick={()=>go("/")}><Home size={22}/><span>Home</span></button>
-    <button className={normalizedPath.startsWith("/explore")?"active":""} aria-current={normalizedPath.startsWith("/explore")?"page":undefined} onClick={()=>go("/explore")}><Compass size={22}/><span>Explore</span></button>
-    <button className={normalizedPath.startsWith("/saved")?"active":""} aria-current={normalizedPath.startsWith("/saved")?"page":undefined} onClick={()=>go("/saved")}><Heart size={22}/><span>Saved</span></button>
-    <button className={path.startsWith("/explore?near")?"active":""} aria-current={path.startsWith("/explore?near")?"page":undefined} onClick={()=>go("/explore?near=Chennai")}><MapPin size={22}/><span>Near me</span></button>
-    <button className={normalizedPath.startsWith("/featured")?"active":""} aria-current={normalizedPath.startsWith("/featured")?"page":undefined} onClick={()=>go("/featured")}><Sparkles size={22}/><span>Featured</span></button>
-  </nav>;
+  const goFromMore = (destination) => {
+    setMoreOpen(false);
+    go(destination);
+  };
+  const moreIsActive = ["/categories", "/featured", "/register", "/login"].some((prefix) => normalizedPath.startsWith(prefix));
+
+  return <>
+    {moreOpen && <button className="mobile-more-backdrop" aria-label="Close more menu" onClick={() => setMoreOpen(false)} />}
+    {moreOpen && <section className="mobile-more-sheet" aria-label="More destinations">
+      <div className="mobile-more-heading">
+        <div><span className="mobile-more-eyebrow">EXPLORE NAMMASPOT</span><strong>More to discover</strong></div>
+        <button className="mobile-more-close" aria-label="Close menu" onClick={() => setMoreOpen(false)}><X size={18}/></button>
+      </div>
+      <button className="mobile-more-link" onClick={() => goFromMore("/categories")}>
+        <span className="mobile-more-icon"><Grid2X2 size={19}/></span>
+        <span><strong>Categories</strong><small>Browse by what you love</small></span>
+        <ChevronRight size={17}/>
+      </button>
+      <button className="mobile-more-link" onClick={() => goFromMore("/featured")}>
+        <span className="mobile-more-icon"><Sparkles size={19}/></span>
+        <span><strong>Featured sellers</strong><small>Discover local favourites</small></span>
+        <ChevronRight size={17}/>
+      </button>
+      <div className="mobile-more-divider" />
+      {profile?.role === "seller" ? (
+        <button className="mobile-more-link" onClick={() => goFromMore("/dashboard")}>
+          <span className="mobile-more-icon"><Store size={19}/></span>
+          <span><strong>Seller dashboard</strong><small>Manage your catalogue</small></span>
+          <ChevronRight size={17}/>
+        </button>
+      ) : profile?.role === "admin" ? (
+        <button className="mobile-more-link" onClick={() => goFromMore("/nammaspot-control-panel/dashboard")}>
+          <span className="mobile-more-icon"><ShieldCheck size={19}/></span>
+          <span><strong>Admin console</strong><small>Manage NammaSpot</small></span>
+          <ChevronRight size={17}/>
+        </button>
+      ) : (
+        <>
+          <button className="mobile-more-link" onClick={() => goFromMore("/register")}>
+            <span className="mobile-more-icon"><Store size={19}/></span>
+            <span><strong>List your business</strong><small>Get discovered locally</small></span>
+            <ChevronRight size={17}/>
+          </button>
+          <button className="mobile-more-link" onClick={() => goFromMore("/login")}>
+            <span className="mobile-more-icon"><LogIn size={19}/></span>
+            <span><strong>Seller login</strong><small>Open your seller space</small></span>
+            <ChevronRight size={17}/>
+          </button>
+        </>
+      )}
+    </section>}
+    <nav className="mobile-bottom-nav" aria-label="Main navigation">
+      <button className={normalizedPath==="/"?"active":""} aria-current={normalizedPath==="/"?"page":undefined} onClick={()=>{setMoreOpen(false);go("/")}}>
+        <span className="mobile-nav-icon"><Home size={20}/></span><span className="mobile-nav-label">Home</span>
+      </button>
+      <button className={normalizedPath.startsWith("/explore")&&!isNearby?"active":""} aria-current={normalizedPath.startsWith("/explore")&&!isNearby?"page":undefined} onClick={()=>{setMoreOpen(false);go("/explore")}}>
+        <span className="mobile-nav-icon"><Compass size={20}/></span><span className="mobile-nav-label">Explore</span>
+      </button>
+      <button className={isNearby?"active":""} aria-current={isNearby?"page":undefined} onClick={()=>{setMoreOpen(false);go("/explore?near=Chennai")}}>
+        <span className="mobile-nav-icon"><MapPin size={20}/></span><span className="mobile-nav-label">Nearby</span>
+      </button>
+      <button className={normalizedPath.startsWith("/saved")?"active":""} aria-current={normalizedPath.startsWith("/saved")?"page":undefined} onClick={()=>{setMoreOpen(false);go("/saved")}}>
+        <span className="mobile-nav-icon"><Heart size={20}/></span><span className="mobile-nav-label">Saved</span>
+      </button>
+      <button className={moreOpen||moreIsActive?"active":""} aria-expanded={moreOpen} aria-haspopup="true" onClick={()=>setMoreOpen((open)=>!open)}>
+        <span className="mobile-nav-icon"><Menu size={20}/></span><span className="mobile-nav-label">More</span>
+      </button>
+    </nav>
+  </>;
 }
 
 async function shareSeller(seller) {

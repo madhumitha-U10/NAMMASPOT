@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 const QRCodeSVG = lazy(() => import("qrcode.react").then((module) => ({ default: module.QRCodeSVG })));
 import {
@@ -1103,6 +1103,44 @@ function ProfileEditor({ seller,categories,onSaved }) {
   );
 }
 
+function ImageCropDialog({ file, onCancel, onConfirm, busy }) {
+  const [src, setSrc] = useState("");
+  const [shape, setShape] = useState("1:1");
+  const [zoom, setZoom] = useState(1);
+  const [x, setX] = useState(50);
+  const [y, setY] = useState(50);
+  const [error, setError] = useState("");
+  const imageRef = React.useRef(null);
+  const ratios = { "1:1": 1, "4:5": 0.8, "3:2": 1.5, "16:9": 16/9 };
+  useEffect(() => { const url = URL.createObjectURL(file); setSrc(url); return () => URL.revokeObjectURL(url); }, [file]);
+  const applyCrop = async () => {
+    const img = imageRef.current;
+    if (!img || !img.naturalWidth) { setError("Wait for the preview to load."); return; }
+    try {
+      const ratio = ratios[shape], iw = img.naturalWidth, ih = img.naturalHeight;
+      let sw, sh;
+      if (iw / ih > ratio) { sh = ih / zoom; sw = sh * ratio; } else { sw = iw / zoom; sh = sw / ratio; }
+      const sx = Math.max(0, Math.min(iw - sw, (iw - sw) * x / 100));
+      const sy = Math.max(0, Math.min(ih - sh, (ih - sh) * y / 100));
+      let ow = 1200, oh = Math.round(1200 / ratio);
+      if (ratio < 1) { oh = 1200; ow = Math.round(1200 * ratio); }
+      const canvas = document.createElement("canvas"); canvas.width = ow; canvas.height = oh;
+      const ctx = canvas.getContext("2d"); if (!ctx) throw new Error("Could not prepare the crop.");
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high"; ctx.drawImage(img, sx, sy, sw, sh, 0, 0, ow, oh);
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/webp", 0.88));
+      if (!blob) throw new Error("Could not create cropped image.");
+      onConfirm(new File([blob], (file.name || "image").replace(/\.[^.]+$/, "") + "-cropped.webp", { type: "image/webp", lastModified: Date.now() }));
+    } catch (e) { setError(e.message || "Could not crop this image."); }
+  };
+  return <div className="ns-crop-backdrop"><section className="ns-crop-dialog" role="dialog" aria-modal="true" aria-labelledby="ns-crop-title">
+    <div className="ns-crop-head"><div><span className="eyebrow">IMAGE EDITOR</span><h2 id="ns-crop-title">Crop your image</h2><p>Adjust the frame before uploading.</p></div><button type="button" className="secondary-button" onClick={onCancel} disabled={busy} aria-label="Close crop editor"><X size={18}/></button></div>
+    <div className="ns-crop-aspects">{Object.keys(ratios).map(k => <button type="button" key={k} className={shape===k?"active":""} onClick={() => setShape(k)}>{k}</button>)}</div>
+    <div className="ns-crop-preview" style={{aspectRatio: String(ratios[shape])}}>{src && <img ref={imageRef} src={src} alt="Crop preview" style={{objectPosition: x+"% "+y+"%", transform: "scale("+zoom+")"}} onError={() => setError("This image cannot be previewed.")}/>}</div>
+    <div className="ns-crop-controls"><label>Zoom <b>{zoom.toFixed(1)}×</b><input type="range" min="1" max="3" step="0.05" value={zoom} onChange={e=>setZoom(Number(e.target.value))}/></label><label>Move left / right<input type="range" min="0" max="100" value={x} onChange={e=>setX(Number(e.target.value))}/></label><label>Move up / down<input type="range" min="0" max="100" value={y} onChange={e=>setY(Number(e.target.value))}/></label></div>
+    {error && <p className="inline-error" role="alert">{error}</p>}<div className="ns-crop-actions"><button type="button" className="secondary-button" onClick={onCancel} disabled={busy}>Cancel</button><button type="button" className="primary-button" onClick={applyCrop} disabled={busy}>{busy?"Uploading…":"Crop and upload"}</button></div>
+  </section></div>;
+}
+
 function ProductManager({ seller, products, categories, storageUsage, onStorageUsageChange, onChange }) {
   const blank={product_name:"",description:"",price:"",availability:true,image_url:"",category_id:""};
   const [form,setForm]=useState(blank);
@@ -1110,6 +1148,7 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
   const [state,setState]=useState({loading:false,error:""});
   const [galleryBusy,setGalleryBusy]=useState(false);
   const [primaryImageBusy,setPrimaryImageBusy]=useState(false);
+  const [cropTarget,setCropTarget]=useState(null);
 
   useEffect(() => {
     getSellerStorageUsage().then(onStorageUsageChange).catch(() => {});
@@ -1133,24 +1172,12 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
     setForm({product_name:product.name,description:product.description,price:product.price,availability:product.available,image_url:product.image_url || "",category_id:product.category_id || ""});
   };
 
-  const uploadGallery = async (event) => {
-    const file=event.target.files?.[0];
-    event.target.value="";
+  const uploadGallery = (event) => {
+    const file=event.target.files?.[0]; event.target.value="";
     if(!file || !editing) return;
     if(!["image/jpeg","image/png","image/webp"].includes(file.type)){setState({loading:false,error:"Unsupported image format. Use JPG, PNG or WebP."});return;}
     if(file.size>10*1024*1024){setState({loading:false,error:"This image is over 10 MB. Please choose a smaller image."});return;}
-    setGalleryBusy(true); setState({loading:false,error:""});
-    try{
-      const session=await getCurrentProfile();
-      const url=await uploadSellerMedia(file,session.id);
-      const current=products.find(p=>p.id===editing);
-      const order=(current?.images||[]).length;
-      await addProductGalleryImage(editing,seller.id,url,order);
-      const next=products.map(p=>p.id===editing?{...p,images:[...(p.images||[]),{id:"new-"+Date.now(),image_url:url,sort_order:order}]}:p);
-      onChange(next);
-      try{onStorageUsageChange(await getSellerStorageUsage());}catch{}
-    }catch(error){setState({loading:false,error:friendlyError(error)});}
-    finally{setGalleryBusy(false);}
+    setState({loading:false,error:""}); setCropTarget({file,kind:"gallery"});
   };
   const removeGallery = async (image) => {
     if(!window.confirm("Remove this catalogue image?")) return;
@@ -1168,28 +1195,32 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
     catch(error){setState({loading:false,error:friendlyError(error)});}
   };
 
-  const upload = async (event) => {
-    const input = event.target;
-    const file = input.files?.[0];
-    input.value = "";
-    if (!file) return;
-    if (!["image/jpeg","image/png","image/webp"].includes(file.type)) { setState({loading:false,error:"Unsupported image format. Use JPG, PNG or WebP."}); return; }
-    if (file.size > 10*1024*1024) { setState({loading:false,error:"This image is over 10 MB. Please choose a smaller image."}); return; }
-    setPrimaryImageBusy(true);
-    setState({loading:false,error:""});
+  const upload = (event) => {
+    const input=event.target, file=input.files?.[0]; input.value="";
+    if(!file) return;
+    if(!["image/jpeg","image/png","image/webp"].includes(file.type)){setState({loading:false,error:"Unsupported image format. Use JPG, PNG or WebP."});return;}
+    if(file.size>10*1024*1024){setState({loading:false,error:"This image is over 10 MB. Please choose a smaller image."});return;}
+    setState({loading:false,error:""}); setCropTarget({file,kind:"primary"});
+  };
+
+  const confirmCrop = async (croppedFile) => {
+    const target=cropTarget; if(!target) return;
+    const gallery=target.kind==="gallery"; if(gallery&&!editing) return;
+    gallery?setGalleryBusy(true):setPrimaryImageBusy(true); setState({loading:false,error:""});
     try {
-      const session = await getCurrentProfile();
-      if (!session?.id) throw new Error("Your seller session has expired. Sign in again before uploading an image.");
-      const url = await uploadSellerMedia(file, session.id);
-      if (!url || !/^https:\/\//i.test(url)) throw new Error("NammaSpot could not confirm the uploaded image URL. Please try again.");
-      setForm((current)=>({...current,image_url:url}));
+      const session=await getCurrentProfile();
+      if(!session?.id) throw new Error("Your seller session has expired. Sign in again before uploading an image.");
+      const url=await uploadSellerMedia(croppedFile,session.id);
+      if(!url || !/^https:\/\//i.test(url)) throw new Error("NammaSpot could not confirm the uploaded image URL. Please try again.");
+      if(gallery){
+        const current=products.find(p=>p.id===editing), order=(current?.images||[]).length;
+        await addProductGalleryImage(editing,seller.id,url,order);
+        onChange(products.map(p=>p.id===editing?{...p,images:[...(p.images||[]),{id:"new-"+Date.now(),image_url:url,sort_order:order}]}:p));
+      } else { setForm(current=>({...current,image_url:url})); }
       try { onStorageUsageChange(await getSellerStorageUsage()); } catch {}
-      setState({loading:false,error:""});
-    } catch (error) {
-      setState({loading:false,error:friendlyError(error)});
-    } finally {
-      setPrimaryImageBusy(false);
-    }
+      setState({loading:false,error:""}); setCropTarget(null);
+    } catch(error) { setState({loading:false,error:friendlyError(error)}); }
+    finally { gallery?setGalleryBusy(false):setPrimaryImageBusy(false); }
   };
 
   return (
@@ -1219,6 +1250,7 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
         {state.error && <div className="inline-error" role="alert" aria-live="assertive"><AlertCircle size={17}/>{state.error}</div>}
         <div className="button-row"><button className="primary-button" type="submit" disabled={state.loading||primaryImageBusy||galleryBusy}>{primaryImageBusy ? "Uploading image…" : state.loading ? "Saving…" : editing ? "Update product" : "Add product"}</button>{editing&&<button type="button" className="secondary-button" onClick={()=>{setEditing(null);setForm(blank);}}>Cancel</button>}</div>
       </form>
+      {cropTarget && <ImageCropDialog file={cropTarget.file} onCancel={()=>setCropTarget(null)} onConfirm={confirmCrop} busy={primaryImageBusy||galleryBusy}/>}
       <div className="dashboard-list">
         {products.length ? products.map((product)=>
           <article className="dashboard-item" key={product.id}>

@@ -1772,12 +1772,26 @@ function Empty({ title,text,actionLabel,onAction }) {
 }
 
 function MobileBottomNav({ path,go }) {
+  // Keep customer discovery navigation out of seller/admin workspaces and focused flows.
+  // The fixed mobile bar can otherwise cover dashboard controls, forms, and seller catalogues.
+  const normalizedPath = (path || "/").split("?")[0];
+  const hideOnPath = [
+    "/dashboard",
+    "/admin",
+    "/login",
+    "/register",
+    "/s/",
+    "/seller/",
+    "/not-found"
+  ];
+  if (hideOnPath.some((prefix) => normalizedPath.startsWith(prefix))) return null;
+
   return <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
-    <button className={path==="/"?"active":""} onClick={()=>go("/")}><Home size={22}/><span>Home</span></button>
-    <button className={path.startsWith("/explore")?"active":""} onClick={()=>go("/explore")}><Compass size={22}/><span>Explore</span></button>
-    <button className={path.startsWith("/saved")?"active":""} onClick={()=>go("/saved")}><Heart size={22}/><span>Saved</span></button>
-    <button className={path.startsWith("/explore?near")?"active":""} onClick={()=>go("/explore?near=Chennai")}><MapPin size={22}/><span>Near me</span></button>
-    <button className={path.startsWith("/featured")?"active":""} onClick={()=>go("/featured")}><Sparkles size={22}/><span>Featured</span></button>
+    <button className={normalizedPath==="/"?"active":""} aria-current={normalizedPath==="/"?"page":undefined} onClick={()=>go("/")}><Home size={22}/><span>Home</span></button>
+    <button className={normalizedPath.startsWith("/explore")?"active":""} aria-current={normalizedPath.startsWith("/explore")?"page":undefined} onClick={()=>go("/explore")}><Compass size={22}/><span>Explore</span></button>
+    <button className={normalizedPath.startsWith("/saved")?"active":""} aria-current={normalizedPath.startsWith("/saved")?"page":undefined} onClick={()=>go("/saved")}><Heart size={22}/><span>Saved</span></button>
+    <button className={path.startsWith("/explore?near")?"active":""} aria-current={path.startsWith("/explore?near")?"page":undefined} onClick={()=>go("/explore?near=Chennai")}><MapPin size={22}/><span>Near me</span></button>
+    <button className={normalizedPath.startsWith("/featured")?"active":""} aria-current={normalizedPath.startsWith("/featured")?"page":undefined} onClick={()=>go("/featured")}><Sparkles size={22}/><span>Featured</span></button>
   </nav>;
 }
 

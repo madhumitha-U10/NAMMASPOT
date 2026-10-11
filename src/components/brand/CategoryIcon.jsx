@@ -4,7 +4,7 @@ const line = { fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLin
 export default function CategoryIcon({ category = "", size = 46, className = "" }) {
   const name = String(category).trim().toLowerCase();
   let art;
-  if (/food|bakery|bake|cake|snack/.test(name)) art = <><path d="M12 20h24l-2-15H14z"/><path d="M17 13c0-4 4-4 4 0s4 4 4 0 4-4 4 0"/><path d="M9 20h30v5H9z"/></>;
+  if (/food|bakery|bake|cake|snack/.test(name)) art = <><path d="M9 25h28l-2 14H11z"/><path d="M7 22c0-3 3-5 6-5 1-5 6-7 10-4 4-3 9-1 10 4 4 0 7 2 7 5v3H7z"/><path d="M16 12V6m8 6V4m8 8V6"/><path d="M14 31h18"/></>;
   else if (/mehendi|henna/.test(name)) art = <><path d="M23 39c-8-3-12-10-11-19 1-5 5-8 9-5l2 4 3-4c4-3 8 0 9 5 1 9-4 16-12 19Z"/><path d="M23 34V17m0 8-5-4m5 9 5-5"/><circle cx="23" cy="12" r="2"/></>;
   else if (/bridal|makeup/.test(name)) art = <><path d="M23 7c-8 0-13 7-13 16s5 16 13 16 13-7 13-16S31 7 23 7Z"/><path d="M15 19l5 2m6 0 5-2M20 29c2 2 4 2 6 0"/><path d="M17 6c2-3 10-3 12 0"/></>;
   else if (/crochet|handmade|craft/.test(name)) art = <><path d="M12 13c0-4 5-6 8-2l7 8c3 3 0 8-4 6l-8-5c-5-3-8 1-6 5l5 8"/><path d="M27 9c4-3 8 1 6 5l-4 6m-7 11 5-5m-15-8 6-4m5 16 7 3"/></>;

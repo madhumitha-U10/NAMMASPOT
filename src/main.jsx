@@ -1393,7 +1393,8 @@ function AdminPage() {
   const [sellers,setSellers]=useState([]);
   const [categories,setCategories]=useState([]);
   const [tab,setTab]=useState("sellers");
-  const [statusFilter,setStatusFilter]=useState("all");
+  const [statusFilter,setStatusFilter]=useState("pending");
+  const [sellerSearch,setSellerSearch]=useState("");
   const [error,setError]=useState("");
   const [busy,setBusy]=useState(false);
   const [loading,setLoading]=useState(true);
@@ -1490,9 +1491,13 @@ function AdminPage() {
     acc[value] = (acc[value] || 0) + 1;
     return acc;
   }, {});
-  const visibleSellers = statusFilter === "all"
-    ? sellers
-    : sellers.filter((item) => (item.verification_status || "pending") === statusFilter);
+  const visibleSellers = sellers.filter((item) => {
+    const matchesStatus = statusFilter === "all" || (item.verification_status || "pending") === statusFilter;
+    const query = sellerSearch.trim().toLowerCase();
+    const matchesSearch = !query || [item.business_name, item.owner_name, item.contact, item.whatsapp_phone, item.location, item.category?.name]
+      .some((value) => String(value || "").toLowerCase().includes(query));
+    return matchesStatus && matchesSearch;
+  });
 
   if (loading && allowed === null) return <main className="page"><div className="page-title"><div className="eyebrow">ADMIN</div><h1>Loading moderation…</h1></div><CardSkeletonRow detailed/></main>;
   if (!allowed) return <main className="page"><ErrorState message={error || "Admin access is restricted."} retry={load}/></main>;
@@ -1557,48 +1562,55 @@ function AdminPage() {
       )}
 
       {tab==="sellers" &&
-        <>
-          <div className="category-row" aria-label="Seller status filters">
+        <section className="admin-sellers-management">
+          <div className="admin-sellers-heading">
+            <div>
+              <h2>Seller management</h2>
+              <p>Review new applications, update seller access, and manage existing accounts.</p>
+            </div>
+            <div className="admin-seller-total"><strong>{sellers.length}</strong><span>Total sellers</span></div>
+          </div>
+          <div className="admin-seller-status-tabs" aria-label="Filter sellers by status">
             {[
-              ["all","All",sellers.length],
-              ["pending","Pending",counts.pending || 0],
+              ["pending","Needs review",counts.pending || 0],
               ["approved","Approved",counts.approved || 0],
-              ["rejected","Rejected",counts.rejected || 0],
               ["suspended","Suspended",counts.suspended || 0],
+              ["rejected","Rejected",counts.rejected || 0],
+              ["all","All sellers",sellers.length],
             ].map(([value,label,count]) => (
-              <button key={value} className={statusFilter===value ? "active" : ""} onClick={()=>setStatusFilter(value)}>
-                {label} ({count})
+              <button type="button" key={value} className={statusFilter===value ? "active" : ""} onClick={()=>setStatusFilter(value)}>
+                <span>{label}</span><b>{count}</b>
               </button>
             ))}
           </div>
-
-          <div className="dashboard-list">
+          <label className="admin-seller-search"><Search size={18}/><input type="search" value={sellerSearch} onChange={(e)=>setSellerSearch(e.target.value)} placeholder="Search business, owner, phone, or location" aria-label="Search sellers"/></label>
+          <div className="admin-seller-results-line"><strong>{visibleSellers.length} {visibleSellers.length===1 ? "seller" : "sellers"}</strong><span>{statusFilter==="pending" ? "Waiting for your review" : statusFilter==="all" ? "All account statuses" : "Showing " + statusFilter + " accounts"}</span></div>
+          <div className="dashboard-list admin-seller-list">
             {loading ? <CardSkeletonRow detailed/> :
-              visibleSellers.length ? visibleSellers.map((seller)=>
-                <article className="dashboard-item" key={seller.id}>
-                  <div>
-                    <strong>{seller.business_name}</strong>
-                    <p><b>Owner:</b> {seller.owner_name || "Not provided"}</p>
-                    <p><b>Business phone:</b> {seller.contact || "Not provided"}</p>
-                    <p><b>WhatsApp:</b> {seller.whatsapp_phone || seller.contact || "Not provided"}</p>
-                    <p><b>Location:</b> {seller.location || "Not provided"}</p>
-                    <small>{seller.category?.name || "Uncategorised"} · {seller.verification_status || "pending"}</small>
+              visibleSellers.length ? visibleSellers.map((seller)=> {
+                const sellerStatus = seller.verification_status || "pending";
+                return <article className="dashboard-item admin-seller-card" key={seller.id}>
+                  <div className="admin-seller-details">
+                    <div className="admin-seller-title-row"><strong>{seller.business_name || "Unnamed business"}</strong><span className={"status-pill " + (sellerStatus==="approved" ? "status-ok" : sellerStatus==="pending" ? "status-warning" : "")}>{sellerStatus.charAt(0).toUpperCase()+sellerStatus.slice(1)}</span></div>
+                    <p><span>Owner</span>{seller.owner_name || "Not provided"}</p>
+                    <p><span>Phone</span>{seller.contact || "Not provided"}{(seller.whatsapp_phone && seller.whatsapp_phone!==seller.contact) ? " · WhatsApp: "+seller.whatsapp_phone : ""}</p>
+                    <p><span>Location</span>{seller.location || "Not provided"}</p>
+                    <small>{seller.category?.name || "Uncategorised"}</small>
                   </div>
-                  <div className="button-row">
-                    {seller.verification_status !== "approved" && <button disabled={busy} className="primary-button" onClick={()=>status(seller.id,"approved")}>approve</button>}
-                    {seller.verification_status !== "rejected" && <button disabled={busy} className="secondary-button" onClick={()=>status(seller.id,"rejected")}>reject</button>}
-                    {seller.verification_status !== "suspended" && <button disabled={busy} className="secondary-button" onClick={()=>status(seller.id,"suspended")}>suspend</button>}
-                    {seller.verification_status === "suspended" && <button disabled={busy} className="danger-button" onClick={()=>permanentlyDelete(seller)}><Trash2 size={15}/> Delete permanently</button>}
+                  <div className="admin-seller-actions">
+                    {sellerStatus !== "approved" && <button type="button" disabled={busy} className="primary-button" onClick={()=>status(seller.id,"approved")}>{sellerStatus==="suspended" ? "Restore access" : "Approve seller"}</button>}
+                    {sellerStatus === "pending" && <button type="button" disabled={busy} className="secondary-button" onClick={()=>status(seller.id,"rejected")}>Reject</button>}
+                    {sellerStatus === "approved" && <button type="button" disabled={busy} className="secondary-button" onClick={()=>status(seller.id,"suspended")}>Suspend access</button>}
+                    {sellerStatus === "rejected" && <button type="button" disabled={busy} className="secondary-button" onClick={()=>status(seller.id,"suspended")}>Suspend</button>}
+                    {sellerStatus === "suspended" && <button type="button" disabled={busy} className="danger-button" onClick={()=>permanentlyDelete(seller)}><Trash2 size={15}/> Delete permanently</button>}
                   </div>
-                </article>
-              ) : <Empty
-                title={statusFilter === "all" ? "No sellers found" : "No " + statusFilter + " sellers"}
-                text={statusFilter === "all"
-                  ? "The admin query returned zero seller rows. Use Refresh and check the signed-in admin account."
-                  : "There are no sellers in this status right now."}
+                </article>;
+              }) : <Empty
+                title={sellerSearch.trim() ? "No matching sellers" : statusFilter === "all" ? "No sellers found" : "No " + (statusFilter==="pending" ? "sellers waiting for review" : statusFilter + " sellers")}
+                text={sellerSearch.trim() ? "Try a business name, owner name, phone number, or location." : statusFilter === "pending" ? "New seller applications will appear here when submitted." : "There are no sellers in this view right now."}
               />}
           </div>
-        </>}
+        </section>}
 
       {tab==="reviews" &&
         <section className="admin-review-queue">

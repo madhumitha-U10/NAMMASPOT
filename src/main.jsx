@@ -1848,8 +1848,8 @@ function MobileBottomNav({ path,go,profile }) {
       <button className={normalizedPath==="/"?"active":""} aria-current={normalizedPath==="/"?"page":undefined} onClick={()=>{setMoreOpen(false);go("/")}}>
         <span className="mobile-nav-icon"><Home size={20}/></span><span className="mobile-nav-label">Home</span>
       </button>
-      <button className={normalizedPath.startsWith("/explore")&&!isNearby?"active":""} aria-current={normalizedPath.startsWith("/explore")&&!isNearby?"page":undefined} onClick={()=>{setMoreOpen(false);go("/explore")}}>
-        <span className="mobile-nav-icon"><Compass size={20}/></span><span className="mobile-nav-label">Explore</span>
+      <button className={normalizedPath.startsWith("/categories")?"active":""} aria-current={normalizedPath.startsWith("/categories")?"page":undefined} onClick={()=>{setMoreOpen(false);go("/categories")}}>
+        <span className="mobile-nav-icon"><Grid2X2 size={20}/></span><span className="mobile-nav-label">Category</span>
       </button>
       <button className={isNearby?"active":""} aria-current={isNearby?"page":undefined} onClick={()=>{setMoreOpen(false);go("/explore?near=Chennai")}}>
         <span className="mobile-nav-icon"><MapPin size={20}/></span><span className="mobile-nav-label">Nearby</span>

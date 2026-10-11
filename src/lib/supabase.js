@@ -83,7 +83,8 @@ export async function uploadSellerMedia(file, userId, bucket = "seller-media") {
       if (usage?.status === "blocked") { await recordUploadEvent("quota_exceeded",compressed.size,"Seller storage quota is full."); throw new Error("Your catalogue storage is full. Delete unused images or contact NammaSpot support to request a storage upgrade."); }
       if (Number(usage?.remaining_bytes) < compressed.size) { await recordUploadEvent("quota_exceeded",compressed.size,"Upload exceeds remaining seller storage."); throw new Error("This image cannot be uploaded because it exceeds your remaining storage. You have " + formatByteMessage(Number(usage?.remaining_bytes) || 0) + " available."); }
       if (compressed.size > Number(usage?.max_file_bytes)) { await recordUploadEvent("file_too_large",compressed.size,"Image exceeds assigned per-image limit."); throw new Error("This image exceeds your assigned per-image limit. Please choose a smaller image."); }
-      await recordUploadEvent("quota_exceeded",compressed.size,"Upload rejected by storage quota preflight.");\n      throw new Error("This image cannot be uploaded because the NammaSpot storage limit has been reached.");
+      await recordUploadEvent("quota_exceeded",compressed.size,"Upload rejected by storage quota preflight.");
+      throw new Error("This image cannot be uploaded because the NammaSpot storage limit has been reached.");
     }
   }
 
@@ -97,6 +98,7 @@ export async function uploadSellerMedia(file, userId, bucket = "seller-media") {
     });
 
   if (error) {
+    await recordUploadEvent(String(error.message || "").toLowerCase().includes("size") ? "file_too_large" : "upload_failed", compressed.size, error.message || "Storage upload failed.");
     if (error.statusCode === "413" || error.message?.toLowerCase().includes("too large")) {
       throw new Error("This image exceeds your assigned per-image limit. Please choose a smaller image.");
     }

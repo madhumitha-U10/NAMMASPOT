@@ -3257,3 +3257,46 @@ body { overflow-x:hidden; }
   }
   .ns-contact-tile-icon svg { width: 19px; height: 19px; }
 }
+
+
+/* Admin-controlled seller storage management */
+.ns-storage-admin{display:grid;gap:18px;min-width:0}
+.ns-storage-stats,.ns-storage-plan-counts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.ns-storage-stats>.dashboard-item,.ns-storage-plan-counts>.dashboard-item{margin:0;min-width:0}
+.ns-storage-stats small,.ns-storage-plan-counts small{display:block;color:var(--muted);font-size:12px;margin-bottom:8px}
+.ns-storage-stats strong,.ns-storage-plan-counts strong{display:block;font-size:clamp(17px,2vw,24px);overflow-wrap:anywhere}
+.ns-storage-settings{display:grid;gap:15px;min-width:0}
+.ns-storage-settings h3{margin:6px 0;font-size:21px}
+.ns-storage-settings p{margin:5px 0;color:var(--muted);line-height:1.5}
+.ns-storage-plan-editor{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.ns-storage-plan-edit{display:grid;align-content:start;gap:11px;border:1px solid var(--line);border-radius:16px;background:var(--card);padding:14px;min-width:0}
+.ns-storage-plan-edit>strong{color:var(--burgundy);font-size:17px}
+.ns-storage-plan-edit label,.ns-platform-settings-grid label,.ns-storage-edit-grid label{display:grid;gap:6px;font-size:12px;font-weight:750;color:var(--muted);min-width:0}
+.ns-storage-plan-edit input,.ns-platform-settings-grid input,.ns-storage-edit-grid input,.ns-storage-edit-grid select,.ns-storage-filters input,.ns-storage-filters select{width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fffefa;color:var(--ink)}
+.ns-platform-settings-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end}
+.ns-platform-settings-grid .primary-button{grid-column:1/-1;justify-self:start}
+.ns-storage-filters{display:grid;grid-template-columns:minmax(0,2fr) minmax(120px,1fr) minmax(130px,1fr);gap:10px}
+.ns-storage-seller{display:grid;gap:11px}
+.ns-storage-seller-heading{display:flex;align-items:start;justify-content:space-between;gap:12px}
+.ns-storage-seller-heading strong{font-size:17px;overflow-wrap:anywhere}
+.ns-storage-seller-heading p{margin:5px 0;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+.ns-storage-edit-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:end}
+.ns-storage-edit-grid .primary-button{min-height:42px}
+.ns-storage-admin .storage-usage-track{width:100%;height:9px;margin:8px 0;background:#ece9df;border-radius:99px;overflow:hidden}
+.ns-storage-admin .storage-usage-track span{display:block;height:100%;background:var(--burgundy);border-radius:99px;transition:width .2s ease}
+.ns-storage-admin .storage-warning .storage-usage-track span,.ns-storage-admin .storage-critical .storage-usage-track span{background:#c87920}
+.ns-storage-admin .storage-blocked .storage-usage-track span{background:#b42318}
+@media(max-width:800px){
+ .ns-storage-stats,.ns-storage-plan-counts{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ns-storage-plan-editor{grid-template-columns:1fr}
+ .ns-platform-settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ns-storage-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ns-storage-filters{grid-template-columns:1fr}
+}
+@media(max-width:480px){
+ .ns-storage-stats,.ns-storage-plan-counts{gap:8px}
+ .ns-storage-stats>.dashboard-item,.ns-storage-plan-counts>.dashboard-item{padding:12px}
+ .ns-platform-settings-grid,.ns-storage-edit-grid{grid-template-columns:1fr}
+ .ns-platform-settings-grid .primary-button{width:100%}
+ .ns-storage-plan-edit .secondary-button,.ns-storage-edit-grid .primary-button{width:100%}
+}

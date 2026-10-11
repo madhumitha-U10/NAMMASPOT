@@ -656,7 +656,11 @@ export async function adminStorageSellers() {
   if(error)throw error; return data||[];
 }
 export async function adminStorageAudit() {
-  const {data,error}=await needBackend().from("seller_storage_audit").select("id,seller_id,previous_plan_code,new_plan_code,previous_quota_bytes,new_quota_bytes,previous_max_file_bytes,new_max_file_bytes,changed_by,reason,created_at").order("created_at",{ascending:false}).limit(50);
+  const {data,error}=await needBackend().rpc("admin_storage_audit");
+  if(error)throw error; return data||[];
+}
+export async function adminStoragePlanAudit() {
+  const {data,error}=await needBackend().rpc("admin_storage_plan_audit");
   if(error)throw error; return data||[];
 }
 export async function adminPlatformStorageSettings() {

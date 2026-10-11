@@ -54,12 +54,13 @@ The connected Supabase project records these storage-management migrations:
 - Existing `seller-media` bucket: public read, allowed types JPEG/PNG/WebP, technical object limit 10,000,000 bytes.
 - Sellers: 1; storage assignments: 1.
 - Actual objects in `seller-media`: 3 files totalling 126,996 bytes at verification time.
-- Small/Medium/Large plan rows exist with the values listed above.
+- Small/Medium/Large plan rows exist with the values listed above; the existing seller remains on the preserved Custom allowance.
 - Storage INSERT and UPDATE policies call the server-side quota enforcement helpers; the new-seller assignment trigger exists.
-- The repository's production build completed successfully and the production alias was assigned to the ready deployment for commit `536bab3716bc2c83acc0e25d080b105c149b608a` at the time of verification.
+- The seven privileged admin storage RPCs inspected were `SECURITY DEFINER`, denied to `anon`, and checked `public.admins` before privileged work.
+- Vercel production deployment `dpl_J89Y8V8VbsJHCYajWt7GDjMT3MKX` was READY for commit `074b80eb43177e548e305bb0747640dd168fe88a`. The public homepage, JavaScript bundle, `robots.txt`, `sitemap.xml`, and `og-image.svg` returned HTTP 200 during smoke checks. Vercel's runtime-error aggregation reported no errors in the most recent hour checked.
 
 ## Important limits and caveats
 
 The Supabase project metadata available to this integration does **not** disclose the account's subscription tier or live bandwidth/egress metrics. The admin panel therefore labels its platform allowance as **configured**, not as a provider-reported live quota. Verify the actual plan and egress in the Supabase dashboard. Do not interpret the warning setting as a guarantee against provider-side throttling, pauses or extra costs.
 
-The Vercel production build verifies compilation and prerendering, but this integration cannot run an authenticated browser end-to-end test as a real seller and admin without their active sessions. Before treating this as fully QA-certified, test concurrent direct Storage uploads and admin plan changes with test seller/admin accounts.
+These checks do not replace authenticated browser end-to-end testing as a real seller and administrator. Upload-boundary tests, simultaneous direct Storage uploads, and admin plan changes still need real test sessions. Vercel Hobby runtime logs were not available for a 24-hour lookback, so the error check above is limited to the recent hour returned by the error aggregation API.

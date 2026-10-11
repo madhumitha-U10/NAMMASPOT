@@ -16,6 +16,12 @@ export default function CategoryIcon({ category = "", size = 46, className = "" 
   else if (/photo|camera/.test(name)) art = <><path d="M6 15h8l3-5h12l3 5h8v23H6z"/><circle cx="23" cy="26" r="7"/><circle cx="23" cy="26" r="3"/><path d="M33 20h1"/></>;
   else if (/beauty|salon|skin/.test(name)) art = <><path d="M18 7h10v5l-2 4v21H17V16l-2-4V7z"/><path d="M18 12h10M17 22h9"/><path d="M31 10c6 5 7 12 3 18"/></>;
   else if (/service|repair|tutor|clean|consult/.test(name)) art = <><path d="M16 7h14v7H16z"/><path d="M12 14h22v24H12z"/><path d="m18 26 4 4 8-9"/><path d="M7 20v13m30-13v13"/></>;
+  else if (/plant|flower|florist|garden|bouquet/.test(name)) art = <><path d="M23 39V21"/><path d="M23 29c-9 0-14-6-13-14 8-1 13 4 13 14Z"/><path d="M23 25c0-9 6-14 14-13 1 8-5 13-14 13Z"/><circle cx="23" cy="12" r="4"/><path d="M16 39h14"/></>;
+  else if (/tutor|education|class|learn|course|training|book/.test(name)) art = <><path d="m5 13 18-7 18 7-18 7-18-7Z"/><path d="M12 17v11c7 6 15 6 22 0V17"/><path d="M41 14v14"/></>;
+  else if (/tailor|stitch|alteration|sewing/.test(name)) art = <><path d="M9 8c-3-3-6 1-3 4l26 26c3 3 7-1 4-4L10 8Z"/><path d="m26 27 9-9M20 21l9-9M14 15l9-9"/><circle cx="34" cy="10" r="4"/></>;
+  else if (/pet|animal|groom/.test(name)) art = <><circle cx="13" cy="13" r="4"/><circle cx="23" cy="8" r="4"/><circle cx="33" cy="13" r="4"/><circle cx="37" cy="23" r="4"/><path d="M23 20c-7 0-13 7-12 13 1 5 7 4 12 2 5 2 11 3 12-2 1-6-5-13-12-13Z"/></>;
+  else if (/tech|computer|digital|mobile|electronic/.test(name)) art = <><rect x="8" y="7" width="30" height="23" rx="3"/><path d="M18 38h10m-5-8v8M15 13h16m-16 5h11"/></>;
+  else if (/other|misc|general/.test(name)) art = <><path d="m23 5 4.5 12.5L40 22l-12.5 4.5L23 39l-4.5-12.5L6 22l12.5-4.5L23 5Z"/><path d="m36 30 2.5 6.5L45 39l-6.5 2.5L36 48l-2.5-6.5L27 39l6.5-2.5L36 30Z"/></>;
   else art = <><path d="M23 40s-14-13-14-23a14 14 0 1 1 28 0c0 10-14 23-14 23Z"/><circle cx="23" cy="17" r="4.5"/></>;
   return <svg className={className} width={size} height={size} viewBox="0 0 46 46" aria-hidden="true" focusable="false" {...line}>{art}</svg>;
 }

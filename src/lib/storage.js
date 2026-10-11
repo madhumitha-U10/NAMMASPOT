@@ -61,5 +61,5 @@ export function formatBytes(bytes) {
   const value = Math.max(0, Number(bytes) || 0);
   if (value < 1000) return `${Math.round(value)} B`;
   if (value < 1000000) return `${(value / 1000).toFixed(0)} KB`;
-  return `${(value / 1000000).toFixed(2).replace(/\\.?0+$/, "")} MB`;
+  return `${(value / 1000000).toFixed(2)} MB`;
 }

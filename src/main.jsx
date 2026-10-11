@@ -1655,6 +1655,8 @@ function AdminStorageManagement() {
         <article className="dashboard-item"><small>Actual seller-media storage</small><strong>{formatBytes(totalUsed)}</strong></article>
         <article className="dashboard-item"><small>Seller quotas assigned</small><strong>{formatBytes(totalQuota)}</strong></article>
         <article className="dashboard-item"><small>Configured platform allowance</small><strong>{formatBytes(overview?.quota_bytes||settings?.configured_storage_allowance_bytes||0)}</strong></article>
+        <article className="dashboard-item"><small>Remaining configured capacity</small><strong>{formatBytes(Math.max(0,Number(overview?.quota_bytes||settings?.configured_storage_allowance_bytes||0)-Number(overview?.used_bytes||0)))}</strong></article>
+        <article className="dashboard-item"><small>Near / over seller quota</small><strong>{rows.filter(r=>Number(r.used_percent||0)>=80).length} / {rows.filter(r=>Number(r.used_percent||0)>=100).length}</strong></article>
       </div>
       <div className="ns-storage-plan-counts">
         {["small","medium","large","custom"].map(code=><div className="dashboard-item" key={code}><small>{code[0].toUpperCase()+code.slice(1)} plan</small><strong>{countPlan(code)} sellers</strong></div>)}

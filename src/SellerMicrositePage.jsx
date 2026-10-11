@@ -162,131 +162,45 @@ export default function SellerMicrositePage({go,slug}){
   const share=()=>setShareOpen(true);
   const wa=whatsappUrl(seller);
   const productWa=p=>whatsappUrl(seller,p);
-  return <main className="seller-microsite ns-seller-profile ns-reference-layout">
-    <aside className="ns-left-sidebar">
-      <button className="ns-side-brand" onClick={()=>go("/")}>NammaSpot</button>
-      <div className="ns-side-tagline">Independent Sellers <span>•</span> Real People <span>•</span> Genuine Products</div>
-      <nav className="ns-side-nav" aria-label="NammaSpot navigation">
-        <button className="active" onClick={()=>go("/")}><Home size={18}/> {isTamil?"முகப்பு":"Home"}</button>
-        <button onClick={()=>go("/explore")}><Compass size={18}/> {isTamil?"தேடுக":"Explore"}</button>
-        <button onClick={()=>go("/categories")}><Grid2X2 size={18}/> {isTamil?"வகைகள்":"Categories"}</button>
-        <button onClick={()=>go("/explore?near=1")}><Navigation size={18}/> {isTamil?"அருகில்":"Nearby"}</button>
-        <button onClick={()=>go("/saved")}><Bookmark size={18}/> {isTamil?"சேமித்தவை":"Saved"}</button>
-      </nav>
-      <div className="ns-side-divider"/>
-      <button className="ns-side-account" onClick={()=>go("/login")}><UserRound size={18}/> {isTamil?"என் கணக்கு":"My Account"}</button>
-      <button className="ns-language-toggle" type="button" onClick={()=>setLanguage(isTamil?"en":"ta")}>{isTamil?"English":"தமிழ்"}</button>
-      <div className="ns-side-local-note">Support Sellers<br/>Discover Great Finds ♡</div>
-    </aside>
-
-    <section className="ns-center-column">
-      <header className="ns-reference-topbar">
-        <button className="ns-mobile-back" onClick={()=>go("/explore")} aria-label="Back"><ArrowLeft size={18}/></button>
-        <div className="ns-reference-search"><Search size={17}/><input aria-label="Search NammaSpot" placeholder="Search for sellers, products, categories..." onFocus={()=>go("/explore")}/></div>
-        <div className="ns-reference-top-actions">
-          <span className="ns-location"><MapPin size={16}/> Chennai <span>⌄</span></span>
-          <button className="icon-button" onClick={()=>setSaved(!saved)} aria-label="Save seller"><Heart size={20} fill={saved?"currentColor":"none"}/></button>
-          <button className="icon-button" onClick={share} aria-label="Share seller"><Share2 size={19}/></button>
-          <button className="ns-account-dot" aria-label="Account"><UserRound size={18}/></button>
-        </div>
-      </header>
-
-      <div className="ns-seller-cover">
-        {seller.cover_image_url&&<img src={seller.cover_image_url} alt="" />}
+  const [catalogueQuery,setCatalogueQuery]=useState("");
+  const filteredProducts=products.filter(p=>String(p.name||"").toLowerCase().includes(catalogueQuery.toLowerCase()));
+  return <main className="seller-microsite ns-seller-profile ns-reference-layout ns-mobile-redesign">
+    <header className="ns-mobile-brandbar">
+      <button onClick={()=>go("/explore")} aria-label="Back to explore"><ArrowLeft size={21}/></button>
+      <div><strong>NammaSpot</strong><small>Local Sellers · Tamil Nadu</small></div>
+      <button onClick={share} aria-label="Share seller"><Share2 size={20}/></button>
+    </header>
+    <section className="ns-mobile-seller-head">
+      <div className="ns-mobile-seller-avatar">{seller.profile_image_url?<img src={seller.profile_image_url} alt={seller.business_name+" logo"}/>:seller.business_name?.charAt(0)}</div>
+      <div className="ns-mobile-seller-info">
+        <h1>{esc(seller.business_name)} {seller.verified&&<CheckCircle className="ns-inline-verified" size={20} aria-label="Verified seller"/>}</h1>
+        <p className="ns-mobile-verified-line">{seller.verified&&<span className="ns-mobile-verified-dot">✓</span>}Verified seller · {esc(seller.category?.name||"Local business")}</p>
+        <p className="ns-mobile-bio">{esc(seller.description||"Discover this local seller on NammaSpot.")}</p>
+        <p className="ns-mobile-location"><MapPin size={16}/>{esc(seller.location||"Chennai, Tamil Nadu")}</p>
       </div>
-
-      <section className="ns-reference-seller-head">
-        <div className="ns-reference-avatar">{seller.profile_image_url?<img src={seller.profile_image_url} alt={seller.business_name+" logo"}/>:seller.business_name?.charAt(0)}</div>
-        <div className="ns-reference-seller-copy">
-          {seller.category?.name && <div className="eyebrow">{esc(seller.category.name)}</div>}
-          <h1>{esc(seller.business_name)} {seller.verified&&<CheckCircle className="ns-inline-verified" size={17}/>}</h1>
-          <div className="ns-handle">{seller.slug?("@"+seller.slug):""} <span className="ns-verified-pill">{seller.verified?"✓ Verified Seller":"NammaSpot Seller"}</span></div>
-          <div className="ns-reference-location"><MapPin size={15}/>{esc(seller.location||"Chennai, Tamil Nadu")}</div>
-          <p>{esc(seller.description||"Seller on NammaSpot")}</p>
-          <div className="ns-reference-stats">
-            <span><b>{products.length}</b> Products</span>
-            <span><b>{seller.category?.name||"Shop"}</b> Type</span>
-            <span><b>{seller.category?.name||"Shop"}</b> Category</span>
-          </div>
-        </div>
-        <div className="ns-reference-actions">
-          {settings.tagline && <div className="ns-daily-update" title="Seller daily update">
-            <CalendarDays size={14}/>
-            <div><small>{new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short"}).format(new Date())}</small><span>{esc(settings.tagline)}</span></div>
-          </div>}
-          <div className="ns-contact-action-row" aria-label="Contact and share seller">
-            {wa&&<a className="ns-contact-tile" href={wa} target="_blank" rel="noreferrer"><span className="ns-contact-tile-icon"><MessageCircle size={22}/></span><span>Enquire on WhatsApp</span></a>}
-            {seller.contact&&<a className="ns-contact-tile" href={"tel:"+seller.contact}><span className="ns-contact-tile-icon"><Phone size={22}/></span><span>Call</span></a>}
-            <a className="ns-contact-tile" href={seller.location_url||("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(seller.location||seller.city||seller.business_name||"Tamil Nadu"))} target="_blank" rel="noreferrer"><span className="ns-contact-tile-icon"><MapPin size={22}/></span><span>Location</span></a>
-            <button type="button" className="ns-contact-tile" onClick={share}><span className="ns-contact-tile-icon"><Share2 size={22}/></span><span>Share</span></button>
-          </div>
-
-        </div>
-      </section>
-
-      <div className="ns-reference-tabs">
-        <a className="active" href="#catalogue">Catalogue</a>
-        <a href="#about">About</a>
-        <a href="#reviews">Reviews</a>
-      </div>
-
-      <section id="catalogue" className="ns-profile-section ns-reference-catalogue">
-        <div className="ns-reference-section-head">
-          <div><h2>Our Catalogue</h2><p>Browse products and services from this seller.</p></div>
-          <div className="ns-catalogue-search"><Search size={15}/><input placeholder="Search products..." aria-label="Search products"/></div>
-        </div>
-        {products.length?<div className="microsite-product-grid ns-reference-product-grid">{products.map(p=><MiniProduct key={p.id} p={p} onOpen={()=>setProduct(p)} onEnquire={productWa(p)}/>)}</div>:<div className="empty-state"><h2>Catalogue coming soon</h2><p>This seller has not added products yet.</p></div>}
-      </section>
-
-      <section id="about" className="ns-profile-section ns-reference-about">
-        <div className="eyebrow">ABOUT THIS SELLER</div>
-        <h2>About</h2>
-        <p>{esc(seller.description||"This seller is part of the NammaSpot community.")}</p>
-      </section>
-
-      <section id="reviews" className="ns-profile-section ns-reference-reviews">
-        <ReviewPanel seller={seller}/>
-      </section>
-
-      <footer className="microsite-footer">NammaSpot · Independent sellers, catalogues & connections</footer>
     </section>
-
-    <aside className="ns-right-sidebar">
-      <section className="ns-right-card ns-contact-card">
-        <h3>Contact Seller</h3>
-        <p>Have a question? Reach out directly to the seller.</p>
-        {wa&&<><a className="primary-button full-button" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp</a><a className="secondary-button full-button" href={wa} target="_blank" rel="noreferrer"><Send size={16}/> Enquire on WhatsApp</a></>}
-        {seller.contact&&<a className="secondary-button full-button" href={"tel:"+seller.contact}><Phone size={16}/> Call</a>}
-        <button className="secondary-button full-button" onClick={share}><Share2 size={16}/> Share</button>
-      </section>
-
-      <section className="ns-right-card" id="business-information">
-        <h3>Business Information</h3>
-        <div className="ns-right-label">About</div>
-        <p>{esc(seller.description||"Seller on NammaSpot")}</p>
-        {seller.contact&&<a className="ns-right-contact" href={"tel:"+seller.contact}><Phone size={15}/>{seller.contact}</a>}
-        {seller.whatsapp_phone&&<a className="ns-right-contact" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={15}/>{seller.whatsapp_phone}</a>}
-        {seller.instagram_url&&<a className="ns-right-contact" href={seller.instagram_url} target="_blank" rel="noreferrer"><Camera size={15}/>Instagram</a>}
-        <div className="ns-right-divider"/>
-        <div className="ns-right-label">Opening Hours</div>
-        {data.hours.length>0&&<div className="ns-right-hours">{data.hours.filter(x=>x.is_open).slice(0,1).map(h=><span key={h.day_of_week}>{days[h.day_of_week].slice(0,3)} - Sat <b>{(h.ranges||[]).map(r=>r.open+" - "+r.close).join(" · ")}</b></span>)}<span className={status?.open?"ns-open":"ns-closed"}>{status?.open?"Open now":"Closed now"}</span></div>}
-        <div className="ns-right-divider"/>
-        <div className="ns-right-label">Location</div>
-        <p>{esc(seller.location||"Chennai, Tamil Nadu")}</p>
-        {seller.location_url&&<a className="secondary-button ns-map-button" href={seller.location_url} target="_blank" rel="noreferrer"><Navigation size={14}/> View on Map</a>}
-        <div className="ns-map-placeholder"><MapPin size={24}/><span>{esc(seller.location||"Chennai")}</span></div>
-      </section>
-
-      <section className="ns-right-card ns-similar-card">
-        <div className="ns-similar-head"><h3>Similar Sellers</h3><button onClick={()=>go("/explore")}>See all →</button></div>
-        <div className="ns-similar-items">
-          
-          <div><span><Star size={17}/></span><small>{seller.category?.name||"Shop"}</small><button>Follow</button></div>
-          <div><span><Heart size={17}/></span><small>Nearby Seller</small><button>Follow</button></div>
-        </div>
-      </section>
-    </aside>
-
+    {settings.tagline&&<section className="ns-mobile-update"><CalendarDays size={24}/><div><small>UPDATE FROM SELLER · {new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short"}).format(new Date())}</small><p>{esc(settings.tagline)}</p></div></section>}
+    <section className="ns-mobile-stats" aria-label="Seller details">
+      <div><b>{products.length}</b><span>Products</span></div><div><b>{esc(seller.category?.name||"Local")}</b><span>Category</span></div>
+    </section>
+    <section className="ns-mobile-contact">
+      {wa&&<a className="ns-mobile-whatsapp" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={22}/> Enquiry on WhatsApp</a>}
+      <div className="ns-mobile-contact-row">
+        {seller.contact&&<a href={"tel:"+seller.contact}><Phone size={20}/><span>Call</span></a>}
+        {seller.instagram_url&&<a href={seller.instagram_url} target="_blank" rel="noreferrer"><Camera size={20}/><span>Instagram</span></a>}
+        <a href={seller.location_url||("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(seller.location||seller.city||seller.business_name||"Tamil Nadu"))} target="_blank" rel="noreferrer"><MapPin size={20}/><span>Directions</span></a>
+        <button onClick={share}><Share2 size={20}/><span>Share</span></button>
+      </div>
+    </section>
+    <nav className="ns-mobile-tabs" aria-label="Seller page sections"><a className="active" href="#catalogue">Catalogue</a><a href="#about">About</a><a href="#reviews">Reviews</a></nav>
+    <section id="catalogue" className="ns-mobile-catalogue">
+      <div className="ns-mobile-search"><Search size={19}/><input value={catalogueQuery} onChange={e=>setCatalogueQuery(e.target.value)} placeholder="Search products..." aria-label="Search products"/></div>
+      {filteredProducts.length?<div className="ns-mobile-product-grid">{filteredProducts.map(p=><article className="ns-mobile-product" key={p.id}><button className="ns-mobile-product-image" onClick={()=>setProduct(p)} aria-label={"View "+p.name}>{p.image_url?<img src={p.image_url} alt={p.name} loading="lazy"/>:<span>{String(p.name||"").charAt(0)}</span>}</button><div className="ns-mobile-product-copy"><h3>{esc(p.name)}</h3><strong>₹{p.price}</strong>{productWa(p)&&<a href={productWa(p)} target="_blank" rel="noreferrer"><MessageCircle size={16}/> Enquire</a>}</div></article>)}
+      <article className="ns-mobile-coming-soon"><span>✧</span><strong>More products<br/>coming soon</strong><small>♡</small></article></div>:<div className="ns-mobile-coming-soon ns-mobile-empty"><span>✧</span><strong>{catalogueQuery?"No matching products":"More products coming soon"}</strong><small>{catalogueQuery?"Try another search":"This seller will add more soon ♡"}</small></div>}
+    </section>
+    <section id="about" className="ns-mobile-about"><h2>About</h2><p>{esc(seller.description||"This seller is part of the NammaSpot community.")}</p><p><MapPin size={16}/>{esc(seller.location||"Chennai, Tamil Nadu")}</p></section>
+    <section id="reviews" className="ns-mobile-reviews"><ReviewPanel seller={seller}/></section>
+    <nav className="ns-mobile-bottom-nav" aria-label="Main navigation"><button onClick={()=>go("/")}><Home size={21}/><span>Home</span></button><button onClick={()=>go("/explore")}><Compass size={21}/><span>Explore</span></button><button onClick={()=>go("/saved")}><Heart size={21}/><span>Saved</span></button><button onClick={()=>go("/explore?near=1")}><Navigation size={21}/><span>Near me</span></button><button onClick={()=>go("/featured")}><Star size={21}/><span>Featured</span></button></nav>
     {shareOpen&&<SellerShareModal seller={seller} url={sellerPublicUrl(seller.slug)} onClose={()=>setShareOpen(false)}/>}
     {product&&<ProductModal product={product} onClose={()=>setProduct(null)} onEnquire={productWa(product)}/>}
   </main>;

@@ -190,11 +190,6 @@ export default function SellerMicrositePage({go,slug}){
       <div><strong>NammaSpot</strong><small>Local Sellers · Tamil Nadu</small></div>
       <button onClick={share} aria-label="Share seller"><Share2 size={20}/></button>
     </header>
-    <section className="ns-catalogue-cover" aria-label={esc(seller.business_name)+" catalogue cover"}>
-      {(seller.cover_image_url||seller.banner_image_url)&&<img className="ns-catalogue-cover-photo" src={seller.cover_image_url||seller.banner_image_url} alt="" loading="eager"/>}
-      <div className="ns-catalogue-cover-shade"/>
-      <div className="ns-catalogue-cover-content"><span className="ns-catalogue-cover-brand">NAMMASPOT · LOCAL FINDS</span><div className="ns-catalogue-cover-logo">{seller.profile_image_url?<img src={seller.profile_image_url} alt=""/>:<span>{String(seller.business_name||"N").trim().charAt(0).toUpperCase()}</span>}</div><h2>{esc(seller.business_name||"Local Seller")}</h2><p>{esc(seller.category?.name||"Local business")} {seller.location?"· "+esc(seller.location):"· Tamil Nadu"}</p><span className="ns-catalogue-cover-label">EXPLORE THE CATALOGUE ↓</span></div>
-    </section>
     <section className="ns-mobile-seller-head">
       <div className="ns-mobile-seller-avatar">{seller.profile_image_url?<img src={seller.profile_image_url} alt={seller.business_name+" logo"}/>:seller.business_name?.charAt(0)}</div>
       <div className="ns-mobile-seller-info">

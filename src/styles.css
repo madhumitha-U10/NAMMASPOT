@@ -3740,3 +3740,41 @@ body { overflow-x:hidden; }
  .ns-mobile-catalogue{padding-left:28px;padding-right:28px}
 }
 @media(prefers-reduced-motion:reduce){.ns-mobile-redesign *{scroll-behavior:auto!important;transition:none!important}}
+
+
+/* The final Other category is a clear, full-width browse row on every screen. */
+.category-tile-other{
+  grid-column:1 / -1;
+  min-height:76px;
+  padding:12px 18px;
+  flex-direction:row;
+  justify-content:flex-start;
+  gap:14px;
+  text-align:left;
+}
+.category-tile-other .category-tile-icon{
+  width:48px;
+  height:48px;
+  flex:0 0 48px;
+  border-radius:16px;
+  background:#f1e6e0;
+  color:var(--burgundy);
+}
+.category-tile-other .category-tile-name{
+  flex:1;
+  text-align:left;
+  overflow-wrap:normal;
+  word-break:normal;
+  hyphens:none;
+}
+.category-tile-other .category-tile-arrow{
+  position:static;
+  flex:0 0 22px;
+  opacity:1;
+  color:var(--burgundy);
+}
+.category-tile-name{
+  overflow-wrap:normal;
+  word-break:normal;
+  hyphens:none;
+}

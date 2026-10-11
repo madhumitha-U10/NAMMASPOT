@@ -507,7 +507,7 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
 const chennaiCategories = [
   "Food & Bakery", "Mehendi", "Bridal Makeup", "Crochet & Handmade",
   "Jewellery", "Boutique & Fashion", "Home Decor", "Gifts", "Art",
-  "Photography", "Beauty", "Services"
+  "Photography", "Beauty", "Services", "Other"
 ];
 
 function CategoriesPage({ go }) {
@@ -515,7 +515,7 @@ function CategoriesPage({ go }) {
   const knownCategoryNames = new Set([
     ...chennaiCategories, "Food", "Bakery", "Henna", "Makeup", "Crochet", "Handmade",
     "Crafts", "Jewelry", "Accessories", "Accessory", "Boutique", "Fashion",
-    "Home & Decor", "Home", "Decor", "Gift", "Photo", "Service"
+    "Home & Decor", "Home", "Decor", "Gift", "Photo", "Service", "Other"
   ].map((name) => name.toLowerCase()));
   const customCategories = (state.data || []).map((item) => item.name).filter((name) =>
     !knownCategoryNames.has(String(name).trim().toLowerCase())
@@ -531,7 +531,7 @@ function CategoriesPage({ go }) {
       {state.loading ? <CardSkeletonRow detailed/> :
         <div className="category-grid-large">
           {categories.map((category) => (
-            <button className="category-tile" key={category} onClick={() => go("/explore?cat=" + encodeURIComponent(category))} aria-label={"Browse " + category}>
+            <button className={"category-tile" + (category === "Other" ? " category-tile-other" : "")} key={category} onClick={() => go("/explore?cat=" + encodeURIComponent(category))} aria-label={"Browse " + category}>
               <span className="category-tile-icon"><CategoryIcon category={category} size={34}/></span>
               <span className="category-tile-name">{category}</span>
               <span className="category-tile-arrow" aria-hidden="true"><ChevronRight size={15}/></span>

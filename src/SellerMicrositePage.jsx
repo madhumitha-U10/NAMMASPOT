@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useRef,useState} from "react";
-import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send,Heart,Home,Compass,Grid2X2,Bookmark,UserRound,Search,Navigation,Star,Instagram,CalendarDays} from "lucide-react";
+import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send,Heart,Home,Compass,Grid2X2,Bookmark,UserRound,Search,Navigation,Star,Camera,CalendarDays} from "lucide-react";
 import {QRCodeCanvas} from "qrcode.react";
 import {createReview,getPublicReviews} from "./lib/api";
 import {getMicrosite,sellerPublicUrl} from "./lib/microsite";
@@ -189,7 +189,7 @@ export default function SellerMicrositePage({go,slug}){
       {wa&&<a className="ns-mobile-whatsapp" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={22}/> Enquiry on WhatsApp</a>}
       <div className="ns-mobile-contact-row">
         {seller.contact&&<a href={"tel:"+seller.contact}><Phone size={20}/><span>Call</span></a>}
-        {seller.instagram_url&&<a href={seller.instagram_url} target="_blank" rel="noreferrer"><Instagram size={20}/><span>Instagram</span></a>}
+        {seller.instagram_url&&<a href={seller.instagram_url} target="_blank" rel="noreferrer"><Camera size={20}/><span>InstagramIcon</span></a>}
         <a href={seller.location_url||("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(seller.location||seller.city||seller.business_name||"Tamil Nadu"))} target="_blank" rel="noreferrer"><MapPin size={20}/><span>Directions</span></a>
         <button onClick={share}><Share2 size={20}/><span>Share</span></button>
       </div>

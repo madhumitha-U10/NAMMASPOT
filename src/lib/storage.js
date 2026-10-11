@@ -1,9 +1,9 @@
-export const MAX_SELLER_IMAGE_BYTES = 512000;
-export const MAX_SELLER_IMAGE_LABEL = "500 KB";
-export const SELLER_STORAGE_QUOTA_BYTES = 50 * 1024 * 1024;
-export const SELLER_STORAGE_QUOTA_LABEL = "50 MB";
-export const SELLER_STORAGE_WARNING_BYTES = 40 * 1024 * 1024;
-export const SELLER_STORAGE_WARNING_LABEL = "40 MB";
+export const MAX_SELLER_IMAGE_BYTES = 1000000;
+export const MAX_SELLER_IMAGE_LABEL = "1 MB";
+export const SELLER_STORAGE_QUOTA_BYTES = 25000000;
+export const SELLER_STORAGE_QUOTA_LABEL = "25 MB";
+export const SELLER_STORAGE_WARNING_BYTES = 20000000;
+export const SELLER_STORAGE_WARNING_LABEL = "20 MB";
 export const MAX_SOURCE_IMAGE_BYTES = 10 * 1024 * 1024;
 export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
@@ -58,8 +58,8 @@ export function sanitizeText(value, max = 1000) {
 }
 
 export function formatBytes(bytes) {
-  const value = Number(bytes) || 0;
-  if (value < 1024) return `${value} B`;
-  if (value < 1024 * 1024) return `${(value / 1024).toFixed(0)} KB`;
-  return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+  const value = Math.max(0, Number(bytes) || 0);
+  if (value < 1000) return `${Math.round(value)} B`;
+  if (value < 1000000) return `${(value / 1000).toFixed(0)} KB`;
+  return `${(value / 1000000).toFixed(2).replace(/\\.?0+$/, "")} MB`;
 }

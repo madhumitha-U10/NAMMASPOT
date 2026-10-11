@@ -47,6 +47,8 @@ import {
   adminStorageUsage,
   adminStoragePlans,
   adminStorageSellers,
+  adminStorageFiles,
+  adminStorageEvents,
   adminStorageAudit,
   adminPlatformStorageSettings,
   adminAssignSellerStorage,
@@ -1550,6 +1552,8 @@ function AdminStorageManagement() {
   const [rows,setRows]=useState([]);
   const [plans,setPlans]=useState([]);
   const [audit,setAudit]=useState([]);
+  const [events,setEvents]=useState([]);
+  const [fileDetails,setFileDetails]=useState({});
   const [settings,setSettings]=useState(null);
   const [overview,setOverview]=useState(null);
   const [loading,setLoading]=useState(true);
@@ -1568,10 +1572,10 @@ function AdminStorageManagement() {
   const load=async()=>{
     setLoading(true);setError("");
     try {
-      const [nextRows,nextPlans,nextAudit,nextSettings,nextOverview]=await Promise.all([
-        adminStorageSellers(),adminStoragePlans(),adminStorageAudit(),adminPlatformStorageSettings(),adminStorageUsage()
+      const [nextRows,nextPlans,nextAudit,nextSettings,nextOverview,nextEvents]=await Promise.all([
+        adminStorageSellers(),adminStoragePlans(),adminStorageAudit(),adminPlatformStorageSettings(),adminStorageUsage(),adminStorageEvents()
       ]);
-      setRows(nextRows);setPlans(nextPlans);setAudit(nextAudit);setSettings(nextSettings);setOverview(Array.isArray(nextOverview)?nextOverview[0]:nextOverview);
+      setRows(nextRows);setPlans(nextPlans);setAudit(nextAudit);setSettings(nextSettings);setOverview(Array.isArray(nextOverview)?nextOverview[0]:nextOverview);setEvents(nextEvents);
       setPlanDrafts(Object.fromEntries(nextPlans.filter(p=>p.code!=="custom").map(p=>[p.code,{quota:bytesToMb(p.quota_bytes),max:bytesToMb(p.max_file_bytes)}])));
       setPlatformDraft({allowance:bytesToMb(nextSettings.configured_storage_allowance_bytes)/1000,warning:nextSettings.warning_percent,critical:nextSettings.critical_percent,emergency:nextSettings.emergency_percent});
       setEdits(Object.fromEntries(nextRows.map(r=>[r.seller_id,{planCode:r.plan_code,quota:bytesToMb(r.quota_bytes),max:bytesToMb(r.max_file_bytes),reason:""}])));
@@ -1593,6 +1597,12 @@ function AdminStorageManagement() {
   const countPlan=(code)=>rows.filter(r=>r.plan_code===code).length;
   const setEdit=(id,patch)=>setEdits(prev=>({...prev,[id]:{...prev[id],...patch}}));
 
+  const toggleFiles=async(row)=>{
+    if(fileDetails[row.seller_id]){setFileDetails(prev=>{const next={...prev};delete next[row.seller_id];return next;});return;}
+    setBusy(true);setError("");
+    try{const files=await adminStorageFiles(row.seller_id);setFileDetails(prev=>({...prev,[row.seller_id]:files}));}
+    catch(e){setError(friendlyError(e));}finally{setBusy(false);}
+  };
   const saveSeller=async(row)=>{
     const draft=edits[row.seller_id];
     if(!draft)return;
@@ -1692,6 +1702,8 @@ function AdminStorageManagement() {
             <div className="storage-usage-track" role="progressbar" aria-valuenow={Math.min(100,pct)} aria-valuemin="0" aria-valuemax="100"><span style={{width:Math.min(100,pct)+"%"}}/></div>
             <small>{row.file_count} files · maximum {formatBytes(row.max_file_bytes)} per image · last plan change {row.last_plan_change?new Date(row.last_plan_change).toLocaleString("en-IN"):"not recorded"} · admin ID {row.last_changed_by||"migration"}</small>
             {over&&<p className="inline-error">This seller is over quota. Existing images are preserved; new uploads are blocked until usage falls below the limit.</p>}
+            <button type="button" className="secondary-button" disabled={busy} onClick={()=>toggleFiles(row)}>{fileDetails[row.seller_id]?"Hide uploaded files":"View uploaded files ("+row.file_count+")"}</button>
+            {fileDetails[row.seller_id]&&<div className="ns-storage-file-list">{fileDetails[row.seller_id].map(file=><div key={file.object_name} className="ns-storage-file-row"><div><strong>{file.object_name.split("/").slice(1).join("/")}</strong><small>{file.content_type||"Image"} · {new Date(file.created_at).toLocaleString("en-IN")}</small></div><span>{formatBytes(file.size_bytes)}</span></div>)}{!fileDetails[row.seller_id].length&&<small>No stored files were found.</small>}</div>}
             <div className="ns-storage-edit-grid">
               <label>Plan<select value={d.planCode} onChange={e=>setEdit(row.seller_id,{planCode:e.target.value})}>{["small","medium","large","custom"].map(p=><option key={p} value={p}>{p[0].toUpperCase()+p.slice(1)}</option>)}</select></label>
               {d.planCode==="custom"&&<><label>Total quota (MB)<input type="number" min="0.1" step="0.1" value={d.quota} onChange={e=>setEdit(row.seller_id,{quota:e.target.value})}/></label><label>Max image (MB)<input type="number" min="0.01" step="0.05" value={d.max} onChange={e=>setEdit(row.seller_id,{max:e.target.value})}/></label></>}
@@ -1702,6 +1714,14 @@ function AdminStorageManagement() {
         })}{!visible.length&&<Empty title="No sellers match" text="Change the search or filters to view sellers." />}</div>
       </section>
 
+      <section className="dashboard-item ns-storage-settings">
+        <div><div className="eyebrow">UPLOAD FAILURES AND QUOTA VIOLATIONS</div><h3>Recent storage events</h3><p>Rejected upload attempts recorded by the application. Direct requests blocked by Storage may not create a client event.</p></div>
+        <div className="dashboard-list">{events.length?events.map(item=><article className="dashboard-item" key={item.event_id}>
+          <strong>{item.business_name} · {item.event_type.replaceAll("_"," ")}</strong>
+          <p>{item.message||"No additional details"}{item.requested_bytes? " · requested "+formatBytes(item.requested_bytes):""}</p>
+          <small>{new Date(item.created_at).toLocaleString("en-IN")}</small>
+        </article>):<p className="muted-note">No recorded upload failures or quota violations.</p>}</div>
+      </section>
       <section className="dashboard-item ns-storage-settings">
         <div><div className="eyebrow">AUDIT TRAIL</div><h3>Recent storage-plan changes</h3><p>Recent plan assignments, quota changes and the administrator account responsible.</p></div>
         <div className="dashboard-list">{audit.length?audit.map(item=><article className="dashboard-item" key={item.id}>

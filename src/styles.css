@@ -3183,54 +3183,77 @@ body { overflow-x:hidden; }
 }
 
 
-/* Seller profile contact actions: wrap compactly instead of overflowing on phones */
+/* Seller catalogue contact actions: four compact icon tiles, matching the approved reference. */
 .ns-contact-action-row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: stretch;
-  gap: 7px;
+  gap: 8px;
   width: 100%;
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  overflow: visible;
 }
-.ns-contact-action-row .ns-unified-contact-button {
+.ns-contact-action-row .ns-contact-tile {
+  appearance: none;
   box-sizing: border-box;
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  flex: 1 1 112px;
+  justify-content: flex-start;
+  gap: 7px;
+  width: 100%;
   min-width: 0;
-  max-width: 100%;
-  min-height: 36px;
-  padding: 8px 10px;
-  border: 1px solid #762c3a;
-  border-radius: 10px;
-  background: #762c3a;
-  color: #fff;
+  min-height: 82px;
+  padding: 9px 4px 8px;
+  border: 1px solid #e4ded5;
+  border-radius: 14px;
+  background: #fffefa;
+  color: #302720;
+  font: inherit;
   font-size: 12px;
+  font-weight: 750;
   line-height: 1.2;
-  white-space: normal;
+  text-align: center;
+  text-decoration: none;
   overflow-wrap: anywhere;
+  cursor: pointer;
 }
-.ns-contact-action-row .ns-unified-contact-button svg {
-  flex: 0 0 auto;
-  width: 15px;
-  height: 15px;
+.ns-contact-tile-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #f7e9e5;
+  color: #762c3a;
+}
+.ns-contact-tile-icon svg { width: 21px; height: 21px; stroke-width: 1.8; }
+.ns-contact-action-row .ns-contact-tile:hover {
+  border-color: #c99da0;
+  background: #fffaf7;
+}
+.ns-contact-action-row .ns-contact-tile:focus-visible {
+  outline: 2px solid rgba(118,44,58,.35);
+  outline-offset: 2px;
 }
 @media (max-width: 480px) {
   .ns-contact-action-row {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 7px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
   }
-  .ns-contact-action-row .ns-unified-contact-button {
-    width: 100%;
-    min-width: 0;
-    padding: 8px 6px;
-    gap: 5px;
-    font-size: 11px;
+  .ns-contact-action-row .ns-contact-tile {
+    min-height: 76px;
+    padding: 8px 2px 7px;
+    gap: 6px;
+    border-radius: 12px;
+    font-size: 10px;
   }
+  .ns-contact-tile-icon {
+    flex-basis: 34px;
+    width: 34px;
+    height: 34px;
+  }
+  .ns-contact-tile-icon svg { width: 19px; height: 19px; }
 }

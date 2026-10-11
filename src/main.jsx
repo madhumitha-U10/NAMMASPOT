@@ -45,6 +45,7 @@ import {
   adminRenameCategory,
   adminDeleteCategory,
   adminStorageUsage,
+  adminCleanupOrphanedMedia,
   adminStoragePlans,
   adminStorageSellers,
   adminStorageFiles,
@@ -1510,10 +1511,10 @@ function AdminPage() {
         <aside className="admin-console-sidebar" aria-label="Admin console navigation">
           <div className="admin-console-brand"><ShieldCheck size={22}/><div><strong>NammaSpot</strong><span>Admin Console</span></div></div>
           <div className="admin-console-nav">
-            <button className={tab==="sellers"?"active":""} onClick={()=>setTab("sellers")}><Store size={17}/> Seller approvals</button>
+            <button className={tab==="sellers"?"active":""} onClick={()=>setTab("sellers")}><Store size={17}/> Sellers</button>
             <button className={tab==="reviews"?"active":""} onClick={()=>setTab("reviews")}><CheckCircle size={17}/> Reviews ({reviews.filter(item=>item.status==="pending").length})</button>
             <button className={tab==="categories"?"active":""} onClick={()=>setTab("categories")}><Grid2X2 size={17}/> Categories</button>
-            <button className={tab==="storage"?"active":""} onClick={()=>setTab("storage")}><ShieldCheck size={17}/> Seller Storage Management</button>
+            <button className={tab==="storage"?"active":""} onClick={()=>setTab("storage")}><ShieldCheck size={17}/> Storage & cleanup</button>
           </div>
           <div className="admin-console-sidebar-bottom">
             <button onClick={load} disabled={loading}>↻ Refresh data</button>
@@ -1524,8 +1525,8 @@ function AdminPage() {
       <div className="dashboard-head">
         <div>
           <div className="eyebrow">ADMIN</div>
-          <h1>Keep NammaSpot trustworthy.</h1>
-          <p>Approve sellers and manage platform categories.</p>
+          <h1>{tab==="sellers" ? "Seller approvals & access" : tab==="storage" ? "Storage & image cleanup" : tab==="reviews" ? "Review moderation" : "Category management"}</h1>
+          <p>{tab==="sellers" ? "Review new sellers first, then manage approved or restricted accounts." : tab==="storage" ? "Set limits and remove failed or unused uploads safely." : tab==="reviews" ? "Review customer feedback before it appears publicly." : "Keep seller categories organised and easy to browse."}</p>
           {adminProfile?.email && <small>Signed in as {adminProfile.email}</small>}
         </div>
         <div className="button-row">
@@ -1567,8 +1568,8 @@ function AdminPage() {
         <section className="admin-sellers-management">
           <div className="admin-sellers-heading">
             <div>
-              <h2>Seller management</h2>
-              <p>Review new applications, update seller access, and manage existing accounts.</p>
+              <h2>Manage sellers</h2>
+              <p>Start with “Needs review”. Approve genuine businesses, reject incomplete applications, or suspend accounts when needed.</p>
             </div>
             <div className="admin-seller-total"><strong>{sellers.length}</strong><span>Total sellers</span></div>
           </div>
@@ -1662,6 +1663,7 @@ function AdminStorageManagement() {
   const [overview,setOverview]=useState(null);
   const [loading,setLoading]=useState(true);
   const [busy,setBusy]=useState(false);
+  const [cleaning,setCleaning]=useState(false);
   const [error,setError]=useState("");
   const [notice,setNotice]=useState("");
   const [search,setSearch]=useState("");
@@ -1733,6 +1735,18 @@ function AdminStorageManagement() {
     try{await adminUpdateStoragePlan({planCode:code,quotaBytes:mbToBytes(d.quota),maxFileBytes:mbToBytes(d.max)});setNotice(code+" plan limits updated.");await load();}
     catch(e){setError(friendlyError(e));}finally{setBusy(false);}
   };
+  const cleanupOrphanedMedia=async()=>{
+    if(!window.confirm("Remove old seller-media files that are not referenced by any seller profile, product, or gallery? Recent uploads from the last hour will be left alone."))return;
+    setCleaning(true);setError("");setNotice("");
+    try{
+      const result=await adminCleanupOrphanedMedia();
+      setNotice("Cleanup complete: removed "+result.deleted_files+" unused files and freed "+formatBytes(result.deleted_bytes)+". "+result.skipped_recent_files+" recent unreferenced file(s) were left for safety.");
+      setFileDetails({});
+      await load();
+    }catch(e){setError(friendlyError(e));}
+    finally{setCleaning(false);}
+  };
+
   const savePlatform=async()=>{
     if(!platformDraft)return;
     if(!(Number(platformDraft.allowance)>0)||!(Number(platformDraft.warning)<Number(platformDraft.critical)&&Number(platformDraft.critical)<Number(platformDraft.emergency)&&Number(platformDraft.emergency)<=100)){
@@ -1748,6 +1762,16 @@ function AdminStorageManagement() {
     <div className="dashboard-section-head"><div><div className="eyebrow">PLATFORM OPERATIONS</div><h2>Seller Storage Management</h2><p>Assign seller limits, monitor real stored objects, and protect NammaSpot's free-first launch.</p></div><button className="secondary-button" onClick={load} disabled={loading}>↻ Refresh</button></div>
     {error&&<div className="inline-error" role="alert">{error}</div>}
     {notice&&<div className="form-status" role="status">{notice}</div>}
+    <section className="ns-storage-cleanup-card" aria-labelledby="ns-storage-cleanup-title">
+      <div className="ns-storage-cleanup-copy">
+        <span className="eyebrow">CLEAN UP UNUSED FILES</span>
+        <h3 id="ns-storage-cleanup-title">Remove failed and abandoned uploads</h3>
+        <p>Only files not referenced by a seller profile, catalogue product or gallery are eligible. Images uploaded in the last hour are protected.</p>
+      </div>
+      <button className="danger-button" type="button" onClick={cleanupOrphanedMedia} disabled={busy||cleaning||loading}>
+        <Trash2 size={16}/>{cleaning?"Cleaning storage…":"Clean unused images"}
+      </button>
+    </section>
     {loading&&!rows.length?<CardSkeletonRow detailed/>:<>
       <div className="ns-storage-stats">
         <article className="dashboard-item"><small>Total sellers</small><strong>{rows.length}</strong></article>

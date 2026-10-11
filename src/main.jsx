@@ -734,6 +734,29 @@ function EnquiryModal({ seller, product, onClose }) {
   );
 }
 
+
+function instagramProfileUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const input = raw.replace(/^@/, "").replace(/\s+/g, "");
+  if (/^https?:\/\//i.test(input)) {
+    try {
+      const parsed = new URL(input);
+      if (!/(^|\.)instagram\.com$/i.test(parsed.hostname)) return "";
+      const handle = parsed.pathname.split("/").filter(Boolean)[0] || "";
+      return /^[A-Za-z0-9._]{1,30}$/.test(handle) ? "https://www.instagram.com/" + handle + "/" : "";
+    } catch { return ""; }
+  }
+  const handle = input.replace(/^www\.instagram\.com\//i, "").replace(/^instagram\.com\//i, "").split(/[/?#]/)[0];
+  return /^[A-Za-z0-9._]{1,30}$/.test(handle) ? "https://www.instagram.com/" + handle + "/" : "";
+}
+
+function instagramHandle(value) {
+  const url = instagramProfileUrl(value);
+  if (!url) return "";
+  return url.replace(/\/$/, "").split("/").pop();
+}
+
 function RegisterPage({ go }) {
   const [data,setData] = useState({nammaspotId:"",business:"",owner:"",phone:"",password:"",category:"Handmade",location:"",locationUrl:"",description:"",whatsapp:"",instagram:""});
   const [state,setState] = useState({loading:false,error:"",success:"",nammaspotId:""});
@@ -775,7 +798,7 @@ function RegisterPage({ go }) {
     }
     setState({loading:true,error:"",success:"",nammaspotId:""});
     try {
-      const result = await startSellerRegistration(data);
+      const result = await startSellerRegistration({...data, instagram: instagramProfileUrl(data.instagram)});
       const seller = await getMySeller();
       await signOut();
       const assignedId = seller?.nammaspot_id || result.nammaspotId;
@@ -861,7 +884,7 @@ function RegisterPage({ go }) {
             </div>
             <details className="signup-more-details"><summary>Add more business details now <span>optional</span></summary><div className="form-grid">
               <label>Google Maps / location URL<input type="url" value={data.locationUrl} onChange={e=>setData({...data,locationUrl:e.target.value})} placeholder="Paste a Google Maps share link"/></label>
-              <label>Instagram URL<input type="url" value={data.instagram} onChange={e=>setData({...data,instagram:e.target.value})} placeholder="https://instagram.com/…"/></label>
+              <label>Instagram ID <span className="optional">(optional)</span><input type="text" value={data.instagram} onChange={e=>setData({...data,instagram:e.target.value})} placeholder="@yourbusiness or Instagram profile URL" autoCapitalize="none" autoCorrect="off"/><small>Customers can tap the Instagram icon on your public profile to visit this account.</small></label>
             </div><label>Short business description<textarea value={data.description} onChange={e=>setData({...data,description:e.target.value})} maxLength={300} placeholder="What do you sell or offer?"/></label></details>
 
             <div className="signup-approval-card"><ShieldCheck size={18}/><div><strong>What happens after you submit?</strong><ol><li>Your account is created.</li><li>Your seller profile stays hidden while it is <b>pending approval</b>.</li><li>After NammaSpot admin approval, your NammaSpot seller profile can go public.</li></ol></div></div>
@@ -978,7 +1001,7 @@ function ProfileEditor({ seller,categories,onSaved }) {
     business_name:seller.business_name, owner_name:seller.owner_name, category_id:seller.category_id || "",
     location:seller.location || "", location_url:seller.location_url || "", city:seller.city || "Chennai",
     description:seller.description || "", contact:seller.phone || "", whatsapp_phone:seller.whatsapp_phone || "",
-    instagram_url:seller.instagram_url || "", opening_time:seller.opening_time || "", closing_time:seller.closing_time || "",
+    instagram_handle:instagramHandle(seller.instagram_url || ""), opening_time:seller.opening_time || "", closing_time:seller.closing_time || "",
     profile_image_url:seller.profile_image_url || "", cover_image_url:seller.cover_image_url || ""
   });
   const [state,setState] = useState({saving:false,error:"",success:"",imageBusy:""});
@@ -1012,7 +1035,7 @@ function ProfileEditor({ seller,categories,onSaved }) {
     setState({saving:true,error:"",success:"",imageBusy:""});
     try {
       const [next] = await Promise.all([
-        updateMySeller(seller.id,data),
+        updateMySeller(seller.id,{...data,instagram_url:instagramProfileUrl(data.instagram_handle)}),
         saveMicrosite(seller.id,{tagline:dailyUpdate})
       ]);
       onSaved(next);
@@ -1045,7 +1068,7 @@ function ProfileEditor({ seller,categories,onSaved }) {
         <label>Location URL<input type="url" value={data.location_url} onChange={(e)=>setData({...data,location_url:e.target.value})}/></label>
         <label>Phone<input value={data.contact} onChange={(e)=>setData({...data,contact:e.target.value})}/></label>
         <label>WhatsApp<input value={data.whatsapp_phone} onChange={(e)=>setData({...data,whatsapp_phone:e.target.value})}/></label>
-        <label>Instagram<input type="url" value={data.instagram_url} onChange={(e)=>setData({...data,instagram_url:e.target.value})}/></label>
+        <label>Instagram ID <span className="optional">(optional)</span><input type="text" value={data.instagram_handle} onChange={(e)=>setData({...data,instagram_handle:e.target.value})} placeholder="@yourbusiness or Instagram profile URL" autoCapitalize="none" autoCorrect="off"/><small>Customers tapping Instagram on your public profile will open this account.</small></label>
       </div>
       <div className="profile-daily-update">
         <div className="profile-daily-update-copy">

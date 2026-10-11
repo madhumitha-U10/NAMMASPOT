@@ -457,6 +457,9 @@ export async function updateProduct(productId,values) {
   const client=needBackend();
   const productName = text(values.product_name,160);
   if (!productName) throw new Error("Enter a product name.");
+  const {data:before,error:beforeError}=await client.from("products").select("id,image_url").eq("id",productId).single();
+  if(beforeError) throw beforeError;
+  const nextImage=text(values.image_url,800)||null;
   const {data,error}=await client.from("products").update({
     name:productName,
     product_name:productName,
@@ -464,10 +467,12 @@ export async function updateProduct(productId,values) {
     price:Number(values.price),
     available:Boolean(values.availability),
     availability:Boolean(values.availability),
-    image_url:text(values.image_url,800)||null,
+    image_url:nextImage,
     category_id:values.category_id||null
   }).eq("id",productId).select("id,seller_id,name,product_name,description,price,available,availability,image_url,category_id,created_at").single();
-  if(error) throw error; return productsOf([data])[0];
+  if(error) throw error;
+  if(before?.image_url&&before.image_url!==nextImage){try{await removeOwnedSellerMedia(before.image_url);}catch{}}
+  return productsOf([data])[0];
 }
 
 function sellerMediaPathFromUrl(url, userId) {

@@ -17,6 +17,24 @@ const whatsappUrl=(seller,product=null)=>{
   return "https://wa.me/"+phone+"?text="+encodeURIComponent(message);
 };
 
+
+function instagramProfileUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const input = raw.replace(/^@/, "").replace(/\s+/g, "");
+  if (/^https?:\/\//i.test(input)) {
+    try {
+      const parsed = new URL(input);
+      if (!/(^|\.)instagram\.com$/i.test(parsed.hostname)) return "";
+      const handle = parsed.pathname.split("/").filter(Boolean)[0] || "";
+      return /^[A-Za-z0-9._]{1,30}$/.test(handle) ? "https://www.instagram.com/" + handle + "/" : "";
+    } catch { return ""; }
+  }
+  const handle = input.replace(/^www\.instagram\.com\//i, "").replace(/^instagram\.com\//i, "").split(/[/?#]/)[0];
+  return /^[A-Za-z0-9._]{1,30}$/.test(handle) ? "https://www.instagram.com/" + handle + "/" : "";
+}
+
+
 function nowStatus(hours,specialDates){
   const now=new Date(), date=now.toISOString().slice(0,10);
   const special=(specialDates||[]).find(x=>x.special_date===date);
@@ -148,7 +166,7 @@ export default function SellerMicrositePage({go,slug}){
       image,
       telephone:seller.contact||seller.phone||undefined,
       address:{"@type":"PostalAddress",addressLocality:seller.city||seller.location||"Tamil Nadu",addressRegion:"Tamil Nadu",addressCountry:"IN"},
-      sameAs:seller.instagram_url?[seller.instagram_url]:undefined,
+      sameAs:instagramProfileUrl(seller.instagram_url)?[instagramProfileUrl(seller.instagram_url)]:undefined,
       hasOfferCatalog:{"@type":"OfferCatalog",name:"Catalogue",itemListElement:(data.products||[]).slice(0,50).map(p=>({"@type":"Offer","itemOffered":{"@type":"Product",name:p.name||p.product_name||"Product",image:p.image_url||undefined}}))}
     };
     const jsonScript=document.createElement("script");
@@ -189,7 +207,7 @@ export default function SellerMicrositePage({go,slug}){
       {wa&&<a className="ns-mobile-whatsapp" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={22}/> Enquiry on WhatsApp</a>}
       <div className="ns-mobile-contact-row">
         {seller.contact&&<a href={"tel:"+seller.contact}><Phone size={20}/><span>Call</span></a>}
-        {seller.instagram_url&&<a href={seller.instagram_url} target="_blank" rel="noreferrer"><Camera size={20}/><span>InstagramIcon</span></a>}
+        {instagramProfileUrl(seller.instagram_url)&&<a href={instagramProfileUrl(seller.instagram_url)} target="_blank" rel="noopener noreferrer" aria-label={"Open Instagram profile "+instagramProfileUrl(seller.instagram_url).split("/").filter(Boolean).pop()}><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg><span>Instagram</span></a>}
         <a href={seller.location_url||("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(seller.location||seller.city||seller.business_name||"Tamil Nadu"))} target="_blank" rel="noreferrer"><MapPin size={20}/><span>Directions</span></a>
         <button onClick={share}><Share2 size={20}/><span>Share</span></button>
       </div>

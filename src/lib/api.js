@@ -630,6 +630,40 @@ export async function adminStorageUsage() {
   return Array.isArray(data) ? data[0] ?? null : data;
 }
 
+export async function adminStoragePlans() {
+  const {data,error}=await needBackend().from("seller_storage_plans").select("code,name,quota_bytes,max_file_bytes,updated_at,updated_by").order("quota_bytes");
+  if(error)throw error; return data||[];
+}
+export async function adminStorageSellers() {
+  const {data,error}=await needBackend().rpc("admin_storage_sellers");
+  if(error)throw error; return data||[];
+}
+export async function adminStorageAudit() {
+  const {data,error}=await needBackend().from("seller_storage_audit").select("id,seller_id,previous_plan_code,new_plan_code,previous_quota_bytes,new_quota_bytes,previous_max_file_bytes,new_max_file_bytes,changed_by,reason,created_at").order("created_at",{ascending:false}).limit(50);
+  if(error)throw error; return data||[];
+}
+export async function adminPlatformStorageSettings() {
+  const {data,error}=await needBackend().from("storage_platform_settings").select("configured_storage_allowance_bytes,warning_percent,critical_percent,emergency_percent,updated_at,updated_by").eq("id",true).single();
+  if(error)throw error; return data;
+}
+export async function adminAssignSellerStorage(values) {
+  const {error}=await needBackend().rpc("admin_update_seller_storage",{
+    p_seller_id:values.sellerId,p_plan_code:values.planCode,p_custom_quota_bytes:values.customQuotaBytes??null,
+    p_custom_max_file_bytes:values.customMaxFileBytes??null,p_reason:values.reason||""
+  });
+  if(error)throw error;
+}
+export async function adminUpdateStoragePlan(values) {
+  const {error}=await needBackend().rpc("admin_update_storage_plan",{p_plan_code:values.planCode,p_quota_bytes:values.quotaBytes,p_max_file_bytes:values.maxFileBytes});
+  if(error)throw error;
+}
+export async function adminUpdatePlatformStorageSettings(values) {
+  const {error}=await needBackend().rpc("admin_update_platform_storage_settings",{
+    p_allowance_bytes:values.allowanceBytes,p_warning:values.warningPercent,p_critical:values.criticalPercent,p_emergency:values.emergencyPercent
+  });
+  if(error)throw error;
+}
+
 export async function adminListSellers() {
   if (!supabase) return demoState().sellers.map((s)=>({id:s.id,slug:s.slug,business_name:s.business_name,owner_name:s.owner_name,contact:s.contact||s.phone,whatsapp_phone:s.whatsapp_phone||s.whatsapp||s.contact||s.phone,verification_status:s.verification_status,verified:s.verified,created_at:s.created_at||"",location:s.location,category:{name:s.category}}));
   const client=needBackend(); const {data,error}=await client.from("sellers").select("id,slug,business_name,owner_name,contact,whatsapp_phone,verification_status,verified,created_at,location,category:categories(name)").order("created_at",{ascending:false}).limit(100); if(error)throw error; return data||[];

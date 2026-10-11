@@ -433,6 +433,7 @@ export async function createProduct(values) {
   const client = needBackend();
   const productName = text(values.product_name,160);
   if (!productName) throw new Error("Enter a product name.");
+  const imageUrl = text(values.image_url,800) || null;
   const { data,error } = await client.from("products").insert({
     seller_id:values.seller_id,
     name:productName,
@@ -441,10 +442,11 @@ export async function createProduct(values) {
     price:Number(values.price),
     available:Boolean(values.availability),
     availability:Boolean(values.availability),
-    image_url:text(values.image_url,800) || null,
+    image_url:imageUrl,
     category_id:values.category_id || null
   }).select("id,seller_id,name,product_name,description,price,available,availability,image_url,category_id,created_at").single();
-  if (error) throw error; return productsOf([data])[0];
+  if (error) { if (imageUrl) { try { await removeMediaIfUnreferenced(imageUrl); } catch {} } throw error; }
+  return productsOf([data])[0];
 }
 
 export async function updateProduct(productId,values) {
@@ -470,8 +472,11 @@ export async function updateProduct(productId,values) {
     image_url:nextImage,
     category_id:values.category_id||null
   }).eq("id",productId).select("id,seller_id,name,product_name,description,price,available,availability,image_url,category_id,created_at").single();
-  if(error) throw error;
-  if(before?.image_url&&before.image_url!==nextImage){try{await removeOwnedSellerMedia(before.image_url);}catch{}}
+  if(error) {
+    if (nextImage && nextImage !== before?.image_url) { try { await removeMediaIfUnreferenced(nextImage); } catch {} }
+    throw error;
+  }
+  if(before?.image_url&&before.image_url!==nextImage){try{await removeMediaIfUnreferenced(before.image_url);}catch{}}
   return productsOf([data])[0];
 }
 
@@ -482,6 +487,24 @@ function sellerMediaPathFromUrl(url, userId) {
   if (index < 0) return null;
   const path = decodeURIComponent(String(url).slice(index + marker.length));
   return path.startsWith(userId + "/") ? path : null;
+}
+
+async function removeMediaIfUnreferenced(url) {
+  if (!url || !supabase) return;
+  const client = needBackend();
+  const [sellers, products, gallery] = await Promise.all([
+    client.from("sellers").select("profile_image_url,cover_image_url"),
+    client.from("products").select("image_url"),
+    client.from("product_images").select("image_url"),
+  ]);
+  if (sellers.error || products.error || gallery.error) throw new Error("Could not verify whether this image is still in use.");
+  const references = [
+    ...(sellers.data || []).flatMap((row) => [row.profile_image_url, row.cover_image_url]),
+    ...(products.data || []).map((row) => row.image_url),
+    ...(gallery.data || []).map((row) => row.image_url),
+  ].filter(Boolean);
+  if (references.includes(url)) return;
+  await removeOwnedSellerMedia(url);
 }
 
 async function removeOwnedSellerMedia(url) {
@@ -499,11 +522,10 @@ export async function deleteProduct(productId) {
   if (fetchError) throw fetchError;
   const { data: gallery, error: galleryError } = await client.from("product_images").select("image_url").eq("product_id",productId);
   if (galleryError) throw galleryError;
-  for (const url of [product?.image_url, ...(gallery||[]).map(item=>item.image_url)].filter(Boolean)) {
-    try { await removeOwnedSellerMedia(url); } catch (error) { throw new Error("Could not safely remove a catalogue image. Please retry before deleting the product."); }
-  }
+  const imageUrls = [...new Set([product?.image_url, ...(gallery||[]).map(item=>item.image_url)].filter(Boolean))];
   const {error}=await client.from("products").delete().eq("id",productId);
   if(error) throw error;
+  for (const url of imageUrls) { try { await removeMediaIfUnreferenced(url); } catch { /* orphan cleanup can retry safely later */ } }
 }
 
 export async function createEnquiry(values) {
@@ -647,6 +669,23 @@ export async function adminStorageFiles(sellerId) {
   const {data,error}=await needBackend().rpc("admin_storage_files",{p_seller_id:sellerId});
   if(error)throw error; return data||[];
 }
+export async function adminCleanupOrphanedMedia() {
+  const { data, error } = await needBackend().functions.invoke("admin-cleanup-orphaned-media", { body: {} });
+  if (error) {
+    if (error.context && typeof error.context.clone === "function") {
+      try {
+        const body = await error.context.clone().json();
+        throw new Error(body?.error || body?.message || error.message);
+      } catch (responseError) {
+        if (responseError instanceof Error && responseError.message) throw responseError;
+      }
+    }
+    throw error;
+  }
+  if (!data?.success) throw new Error(data?.error || "Storage cleanup did not finish. Please retry.");
+  return data;
+}
+
 export async function adminStorageEvents() {
   const {data,error}=await needBackend().rpc("admin_storage_events");
   if(error)throw error; return data||[];

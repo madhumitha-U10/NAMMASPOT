@@ -187,11 +187,14 @@ export default function SellerMicrositePage({go,slug}){
   return <main className="seller-microsite ns-seller-profile ns-reference-layout ns-mobile-redesign">
     <header className="ns-mobile-brandbar">
       <button onClick={()=>go("/explore")} aria-label="Back to explore"><ArrowLeft size={21}/></button>
-      <div><strong>NammaSpot</strong><small>Local Sellers · Tamil Nadu</small></div>
+      <div className="ns-brand-lockup"><span className="ns-brand-mark" aria-hidden="true">N</span><span><strong>NammaSpot</strong><small>Local Sellers · Tamil Nadu</small></span></div>
       <button onClick={share} aria-label="Share seller"><Share2 size={20}/></button>
     </header>
     <section className="ns-mobile-seller-head">
-      <div className="ns-mobile-seller-avatar">{seller.profile_image_url?<img src={seller.profile_image_url} alt={seller.business_name+" logo"}/>:seller.business_name?.charAt(0)}</div>
+      <div className="ns-mobile-seller-avatar">
+        <span className="ns-seller-avatar-fallback" aria-hidden="true">{String(seller.business_name||"N").trim().charAt(0).toUpperCase()}</span>
+        {(seller.profile_image_url||settings.logo_url||settings.profile_image_url) && <img src={seller.profile_image_url||settings.logo_url||settings.profile_image_url} alt={seller.business_name+" logo"} onError={e=>{e.currentTarget.style.display="none"}}/>}
+      </div>
       <div className="ns-mobile-seller-info">
         <h1>{esc(seller.business_name)} {seller.verified&&<span className="ns-mobile-verified-dot" aria-label="Verified seller">✓</span>}</h1>
         <p className="ns-mobile-verified-line">{seller.verified ? "Verified seller" : "Local seller"} · {esc(seller.category?.name||"Local business")}</p>

@@ -244,8 +244,6 @@ function getRoute(path) {
   if (path.startsWith("/login")) return "login";
   if (path === "/register") return "register";
   if (path.startsWith("/dashboard/website")) return "website-editor";
-  if (path.startsWith("/dashboard/website")) return "website-editor";
-  if (path.startsWith("/dashboard/website")) return "website-editor";
   if (path.startsWith("/dashboard")) return "dashboard";
   if (path.startsWith("/nammaspot-control-panel/login")) return "admin-login";
   if (path.startsWith("/nammaspot-control-panel/dashboard") || path.startsWith("/admin-console")) return "admin-dashboard";
@@ -1346,6 +1344,9 @@ function AdminPage() {
   useEffect(()=>{load(); const timer=window.setInterval(load,300000); return ()=>window.clearInterval(timer);},[]);
 
   const status=async(id,next)=>{
+    const target = sellers.find((item)=>item.id===id);
+    const actionText = next==="approved" ? "approve" : next==="rejected" ? "reject" : next==="suspended" ? "suspend" : "change the status of";
+    if (target && !window.confirm("Are you sure you want to "+actionText+" "+(target.business_name || "this seller")+"?")) return;
     setBusy(true);
     setError("");
     try {
@@ -1416,10 +1417,10 @@ function AdminPage() {
         <aside className="admin-console-sidebar" aria-label="Admin console navigation">
           <div className="admin-console-brand"><ShieldCheck size={22}/><div><strong>NammaSpot</strong><span>Admin Console</span></div></div>
           <div className="admin-console-nav">
-            <button className={tab==="sellers"?"active":""} onClick={()=>setTab("sellers")}><Store size={17}/> Sellers</button>
-            <button className={tab==="reviews"?"active":""} onClick={()=>setTab("reviews")}><CheckCircle size={17}/> Reviews ({reviews.filter(item=>item.status==="pending").length})</button>
-            <button className={tab==="categories"?"active":""} onClick={()=>setTab("categories")}><Grid2X2 size={17}/> Categories</button>
-            <button className={tab==="storage"?"active":""} onClick={()=>setTab("storage")}><ShieldCheck size={17}/> Storage & cleanup</button>
+            <button className={tab==="sellers"?"active":""} onClick={()=>setTab("sellers")}><Store size={17}/><span><strong>Seller management</strong><small>Review and manage accounts</small></span></button>
+            <button className={tab==="reviews"?"active":""} onClick={()=>setTab("reviews")}><CheckCircle size={17}/><span><strong>Reviews & reports</strong><small>{reviews.filter(item=>item.status==="pending").length} awaiting review</small></span></button>
+            <button className={tab==="categories"?"active":""} onClick={()=>setTab("categories")}><Grid2X2 size={17}/><span><strong>Categories</strong><small>Organise seller categories</small></span></button>
+            <button className={tab==="storage"?"active":""} onClick={()=>setTab("storage")}><ShieldCheck size={17}/><span><strong>Storage management</strong><small>Usage, limits and cleanup</small></span></button>
           </div>
           <div className="admin-console-sidebar-bottom">
             <button onClick={load} disabled={loading}>↻ Refresh data</button>
@@ -1427,10 +1428,23 @@ function AdminPage() {
           </div>
         </aside>
         <section className="admin-console-content">
+      <div className="admin-welcome">
+        <div className="eyebrow">NAMMASPOT CONTROL CENTRE</div>
+        <h1>NammaSpot Admin Console</h1>
+        <p>Manage sellers, catalogue content, approvals, and platform storage from one place.</p>
+      </div>
+      <div className="admin-summary-grid" aria-label="Platform summary">
+        <article className="admin-summary-card"><span>Total sellers</span><strong>{sellers.length}</strong><small>All seller accounts</small></article>
+        <article className="admin-summary-card is-pending"><span>Pending approvals</span><strong>{counts.pending || 0}</strong><small>Need your review</small></article>
+        <article className="admin-summary-card is-approved"><span>Approved sellers</span><strong>{counts.approved || 0}</strong><small>Can use NammaSpot</small></article>
+        <article className="admin-summary-card is-suspended"><span>Suspended sellers</span><strong>{counts.suspended || 0}</strong><small>Access currently paused</small></article>
+        <article className="admin-summary-card"><span>Categories</span><strong>{categories.length}</strong><small>Available category records</small></article>
+        <article className="admin-summary-card"><span>Pending reviews</span><strong>{reviews.filter(item=>item.status==="pending").length}</strong><small>Customer feedback to review</small></article>
+      </div>
       <div className="dashboard-head">
         <div>
-          <div className="eyebrow">ADMIN</div>
-          <h1>{tab==="sellers" ? "Seller approvals & access" : tab==="storage" ? "Storage & image cleanup" : tab==="reviews" ? "Review moderation" : "Category management"}</h1>
+          <div className="eyebrow">CURRENT SECTION</div>
+          <h1>{tab==="sellers" ? "Seller management" : tab==="storage" ? "Storage management" : tab==="reviews" ? "Reviews & reports" : "Category management"}</h1>
           <p>{tab==="sellers" ? "Review new sellers first, then manage approved or restricted accounts." : tab==="storage" ? "Set limits and remove failed or unused uploads safely." : tab==="reviews" ? "Review customer feedback before it appears publicly." : "Keep seller categories organised and easy to browse."}</p>
           {adminProfile?.email && <small>Signed in as {adminProfile.email}</small>}
         </div>
@@ -1476,7 +1490,7 @@ function AdminPage() {
               <h2>Manage sellers</h2>
               <p>Start with “Needs review”. Approve genuine businesses, reject incomplete applications, or suspend accounts when needed.</p>
             </div>
-            <div className="admin-seller-total"><strong>{sellers.length}</strong><span>Total sellers</span></div>
+            <div className="admin-seller-total"><strong>{counts.pending || 0}</strong><span>Awaiting review</span></div>
           </div>
           <div className="admin-seller-status-tabs" aria-label="Filter sellers by status">
             {[

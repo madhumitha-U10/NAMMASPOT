@@ -188,7 +188,7 @@ function App() {
       )}
 
       <header className="topbar">
-        <button className="brand" onClick={() => go("/")} aria-label="NammaSpot home"><span>NammaSpot</span></button>
+        <button className="brand" onClick={() => go("/")} aria-label="NammaSpot home"><span className="brand-mark" aria-hidden="true">N</span><span className="brand-word">NammaSpot</span></button>
 
         <nav className={menu ? "desktop-nav open" : "desktop-nav"} aria-label="Primary navigation">
           <button onClick={() => go("/")}>Home</button>

@@ -3923,3 +3923,33 @@ body { overflow-x:hidden; }
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Clearer admin console information hierarchy and navigation. */
+.admin-app-shell .demo-bar { display:none !important; }
+.admin-welcome { margin:0 0 22px; padding:24px 26px; border:1px solid #e2d5c9; border-radius:20px; background:linear-gradient(120deg,#fffdf7,#f7eee6); }
+.admin-welcome h1 { margin:8px 0 7px; font-size:clamp(28px,3.2vw,42px); line-height:1.12; letter-spacing:-.04em; }
+.admin-welcome p { margin:0; max-width:760px; color:#625d56; line-height:1.55; }
+.admin-summary-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:0 0 28px; }
+.admin-summary-card { min-width:0; padding:18px; border:1px solid #e2ded4; border-radius:16px; background:#fffefa; }
+.admin-summary-card span,.admin-summary-card small { display:block; color:#68635c; }
+.admin-summary-card span { font-size:13px; font-weight:750; }
+.admin-summary-card strong { display:block; margin:8px 0 5px; color:var(--burgundy); font-size:32px; line-height:1; }
+.admin-summary-card small { font-size:12px; line-height:1.4; }
+.admin-summary-card.is-pending { border-top:3px solid #b57b32; }
+.admin-summary-card.is-approved { border-top:3px solid #4f8060; }
+.admin-summary-card.is-suspended { border-top:3px solid #8c5555; }
+.admin-console-nav button { display:flex; align-items:flex-start; gap:10px; text-align:left; }
+.admin-console-nav button span { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.admin-console-nav button strong { font-size:13px; font-weight:750; }
+.admin-console-nav button small { font-size:11px; font-weight:500; line-height:1.35; opacity:.78; }
+.admin-console-nav button svg { flex:none; margin-top:2px; }
+.admin-console-sidebar-bottom button { min-height:42px; }
+@media (max-width:820px) { .admin-summary-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .admin-welcome { padding:20px; } }
+@media (max-width:420px) {
+ .admin-summary-grid { grid-template-columns:1fr 1fr; gap:8px; }
+ .admin-summary-card { padding:13px; }
+ .admin-summary-card strong { font-size:26px; }
+ .admin-summary-card span { font-size:12px; }
+ .admin-summary-card small { font-size:11px; }
+}

@@ -494,7 +494,6 @@ function SellerCard({ seller, index=0, go, toggleSave, saved, detailed=false }) 
   return (
     <article className={detailed ? "seller-card detailed" : "seller-card"}>
       <button className={"seller-cover cover-" + ((index % 4)+1)} onClick={() => go("/s/" + seller.slug)} aria-label={"Open " + seller.name}>
-        {seller.profile_image_url && <img className="seller-cover-image" src={seller.profile_image_url} alt="" loading="lazy" />}
         <span className="seller-cover-shade" />
         {seller.profile_image_url && <span className="seller-cover-logo-badge"><img src={seller.profile_image_url} alt={seller.name + " logo"} loading="lazy" onError={(event) => { event.currentTarget.parentElement.style.display = "none"; }}/></span>}<span className="category-label">{seller.category}</span>
         {seller.featured && <span className="featured-label"><Sparkles size={13}/> Featured</span>}

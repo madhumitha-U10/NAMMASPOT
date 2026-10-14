@@ -177,38 +177,126 @@ export const categoryAliases = {
   "Services": ["service"],
 };
 
-function categoryMatches(sellerCategory, selectedCategory) {
-  if (selectedCategory === "All") return true;
-  const actual = String(sellerCategory || "").trim().toLowerCase();
-  const accepted = [selectedCategory, ...(categoryAliases[selectedCategory] || [])]
-    .map((value) => value.trim().toLowerCase());
-  return accepted.includes(actual);
+const SEARCH_SYNONYMS = {
+  cake: ["cakes", "bakery", "bake"], cakes: ["cake", "bakery"],
+  gift: ["gifts", "present", "presents"], gifts: ["gift", "present"],
+  crochet: ["crochets", "handmade", "hand made", "croch"],
+  mehendi: ["mehandi", "mehndi", "henna"], mehandi: ["mehendi", "mehndi", "henna"],
+  mehndi: ["mehendi", "mehandi", "henna"], henna: ["mehendi", "mehandi", "mehndi"],
+  jewellery: ["jewelry", "jewelleries", "accessories"], jewelry: ["jewellery", "accessories"],
+  tailor: ["tailoring", "boutique", "alteration"], tailoring: ["tailor"],
+  flower: ["flowers", "bouquet", "poo"], flowers: ["flower", "bouquet"],
+  handmade: ["hand made", "craft", "crafts", "artisan"],
+  makeup: ["make up", "bridal makeup", "beauty"],
+  photo: ["photography", "photographer"], photography: ["photo", "photographer"],
+};
+function normaliseSearch(value) {
+  return String(value ?? "").normalize("NFKC").toLocaleLowerCase("en-IN")
+    .replace(/[’']/g, "").replace(/[^\p{L}\p{N}₹]+/gu, " ").trim().replace(/\s+/g, " ");
 }
-
-export async function getPublicSellers({ query = "", category = "All", near = "" } = {}) {
+function expandSearchTerms(query) {
+  const normalised = normaliseSearch(query);
+  const terms = new Set(normalised.split(" ").filter(Boolean));
+  for (const term of [...terms]) {
+    for (const synonym of SEARCH_SYNONYMS[term] || []) terms.add(normaliseSearch(synonym));
+    if (term.endsWith("s") && term.length > 3) terms.add(term.slice(0, -1));
+    if (term.length > 4 && term.endsWith("ing")) terms.add(term.slice(0, -3));
+  }
+  return [...terms];
+}
+function categoryMatches(sellerCategory, selectedCategory) {
+  if (!selectedCategory || selectedCategory === "All") return true;
+  const actual = normaliseSearch(sellerCategory);
+  const wanted = normaliseSearch(selectedCategory);
+  const aliases = (categoryAliases[selectedCategory] || []).map(normaliseSearch);
+  return actual === wanted || aliases.includes(actual) || actual.includes(wanted) || aliases.some((alias) => wanted.includes(alias));
+}
+function sellerSearchScore(seller, query, requestedArea) {
+  if (!query) return 0;
+  const normalisedQuery = normaliseSearch(query);
+  const terms = expandSearchTerms(query);
+  const name = normaliseSearch(seller.name);
+  const category = normaliseSearch(seller.category);
+  const description = normaliseSearch(seller.description);
+  const location = normaliseSearch([seller.location, seller.city].join(" "));
+  const products = (seller.products || []).map((product) => ({
+    name: normaliseSearch(product.name),
+    description: normaliseSearch(product.description),
+  }));
+  let score = 0;
+  if (name === normalisedQuery) score += 120;
+  else if (name.includes(normalisedQuery)) score += 75;
+  if (category === normalisedQuery) score += 95;
+  else if (category.includes(normalisedQuery)) score += 55;
+  if (location.includes(normalisedQuery)) score += 50;
+  if (description.includes(normalisedQuery)) score += 28;
+  for (const product of products) {
+    if (product.name === normalisedQuery) score = Math.max(score, 115);
+    else if (product.name.includes(normalisedQuery)) score += 48;
+    if (product.description.includes(normalisedQuery)) score += 12;
+  }
+  for (const term of terms) {
+    if (term.length < 2) continue;
+    if (name.split(" ").some((word) => word.startsWith(term))) score += 12;
+    if (category.split(" ").some((word) => word.startsWith(term))) score += 14;
+    if (location.split(" ").some((word) => word.startsWith(term))) score += requestedArea ? 20 : 5;
+    if (description.includes(term)) score += 3;
+    if (products.some((product) => product.name.includes(term))) score += 10;
+    if (products.some((product) => product.description.includes(term))) score += 2;
+  }
+  if (requestedArea && location.includes(normaliseSearch(requestedArea))) score += 35;
+  if (seller.verified) score += 2;
+  if (seller.profile_image_url || seller.cover_image_url) score += 1;
+  return score;
+}
+function extractBudget(query) {
+  const match = String(query || "").match(/(?:under|below|less than|within|budget of|upto|up to|₹|rs\.?\s*)\s*₹?\s*(\d[\d,]*)/i);
+  if (!match) return null;
+  const amount = Number(match[1].replace(/,/g, ""));
+  return Number.isFinite(amount) && amount > 0 ? amount : null;
+}
+function queryWithoutBudget(query) {
+  return String(query || "").replace(/(?:under|below|less than|within|budget of|upto|up to)\s*₹?\s*\d[\d,]*|₹\s*\d[\d,]*|rs\.?\s*\d[\d,]*/ig, " ").trim();
+}
+export async function getPublicSellers({ query = "", category = "All", near = "", sort = "relevant", resultType = "all" } = {}) {
+  let rows;
   if (!supabase) {
     const state = demoState();
-    const q = query.trim().toLowerCase();
-    return state.sellers.filter((seller) => seller.verification_status === "approved").map((s) => ({
-      ...s,
-      products: state.products.filter((p) => p.seller_id === s.id),
-    })).filter((s) => {
-      const categoryOk = categoryMatches(s.category, category);
-      const nearOk = !near || (s.location || "").toLowerCase().includes(near.toLowerCase());
-      const queryOk = !q || [s.name,s.category,s.location,s.description,...s.products.map((p) => p.name)].join(" ").toLowerCase().includes(q);
-      return categoryOk && nearOk && queryOk;
-    });
+    rows = state.sellers.filter((seller) => seller.verification_status === "approved").map((seller) => ({
+      ...seller,
+      products: state.products.filter((product) => product.seller_id === seller.id),
+    }));
+  } else {
+    const { data, error } = await supabase.from("sellers").select(sellerSelect)
+      .eq("verification_status", "approved").order("created_at", { ascending: false }).limit(200);
+    if (error) throw error;
+    rows = (data ?? []).map(sellerOf);
   }
-
-  const { data, error } = await supabase.from("sellers").select(sellerSelect).eq("verification_status","approved").order("created_at",{ascending:false}).limit(60);
-  if (error) throw error;
-  const q = query.trim().toLowerCase();
-  return (data ?? []).map(sellerOf).filter((s) => {
-    const categoryOk = categoryMatches(s.category, category);
-    const nearOk = !near || s.location.toLowerCase().includes(near.toLowerCase());
-    const queryOk = !q || [s.name,s.category,s.location,s.description,...s.products.map((p) => p.name)].join(" ").toLowerCase().includes(q);
-    return categoryOk && nearOk && queryOk;
+  const requestedArea = near || "";
+  const budget = extractBudget(query);
+  const effectiveQuery = normaliseSearch(queryWithoutBudget(query));
+  const ranked = rows.filter((seller) => {
+    if (seller.verification_status !== "approved") return false;
+    if (!categoryMatches(seller.category, category)) return false;
+    if (requestedArea && !normaliseSearch([seller.location, seller.city].join(" ")).includes(normaliseSearch(requestedArea))) return false;
+    if (budget !== null && !(seller.products || []).some((product) => Number(product.price) > 0 && Number(product.price) <= budget)) return false;
+    if (resultType === "sellers" || resultType === "services") {
+      if (resultType === "services" && !/service|artist|tailor|makeup|mehendi|photograph/i.test(seller.category + " " + seller.description)) return false;
+    }
+    if (!effectiveQuery) return true;
+    const searchable = normaliseSearch([
+      seller.name, seller.category, seller.location, seller.city, seller.description,
+      ...(seller.products || []).flatMap((product) => [product.name, product.description]),
+    ].join(" "));
+    const terms = expandSearchTerms(effectiveQuery);
+    return searchable.includes(effectiveQuery) || terms.some((term) => term.length > 1 && searchable.includes(term));
+  }).map((seller) => ({ seller, score: sellerSearchScore(seller, effectiveQuery, requestedArea) }));
+  ranked.sort((a, b) => {
+    if (sort === "name") return String(a.seller.name || "").localeCompare(String(b.seller.name || ""));
+    if (sort === "recent") return String(b.seller.created_at || "").localeCompare(String(a.seller.created_at || ""));
+    return b.score - a.score || String(a.seller.name || "").localeCompare(String(b.seller.name || ""));
   });
+  return ranked.map(({ seller }) => seller);
 }
 
 export async function getPublicSeller(slug) {

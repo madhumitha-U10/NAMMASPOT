@@ -6,6 +6,9 @@ import {getMicrosite,sellerPublicUrl} from "./lib/microsite";
 
 const days=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const esc=(v)=>String(v||"").replace(/[<>]/g,"");
+const SAVED_PRODUCTS_KEY="nammaspot-saved-products";
+const readSavedProducts=()=>{try{const items=JSON.parse(localStorage.getItem(SAVED_PRODUCTS_KEY)||"[]");return Array.isArray(items)?items:[]}catch{return[]}};
+const writeSavedProducts=(items)=>{try{localStorage.setItem(SAVED_PRODUCTS_KEY,JSON.stringify(items));window.dispatchEvent(new CustomEvent("nammaspot-saved-products-change"))}catch{}};
 const whatsappUrl=(seller,product=null)=>{
   const raw=String(seller?.whatsapp_phone||"").replace(/\D/g,"");
   if(!raw)return null;
@@ -120,11 +123,11 @@ function ReviewPanel({seller}) {
   </div>;
 }
 
-export default function SellerMicrositePage({go,slug}){
+export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave}){
   const [state,setState]=useState({loading:true,error:"",data:null});
   const [language,setLanguage]=useState(()=>localStorage.getItem("nammaspot-language")==="ta"?"ta":"en");
   const isTamil=language==="ta";
-  const [product,setProduct]=useState(null),[saved,setSaved]=useState(false);
+  const [product,setProduct]=useState(null);\n  const [savedProductIds,setSavedProductIds]=useState(()=>new Set(readSavedProducts().map(item=>item.id)));
   const [catalogueQuery,setCatalogueQuery]=useState("");
   const [activeTab,setActiveTab]=useState("catalogue");
   const [shareOpen,setShareOpen]=useState(false);
@@ -184,11 +187,21 @@ export default function SellerMicrositePage({go,slug}){
   const wa=whatsappUrl(seller);
   const productWa=p=>whatsappUrl(seller,p);
   const filteredProducts=products.filter(p=>String(p.name||"").toLowerCase().includes(catalogueQuery.toLowerCase()));
+  const toggleProductSave=(p)=>{
+    const current=readSavedProducts();
+    const already=current.some(item=>item.id===p.id);
+    const next=already?current.filter(item=>item.id!==p.id):[...current,{id:p.id,name:p.name,price:p.price,image_url:p.image_url||"",description:p.description||"",sellerSlug:seller.slug,sellerName:seller.business_name}];
+    writeSavedProducts(next);
+    setSavedProductIds(new Set(next.map(item=>item.id)));
+  };
   return <main className="seller-microsite ns-seller-profile ns-reference-layout ns-mobile-redesign">
     <header className="ns-mobile-brandbar">
       <button onClick={()=>go("/explore")} aria-label="Back to explore"><ArrowLeft size={21}/></button>
       <div className="ns-brand-lockup"><span><strong>NammaSpot</strong><small>Local Sellers · Tamil Nadu</small></span></div>
-      <button onClick={share} aria-label="Share seller"><Share2 size={20}/></button>
+      <div className="ns-brandbar-actions">
+        <button className={"ns-save-website-btn"+(savedWebsites.includes(seller.id)?" is-saved":"")} onClick={()=>toggleSave&&toggleSave(seller.id)} aria-label={savedWebsites.includes(seller.id)?"Remove saved website":"Save website"} title={savedWebsites.includes(seller.id)?"Saved website":"Save website"}><Heart size={20} fill={savedWebsites.includes(seller.id)?"currentColor":"none"}/></button>
+        <button onClick={share} aria-label="Share seller"><Share2 size={20}/></button>
+      </div>
     </header>
     <section className="ns-mobile-seller-head">
       <div className="ns-mobile-seller-avatar">
@@ -218,7 +231,7 @@ export default function SellerMicrositePage({go,slug}){
     <nav className="ns-mobile-tabs" aria-label="Seller page sections"><a className={activeTab==="catalogue"?"active":""} href="#catalogue" onClick={()=>setActiveTab("catalogue")}>Catalogue</a><a className={activeTab==="about"?"active":""} href="#about" onClick={()=>setActiveTab("about")}>About</a><a className={activeTab==="reviews"?"active":""} href="#reviews" onClick={()=>setActiveTab("reviews")}>Reviews</a></nav>
     <section id="catalogue" className="ns-mobile-catalogue">
       <div className="ns-mobile-search"><Search size={19}/><input value={catalogueQuery} onChange={e=>setCatalogueQuery(e.target.value)} placeholder="Search products..." aria-label="Search products"/></div>
-      {filteredProducts.length?<div className="ns-mobile-product-grid">{filteredProducts.map(p=><article className="ns-mobile-product" key={p.id}><button className="ns-mobile-product-image" onClick={()=>setProduct(p)} aria-label={"View "+p.name}>{p.image_url?<img src={p.image_url} alt={p.name} loading="lazy"/>:<span>{String(p.name||"").charAt(0)}</span>}</button><div className="ns-mobile-product-copy"><h3>{esc(p.name)}</h3><strong>₹{p.price}</strong>{productWa(p)&&<a href={productWa(p)} target="_blank" rel="noreferrer"><MessageCircle size={16}/> Enquire</a>}</div></article>)}
+      {filteredProducts.length?<div className="ns-mobile-product-grid">{filteredProducts.map(p=><article className="ns-mobile-product" key={p.id}><button className="ns-mobile-product-image" onClick={()=>setProduct(p)} aria-label={"View "+p.name}>{p.image_url?<img src={p.image_url} alt={p.name} loading="lazy"/>:<span>{String(p.name||"").charAt(0)}</span>}</button><button type="button" className={"ns-product-save-btn"+(savedProductIds.has(p.id)?" is-saved":"")} onClick={()=>toggleProductSave(p)} aria-label={savedProductIds.has(p.id)?"Remove "+p.name+" from saved products":"Save "+p.name} title={savedProductIds.has(p.id)?"Saved product":"Save product"}><Heart size={19} fill={savedProductIds.has(p.id)?"currentColor":"none"}/></button><div className="ns-mobile-product-copy"><h3>{esc(p.name)}</h3><strong>₹{p.price}</strong>{productWa(p)&&<a href={productWa(p)} target="_blank" rel="noreferrer"><MessageCircle size={16}/> Enquire</a>}</div></article>)}
       <article className="ns-mobile-coming-soon"><span>✧</span><strong>More products<br/>coming soon</strong><small>♡</small></article></div>:<div className="ns-mobile-coming-soon ns-mobile-empty"><span>✧</span><strong>{catalogueQuery?"No matching products":"More products coming soon"}</strong><small>{catalogueQuery?"Try another search":"This seller will add more soon ♡"}</small></div>}
     </section>
     <section id="about" className="ns-mobile-about" onMouseEnter={()=>setActiveTab("about")}><h2>About</h2><p>{esc(seller.description||"This seller is part of the NammaSpot community.")}</p><p><MapPin size={16}/>{esc(seller.location||"Chennai, Tamil Nadu")}</p></section>

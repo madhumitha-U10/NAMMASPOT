@@ -233,7 +233,23 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   border:0;
   text-align:left;
   position:relative;
+  overflow:hidden;
+  isolation:isolate;
 }
+.seller-cover-photo{
+  position:absolute;
+  inset:0;
+  z-index:-2;
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center;
+  background:#f3e8d9;
+}
+.seller-cover.has-cover-photo{background:#f3e8d9}
+.seller-cover-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(24,16,13,.02) 35%,rgba(24,16,13,.48) 100%);pointer-events:none}
+.seller-cover.has-cover-photo .seller-cover-shade{background:linear-gradient(180deg,rgba(24,16,13,.02) 25%,rgba(24,16,13,.55) 100%)}
 .cover-1{
   background:
     radial-gradient(circle at 25% 20%,rgba(126,36,36,.28),transparent 24%),
@@ -408,23 +424,60 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 }
 .category-grid-large{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:13px;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;
 }
-.category-grid-large button{
-  display:grid;
-  grid-template-columns:auto 1fr auto;
-  align-items:center;
-  gap:14px;
-  padding:23px 20px;
-  border:1px solid #ddd9d0;
-  border-radius:20px;
-  background:rgba(255,254,250,.8);
+.category-grid-large .category-tile{
+  min-height:168px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  padding:22px;
+  border:1px solid #e3ddd1;
+  border-radius:24px;
+  background:#fffefa;
   text-align:left;
+  transition:border-color .18s ease,transform .18s ease,box-shadow .18s ease;
 }
-.category-grid-large span{color:var(--burgundy);font-weight:800;font-size:12px}
-.category-grid-large strong{font-size:19px}
-.category-grid-large button:hover{border-color:var(--burgundy)}
+.category-grid-large .category-tile:hover{
+  border-color:var(--burgundy);
+  transform:translateY(-2px);
+  box-shadow:0 10px 24px rgba(40,25,20,.06);
+}
+.category-tile-icon{
+  width:68px;
+  height:68px;
+  flex:none;
+  display:grid;
+  place-items:center;
+  border-radius:22px;
+  background:#f5e5e2;
+  color:var(--burgundy);
+}
+.category-tile:nth-child(4n + 2) .category-tile-icon{background:#f2ead5}
+.category-tile:nth-child(4n + 3) .category-tile-icon{background:#e7eee4}
+.category-tile:nth-child(4n) .category-tile-icon{background:#eee7f3}
+.category-tile-icon svg{width:36px;height:36px;stroke:currentColor}
+.category-grid-large .category-tile-name{
+  color:#512126;
+  font-size:19px;
+  font-weight:650;
+  line-height:1.28;
+}
+.category-grid-large .category-tile-arrow{display:none}
+@media(max-width:900px){
+  .category-grid-large{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .category-grid-large .category-tile{min-height:190px;padding:20px 18px;border-radius:23px}
+  .category-tile-icon{width:66px;height:66px;border-radius:21px}
+  .category-grid-large .category-tile-name{font-size:18px}
+}
+@media(max-width:420px){
+  .category-grid-large .category-tile{min-height:174px;padding:17px 15px}
+  .category-tile-icon{width:60px;height:60px;border-radius:19px}
+  .category-grid-large .category-tile-name{font-size:17px}
+}
 
 .seller-page{max-width:1130px;margin:0 auto;padding:28px 5.5% 85px}
 .back-button{
@@ -3984,8 +4037,3 @@ body { overflow-x:hidden; }
 @media(max-width:520px){.brand{gap:7px;font-size:24px}.brand-mark{width:32px;height:32px;border-radius:10px;font-size:20px}.categories-page .category-grid-large{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.categories-page .category-tile{min-height:132px;padding:15px 9px 13px;border-radius:18px}.categories-page .category-tile-icon{width:54px;height:54px;border-radius:17px}.categories-page .category-tile-icon svg{width:31px;height:31px}.categories-page .category-tile-name{font-size:12px}.categories-page .category-tile-arrow{right:7px;top:7px}}
 @media(prefers-reduced-motion:reduce){.categories-page .category-tile{transition:none}}
 
-
-/* Seller logo visibility: show the complete logo in a dedicated badge, not cropped into the cover. */
-.seller-cover-logo-badge{position:absolute;left:16px;top:16px;z-index:3;width:66px;height:66px;border:2px solid rgba(255,255,255,.94);border-radius:16px;background:#fffdf8;box-shadow:0 5px 18px rgba(25,18,16,.16);display:grid;place-items:center;overflow:hidden;padding:5px}
-.seller-cover-logo-badge img{display:block;width:100%;height:100%;object-fit:contain;object-position:center}
-@media(max-width:520px){.brand{gap:0}.seller-cover-logo-badge{width:58px;height:58px;border-radius:14px}}

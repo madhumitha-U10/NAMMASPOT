@@ -459,7 +459,21 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .category-tile:nth-child(4n + 2) .category-tile-icon{background:#f2ead5}
 .category-tile:nth-child(4n + 3) .category-tile-icon{background:#e7eee4}
 .category-tile:nth-child(4n) .category-tile-icon{background:#eee7f3}
-.category-tile-icon svg{width:36px;height:36px;stroke:currentColor}
+.category-tile-icon svg{
+  display:block;
+  width:38px !important;
+  height:38px !important;
+  min-width:38px;
+  min-height:38px;
+  flex:none;
+  overflow:visible;
+  color:#762a38;
+  stroke:#762a38;
+  fill:none;
+  stroke-width:2;
+  opacity:1;
+  visibility:visible;
+}
 .category-grid-large .category-tile-name{
   color:#512126;
   font-size:19px;

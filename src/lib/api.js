@@ -128,6 +128,7 @@ function productsOf(rows = []) {
 function sellerOf(row) {
   return {
     id: row.id,
+    created_at: row.created_at ?? null,
     nammaspot_id: row.nammaspot_id ?? "",
     slug: row.slug,
     name: row.business_name || row.name,

@@ -187,7 +187,7 @@ export default function SellerMicrositePage({go,slug}){
   return <main className="seller-microsite ns-seller-profile ns-reference-layout ns-mobile-redesign">
     <header className="ns-mobile-brandbar">
       <button onClick={()=>go("/explore")} aria-label="Back to explore"><ArrowLeft size={21}/></button>
-      <div className="ns-brand-lockup"><span className="ns-brand-mark" aria-hidden="true">N</span><span><strong>NammaSpot</strong><small>Local Sellers · Tamil Nadu</small></span></div>
+      <div className="ns-brand-lockup"><span><strong>NammaSpot</strong><small>Local Sellers · Tamil Nadu</small></span></div>
       <button onClick={share} aria-label="Share seller"><Share2 size={20}/></button>
     </header>
     <section className="ns-mobile-seller-head">

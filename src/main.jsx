@@ -1347,6 +1347,11 @@ function AdminPage() {
   const [storageUsage,setStorageUsage]=useState(null);
   const [otpAlerts,setOtpAlerts]=useState([]);
   const [reviews,setReviews]=useState([]);
+  const [categoryDraft,setCategoryDraft]=useState("");
+  const [categorySearch,setCategorySearch]=useState("");
+  const [editingCategoryId,setEditingCategoryId]=useState(null);
+  const [editingCategoryName,setEditingCategoryName]=useState("");
+  const [categoryBusy,setCategoryBusy]=useState(false);
 
   const load=async()=>{
     setLoading(true);
@@ -1418,22 +1423,46 @@ function AdminPage() {
     finally{setBusy(false)}
   };
 
-  const addCategory=async()=>{
-    const name=window.prompt("Category name");
+  const addCategory=async(event)=>{
+    event?.preventDefault();
+    const name=categoryDraft.trim();
     if(!name) return;
-    try { await adminAddCategory(name); setCategories(await adminListCategories()); } catch(error){setError(friendlyError(error));}
+    setCategoryBusy(true);setError("");
+    try {
+      await adminAddCategory(name);
+      setCategories(await adminListCategories());
+      setCategoryDraft("");
+    } catch(error){setError(friendlyError(error));}
+    finally{setCategoryBusy(false);}
+  };
+
+  const startRenameCategory=(item)=>{
+    setEditingCategoryId(item.id);
+    setEditingCategoryName(item.name || "");
   };
 
   const renameCategory=async(item)=>{
-    const name=window.prompt("New category name",item.name);
-    if(!name || name===item.name) return;
-    try { await adminRenameCategory(item.id,name); setCategories(await adminListCategories()); } catch(error){setError(friendlyError(error));}
+    const name=editingCategoryName.trim();
+    if(!name || name===item.name){setEditingCategoryId(null);return;}
+    setCategoryBusy(true);setError("");
+    try {
+      await adminRenameCategory(item.id,name);
+      setCategories(await adminListCategories());
+      setEditingCategoryId(null);
+      setEditingCategoryName("");
+    } catch(error){setError(friendlyError(error));}
+    finally{setCategoryBusy(false);}
   };
 
   const removeCategory=async(item)=>{
-    if(!window.confirm("Delete category " + item.name + "?")) return;
-    try { await adminDeleteCategory(item.id); setCategories(await adminListCategories()); } catch(error){setError(friendlyError(error));}
+    if(!window.confirm("Delete category " + item.name + "? Check that sellers using this category will not lose needed information.")) return;
+    setCategoryBusy(true);setError("");
+    try { await adminDeleteCategory(item.id); setCategories(await adminListCategories()); }
+    catch(error){setError(friendlyError(error));}
+    finally{setCategoryBusy(false);}
   };
+
+  const visibleCategories=categories.filter((item)=>String(item.name||"").toLowerCase().includes(categorySearch.trim().toLowerCase()));
 
   const counts = sellers.reduce((acc,item) => {
     const value = item.verification_status || "pending";
@@ -1599,12 +1628,36 @@ function AdminPage() {
         </section>}
       {tab==="storage" && <AdminStorageManagement />}
       {tab==="categories" &&
-        <div className="dashboard-list">
-          <button className="primary-button" onClick={addCategory}><Plus size={16}/> Add category</button>
-          {categories.map((item)=>
-            <article className="dashboard-item" key={item.id}><strong>{item.name}</strong><div className="button-row"><button className="secondary-button" onClick={()=>renameCategory(item)}><Pencil size={15}/> Rename</button><button className="danger-button" onClick={()=>removeCategory(item)}><Trash2 size={15}/> Delete</button></div></article>
-          )}
-        </div>}
+        <section className="admin-category-management">
+          <div className="dashboard-section-head">
+            <div><h2>Category management</h2><p>Add and maintain the categories customers use to discover local sellers. Use clear names and avoid duplicates.</p></div>
+            <span className="admin-category-count">{categories.length} categories</span>
+          </div>
+          <form className="admin-category-create" onSubmit={addCategory}>
+            <label htmlFor="admin-category-new">Add a category</label>
+            <div className="admin-category-create-row">
+              <input id="admin-category-new" value={categoryDraft} onChange={(event)=>setCategoryDraft(event.target.value)} placeholder="e.g. Handmade gifts" maxLength={60} required />
+              <button className="primary-button" type="submit" disabled={categoryBusy||!categoryDraft.trim()}><Plus size={16}/>{categoryBusy?"Saving…":"Add category"}</button>
+            </div>
+            <small>Use a short, customer-friendly name. The existing category system remains unchanged.</small>
+          </form>
+          <label className="admin-seller-search"><Search size={18}/><input type="search" value={categorySearch} onChange={(event)=>setCategorySearch(event.target.value)} placeholder="Find a category" aria-label="Search categories"/></label>
+          <div className="admin-category-list">
+            {visibleCategories.map((item)=>
+              <article className="dashboard-item admin-category-row" key={item.id}>
+                {editingCategoryId===item.id ? (
+                  <form className="admin-category-edit" onSubmit={(event)=>{event.preventDefault();renameCategory(item);}}>
+                    <input aria-label={"Rename "+item.name} value={editingCategoryName} onChange={(event)=>setEditingCategoryName(event.target.value)} maxLength={60} required autoFocus/>
+                    <div className="button-row"><button className="primary-button" type="submit" disabled={categoryBusy||!editingCategoryName.trim()}>{categoryBusy?"Saving…":"Save"}</button><button className="secondary-button" type="button" onClick={()=>setEditingCategoryId(null)} disabled={categoryBusy}>Cancel</button></div>
+                  </form>
+                ) : (
+                  <><div className="admin-category-name"><Grid2X2 size={18}/><strong>{item.name}</strong></div><div className="button-row"><button className="secondary-button" type="button" onClick={()=>startRenameCategory(item)} disabled={categoryBusy}><Pencil size={15}/> Rename</button><button className="danger-button" type="button" onClick={()=>removeCategory(item)} disabled={categoryBusy}><Trash2 size={15}/> Delete</button></div></>
+                )}
+              </article>
+            )}
+            {!visibleCategories.length&&<Empty title="No matching categories" text={categorySearch?"Try another search term.":"Add the first category using the form above."}/>}
+          </div>
+        </section>}
         </section>
       </div>
     </main>

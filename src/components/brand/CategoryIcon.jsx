@@ -23,5 +23,5 @@ export default function CategoryIcon({ category = "", size = 46, className = "" 
   else if (/tech|computer|digital|mobile|electronic/.test(name)) art = <><rect x="8" y="7" width="30" height="23" rx="3"/><path d="M18 38h10m-5-8v8M15 13h16m-16 5h11"/></>;
   else if (/other|misc|general/.test(name)) art = <><circle cx="12" cy="23" r="2"/><circle cx="23" cy="23" r="2"/><circle cx="34" cy="23" r="2"/><path d="m29 13 10 10-10 10"/></>;
   else art = <><path d="M23 40s-14-13-14-23a14 14 0 1 1 28 0c0 10-14 23-14 23Z"/><circle cx="23" cy="17" r="4.5"/></>;
-  return <svg className={className} width={size} height={size} viewBox="0 0 46 46" aria-hidden="true" focusable="false" {...line}>{art}</svg>;
+  return <svg className={className} width={size} height={size} viewBox="0 0 46 46" aria-hidden="true" focusable="false" fill="none" stroke="#762a38" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{display:"block",width:size,height:size,minWidth:size,minHeight:size,flex:"none",overflow:"visible",color:"#762a38",opacity:1,visibility:"visible"}}>{art}</svg>;
 }

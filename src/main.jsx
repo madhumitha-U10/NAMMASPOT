@@ -395,7 +395,14 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
     return () => window.clearTimeout(timer);
   }, [query]);
   const activeNear = area || near;
-  const options = useMemo(() => ({ query, category, near: activeNear }), [query, category, activeNear]);
+  const [sort, setSort] = useState("relevant");
+  const [resultType, setResultType] = useState("all");
+  const [debouncedQuery, setDebouncedQuery] = useState(urlQuery);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedQuery(query), 250);
+    return () => window.clearTimeout(timer);
+  }, [query]);
+  const options = useMemo(() => ({ query: debouncedQuery, category, near: activeNear, sort, resultType }), [debouncedQuery, category, activeNear, sort, resultType]);
   const state = useAsync(() => getPublicSellers(options), [options]);
 
   const categories = Array.from(new Set(["All", ...popularCategories, ...categoryNames]));
@@ -408,10 +415,30 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
         <p>Search by seller, product, category or neighbourhood.</p>
       </div>
 
-      <div className="explore-search">
-        <Search size={21}/>
-        <input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search sellers, products or places"/>
-        {query && <button onClick={() => setQuery("")}>Clear</button>}
+      <div className="explore-search" role="search">
+        <Search size={21} aria-hidden="true"/>
+        <input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search sellers, products or places" aria-label="Search sellers, products and services"/>
+        {query && <button type="button" aria-label="Clear search" onClick={() => setQuery("")}>Clear</button>}
+      </div>
+      {!query.trim() && <div className="search-suggestions" aria-label="Popular searches">
+        <span>Try searching</span>
+        {["Birthday cakes", "Crochet bouquet", "Mehendi", "Handmade jewellery"].map((suggestion) => <button key={suggestion} onClick={() => setQuery(suggestion)}>{suggestion}</button>)}
+      </div>}
+      <div className="search-controls">
+        <label>Show
+          <select value={resultType} onChange={(event) => setResultType(event.target.value)}>
+            <option value="all">All sellers</option>
+            <option value="services">Service providers</option>
+            <option value="sellers">Businesses</option>
+          </select>
+        </label>
+        <label>Sort
+          <select value={sort} onChange={(event) => setSort(event.target.value)}>
+            <option value="relevant">Most relevant</option>
+            <option value="recent">Recently added</option>
+            <option value="name">Name A–Z</option>
+          </select>
+        </label>
       </div>
 
       <div className="category-row">
@@ -426,7 +453,7 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
       {state.loading ? <CardSkeletonRow detailed/> :
         state.error ? <ErrorState message={state.error} retry={() => location.reload()}/> :
         state.data?.length ? <div className="seller-list">{state.data.map((seller,index) => <SellerCard key={seller.id} seller={seller} index={index} go={go} toggleSave={toggleSave} saved={saved.includes(seller.id)} detailed/>)}</div> :
-        <Empty title="No sellers found" text="Try a different search or category." actionLabel="Clear filters" onAction={() => go("/explore")}/>}
+        <Empty title="No matching sellers yet" text="Try a shorter search, remove a filter, or explore another category." actionLabel="Clear search and filters" onAction={() => { setQuery(""); setResultType("all"); setSort("relevant"); go("/explore"); }}/>}
     </main>
   );
 }

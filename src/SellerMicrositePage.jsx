@@ -127,7 +127,8 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
   const [state,setState]=useState({loading:true,error:"",data:null});
   const [language,setLanguage]=useState(()=>localStorage.getItem("nammaspot-language")==="ta"?"ta":"en");
   const isTamil=language==="ta";
-  const [product,setProduct]=useState(null);\n  const [savedProductIds,setSavedProductIds]=useState(()=>new Set(readSavedProducts().map(item=>item.id)));
+  const [product,setProduct]=useState(null);
+  const [savedProductIds,setSavedProductIds]=useState(()=>new Set(readSavedProducts().map(item=>item.id)));
   const [catalogueQuery,setCatalogueQuery]=useState("");
   const [activeTab,setActiveTab]=useState("catalogue");
   const [shareOpen,setShareOpen]=useState(false);

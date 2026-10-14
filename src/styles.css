@@ -4051,3 +4051,30 @@ body { overflow-x:hidden; }
 @media(max-width:520px){.brand{gap:7px;font-size:24px}.brand-mark{width:32px;height:32px;border-radius:10px;font-size:20px}.categories-page .category-grid-large{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.categories-page .category-tile{min-height:132px;padding:15px 9px 13px;border-radius:18px}.categories-page .category-tile-icon{width:54px;height:54px;border-radius:17px}.categories-page .category-tile-icon svg{width:31px;height:31px}.categories-page .category-tile-name{font-size:12px}.categories-page .category-tile-arrow{right:7px;top:7px}}
 @media(prefers-reduced-motion:reduce){.categories-page .category-tile{transition:none}}
 
+
+
+/* Search UX: compact, accessible controls for mobile and desktop. */
+.search-suggestions{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0 18px;
+  color:var(--muted);font-size:13px;
+}
+.search-suggestions button{
+  border:1px solid #e1d9cf;background:#fffefa;color:#63262b;border-radius:999px;
+  padding:8px 12px;font-size:13px;font-weight:650;
+}
+.search-suggestions button:hover{border-color:var(--burgundy);background:var(--soft-burgundy)}
+.search-controls{
+  display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;margin:8px 0 18px;
+}
+.search-controls label{display:flex;align-items:center;gap:8px;color:#5f5b53;font-size:13px;font-weight:700}
+.search-controls select{
+  min-height:40px;max-width:190px;border:1px solid #d9d4c9;border-radius:12px;
+  background:#fffefa;color:var(--ink);padding:8px 30px 8px 11px;
+}
+@media(max-width:520px){
+  .search-controls{justify-content:stretch;gap:8px}
+  .search-controls label{flex:1;min-width:0;justify-content:space-between}
+  .search-controls select{max-width:62%;min-width:0}
+  .search-suggestions{gap:7px}
+  .search-suggestions button{padding:7px 10px}
+}

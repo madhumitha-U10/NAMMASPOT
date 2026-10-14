@@ -68,6 +68,19 @@ import { addProductGalleryImage, deleteProductGalleryImage, getMyMicrosite, save
 import { formatBytes } from "./lib/storage";
 
 const popularCategories = ["Bakery", "Mehendi", "Crochet", "Makeup", "Art"];
+const SAVED_PRODUCTS_KEY = "nammaspot-saved-products";
+function readSavedProducts() {
+  try {
+    const value = JSON.parse(localStorage.getItem(SAVED_PRODUCTS_KEY) || "[]");
+    return Array.isArray(value) ? value : [];
+  } catch { return []; }
+}
+function writeSavedProducts(items) {
+  try {
+    localStorage.setItem(SAVED_PRODUCTS_KEY, JSON.stringify(items));
+    window.dispatchEvent(new CustomEvent("nammaspot-saved-products-change"));
+  } catch {}
+}
 
 
 function App() {
@@ -226,7 +239,7 @@ function App() {
       {route === "dashboard" && <DashboardPage go={go} profile={profile}/>}
       {route === "admin-login" && <AdminLoginPage go={go} onSignedIn={(next) => setProfile(next)} />}
       {route === "admin-dashboard" && <AdminPage go={go}/>}
-      {route === "seller" && <Suspense fallback={<main className="page" aria-live="polite">Loading seller catalogue…</main>}><SellerMicrositePage go={go} slug={getSellerSlug(path)}/></Suspense>}
+      {route === "seller" && <Suspense fallback={<main className="page" aria-live="polite">Loading seller catalogue…</main>}><SellerMicrositePage go={go} slug={getSellerSlug(path)} savedWebsites={saved} toggleSave={toggleSave}/></Suspense>}
       {route === "website-editor" && <Suspense fallback={<main className="page" aria-live="polite">Loading settings…</main>}><WebsiteEditorPage go={go}/></Suspense>}
       {route === "not-found" && <main className="page"><Empty title="Page not found" text="That NammaSpot page does not exist." actionLabel="Back home" onAction={() => go("/")}/></main>}
 
@@ -514,15 +527,49 @@ function FeaturedPage({ go, saved, toggleSave }) {
 }
 
 function SavedPage({ go, saved, toggleSave }) {
+  const [activeTab, setActiveTab] = useState("products");
+  const [savedProducts, setSavedProducts] = useState(() => readSavedProducts());
   const state = useAsync(() => getPublicSellers(), [saved.join(",")]);
   const sellers = (state.data || []).filter((seller) => saved.includes(seller.id));
+
+  useEffect(() => {
+    const refresh = () => setSavedProducts(readSavedProducts());
+    window.addEventListener("nammaspot-saved-products-change", refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener("nammaspot-saved-products-change", refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
+
+  const removeSavedProduct = (productId) => {
+    const next = savedProducts.filter((item) => item.id !== productId);
+    setSavedProducts(next);
+    writeSavedProducts(next);
+  };
+
   return (
-    <main className="page">
-      <div className="page-title"><div className="eyebrow">YOUR LIST</div><h1>Places you want to remember.</h1><p>Keep your favourites close by.</p></div>
-      {state.loading ? <CardSkeletonRow detailed/> :
+    <main className="page saved-page">
+      <div className="page-title"><div className="eyebrow">YOUR NAMMASPOT</div><h1>Your saved favourites.</h1><p>Keep products and local seller websites in one place.</p></div>
+      <div className="saved-tabs" role="tablist" aria-label="Saved items">
+        <button type="button" role="tab" aria-selected={activeTab === "products"} className={activeTab === "products" ? "active" : ""} onClick={() => setActiveTab("products")}><Heart size={17} fill={activeTab === "products" ? "currentColor" : "none"}/> Saved Products <span>{savedProducts.length}</span></button>
+        <button type="button" role="tab" aria-selected={activeTab === "websites"} className={activeTab === "websites" ? "active" : ""} onClick={() => setActiveTab("websites")}><Store size={17}/> Saved Websites <span>{saved.length}</span></button>
+      </div>
+      {activeTab === "products" ? (
+        savedProducts.length ? <div className="saved-product-grid">{savedProducts.map((item) => (
+          <article className="saved-product-card" key={item.id}>
+            <div className="saved-product-image">{item.image_url ? <img src={item.image_url} alt={item.name} loading="lazy"/> : <span>{String(item.name || "P").charAt(0)}</span>}
+              <button className="saved-product-remove" type="button" onClick={() => removeSavedProduct(item.id)} aria-label={"Remove " + item.name + " from saved products"}><Heart size={19} fill="currentColor"/></button>
+            </div>
+            <div className="saved-product-info"><h2>{item.name}</h2><strong>₹{item.price}</strong><p>{item.sellerName || "Local seller"}</p><button className="card-link" onClick={() => item.sellerSlug ? go("/s/" + item.sellerSlug) : go("/explore")}>View seller website <ChevronRight size={16}/></button></div>
+          </article>
+        ))}</div> : <Empty title="No saved products yet" text="Tap the red heart on a product to save it here." actionLabel="Explore sellers" onAction={() => go("/explore")}/>
+      ) : (
+        state.loading ? <CardSkeletonRow detailed/> :
         state.error ? <ErrorState message={state.error}/> :
         sellers.length ? <div className="seller-list">{sellers.map((seller,index) => <SellerCard key={seller.id} seller={seller} index={index} go={go} toggleSave={toggleSave} saved detailed/>)}</div> :
-        <Empty title="Nothing saved yet" text="Tap the heart on a seller and they will appear here." actionLabel="Explore sellers" onAction={() => go("/explore")}/>}
+        <Empty title="No saved websites yet" text="Tap the heart on a seller card or seller website to save it here." actionLabel="Explore sellers" onAction={() => go("/explore")}/>
+      )}
     </main>
   );
 }

@@ -268,10 +268,20 @@ export async function getPublicSellers({ query = "", category = "All", near = ""
       products: state.products.filter((product) => product.seller_id === seller.id),
     }));
   } else {
-    const { data, error } = await supabase.from("sellers").select(sellerSelect)
-      .eq("verification_status", "approved").order("created_at", { ascending: false }).limit(200);
-    if (error) throw error;
-    rows = (data ?? []).map(sellerOf);
+    // Fetch approved sellers in pages so discovery does not silently stop at 200.
+    // Keep a bounded page size to avoid one oversized PostgREST response.
+    const data = [];
+    const pageSize = 500;
+    for (let from = 0; ; from += pageSize) {
+      const { data: page, error } = await supabase.from("sellers").select(sellerSelect)
+        .eq("verification_status", "approved")
+        .order("created_at", { ascending: false })
+        .range(from, from + pageSize - 1);
+      if (error) throw error;
+      data.push(...(page ?? []));
+      if (!page || page.length < pageSize) break;
+    }
+    rows = data.map(sellerOf);
   }
   const requestedArea = near || "";
   const budget = extractBudget(query);

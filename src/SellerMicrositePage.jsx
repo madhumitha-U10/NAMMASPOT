@@ -404,4 +404,3 @@ function SellerShareModal({seller,url,onClose}){
   </div>;
 }
 
-function MiniProduct({p,onOpen,onEnquire}){return <article className="microsite-product-card" tabIndex="0" onClick={onOpen} onKeyDown={e=>{if(e.key==="Enter"||e.key===" ")onOpen()}}><div className="microsite-product-image">{p.image_url?<img src={p.image_url} alt={p.name||p.product_name} loading="lazy"/>:<span>{(p.name||p.product_name||"?").charAt(0)}</span>}</div><div><small>{p.category?.name||"Catalogue"}</small><h3>{esc(p.name||p.product_name)}</h3>{p.description&&<p>{esc(p.description).slice(0,120)}</p>}{p.price!=null&&<strong>₹{p.price}</strong>}{onEnquire&&<a className="secondary-button full-button ns-product-enquiry" href={onEnquire} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()}><MessageCircle size={15}/> Enquire on WhatsApp</a>}</div></article>}

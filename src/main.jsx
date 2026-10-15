@@ -78,7 +78,7 @@ function readSavedProducts() {
 function writeSavedProducts(items) {
   try {
     localStorage.setItem(SAVED_PRODUCTS_KEY, JSON.stringify(items));
-    window.dispatchEvent(new CustomEvent("nammaspot-saved-products-change"));
+    window.dispatchEvent(new window.CustomEvent("nammaspot-saved-products-change"));
   } catch {}
 }
 

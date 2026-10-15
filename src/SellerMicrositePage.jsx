@@ -1,14 +1,13 @@
-import {useEffect,useMemo,useRef,useState} from "react";
-import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Send,Heart,Home,Compass,Grid2X2,Bookmark,UserRound,Search,Navigation,Star,Camera,CalendarDays} from "lucide-react";
+import {useEffect,useRef,useState} from "react";
+import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Heart,Home,Compass,Search,Navigation,Star,CalendarDays} from "lucide-react";
 import {QRCodeCanvas} from "qrcode.react";
 import {createReview,getPublicReviews} from "./lib/api";
 import {getMicrosite,sellerPublicUrl} from "./lib/microsite";
 
-const days=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const esc=(v)=>String(v||"").replace(/[<>]/g,"");
 const SAVED_PRODUCTS_KEY="nammaspot-saved-products";
 const readSavedProducts=()=>{try{const items=JSON.parse(localStorage.getItem(SAVED_PRODUCTS_KEY)||"[]");return Array.isArray(items)?items:[]}catch{return[]}};
-const writeSavedProducts=(items)=>{try{localStorage.setItem(SAVED_PRODUCTS_KEY,JSON.stringify(items));window.dispatchEvent(new CustomEvent("nammaspot-saved-products-change"))}catch{}};
+const writeSavedProducts=(items)=>{try{localStorage.setItem(SAVED_PRODUCTS_KEY,JSON.stringify(items));window.dispatchEvent(new window.CustomEvent("nammaspot-saved-products-change"))}catch{}};
 const whatsappUrl=(seller,product=null)=>{
   const raw=String(seller?.whatsapp_phone||"").replace(/\D/g,"");
   if(!raw)return null;
@@ -125,17 +124,13 @@ function ReviewPanel({seller}) {
 
 export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave}){
   const [state,setState]=useState({loading:true,error:"",data:null});
-  const [language,setLanguage]=useState(()=>localStorage.getItem("nammaspot-language")==="ta"?"ta":"en");
-  const isTamil=language==="ta";
   const [product,setProduct]=useState(null);
   const [savedProductIds,setSavedProductIds]=useState(()=>new Set(readSavedProducts().map(item=>item.id)));
   const [catalogueQuery,setCatalogueQuery]=useState("");
   const [activeTab,setActiveTab]=useState("catalogue");
   const [shareOpen,setShareOpen]=useState(false);
-  useEffect(()=>{localStorage.setItem("nammaspot-language",language);document.documentElement.lang=language},[language]);
   useEffect(()=>{let alive=true;getMicrosite(slug).then(data=>alive&&setState({loading:false,error:"",data})).catch(e=>alive&&setState({loading:false,error:e.message||"Could not load this seller.",data:null}));return()=>{alive=false}},[slug]);
   const data=state.data,seller=data?.seller,settings=data?.settings||{};
-  const status=useMemo(()=>data?nowStatus(data.hours,data.specialDates):null,[data]);
   useEffect(()=>{
     if(!seller)return;
     const url=sellerPublicUrl(seller.slug);

@@ -37,22 +37,6 @@ function instagramProfileUrl(value) {
 }
 
 
-function nowStatus(hours,specialDates){
-  const now=new Date(), date=now.toISOString().slice(0,10);
-  const special=(specialDates||[]).find(x=>x.special_date===date);
-  const day=special || (hours||[]).find(x=>Number(x.day_of_week)===now.getDay());
-  if(!day) return null;
-  if(day.is_open===false || day.is_closed===true) return {open:false};
-  const mins=now.getHours()*60+now.getMinutes();
-  const ranges=(day.ranges||[]).map(r=>[r.open,r.close]).filter(x=>x[0]&&x[1]);
-  for(const [a,b] of ranges){
-    const [ah,am]=a.split(":").map(Number),[bh,bm]=b.split(":").map(Number);
-    if(mins>=ah*60+am&&mins<bh*60+bm)return {open:true,close:b};
-  }
-  const next=ranges.find(r=>{const [h,m]=r[0].split(":").map(Number);return mins<h*60+m;});
-  return {open:false,next:next?.[0]};
-}
-
 function ProductModal({product,onClose,onEnquire}){
   const imgs=[...new Set([product.image_url,...(product.images||[]).map(x=>x.image_url)].map(x=>String(x||"").trim()).filter(Boolean))];
   const [i,setI]=useState(0);

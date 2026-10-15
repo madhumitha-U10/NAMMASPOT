@@ -432,7 +432,8 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
   const options = useMemo(() => ({ query: debouncedQuery, category, near: activeNear, sort, resultType }), [debouncedQuery, category, activeNear, sort, resultType]);
   const state = useAsync(() => getPublicSellers(options), [options]);
 
-  const categories = Array.from(new Set(["All", ...popularCategories, ...categoryNames]));
+  const categoryState = useAsync(() => getCategories(), []);
+  const categories = Array.from(new Set(["All", ...(categoryState.data || []).map((item) => item.name).filter(Boolean)]));
 
   return (
     <main className="page">
@@ -485,23 +486,12 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
   );
 }
 
-const chennaiCategories = [
-  "Food & Bakery", "Mehendi", "Bridal Makeup", "Crochet & Handmade",
-  "Jewellery", "Boutique & Fashion", "Home Decor", "Gifts", "Art",
-  "Photography", "Beauty", "Services", "Other"
-];
-
 function CategoriesPage({ go }) {
   const state = useAsync(() => getCategories(), []);
-  const knownCategoryNames = new Set([
-    ...chennaiCategories, "Food", "Bakery", "Henna", "Makeup", "Crochet", "Handmade",
-    "Crafts", "Jewelry", "Accessories", "Accessory", "Boutique", "Fashion",
-    "Home & Decor", "Home", "Decor", "Gift", "Photo", "Service", "Other"
-  ].map((name) => name.toLowerCase()));
-  const customCategories = (state.data || []).map((item) => item.name).filter((name) =>
-    !knownCategoryNames.has(String(name).trim().toLowerCase())
-  );
-  const categories = [...chennaiCategories, ...customCategories];
+  const categories = Array.from(new Map((state.data || [])
+    .filter((item) => item && item.name)
+    .map((item) => [String(item.name).trim().toLocaleLowerCase("en-IN"), String(item.name).trim()])
+  ).values());
   return (
     <main className="page categories-page">
       <div className="page-title">
@@ -778,8 +768,20 @@ function instagramHandle(value) {
 }
 
 function RegisterPage({ go }) {
-  const [data,setData] = useState({nammaspotId:"",business:"",owner:"",phone:"",password:"",category:"Handmade",location:"",locationUrl:"",description:"",whatsapp:"",instagram:""});
+  const [data,setData] = useState({nammaspotId:"",business:"",owner:"",phone:"",password:"",category:"",location:"",locationUrl:"",description:"",whatsapp:"",instagram:""});
+  const [categoryOptions,setCategoryOptions] = useState([]);
   const [state,setState] = useState({loading:false,error:"",success:"",nammaspotId:""});
+  useEffect(() => {
+    let active = true;
+    getCategories().then((items) => {
+      if (!active) return;
+      const names = Array.from(new Map((items || []).filter((item) => item && item.name)
+        .map((item) => [String(item.name).trim().toLocaleLowerCase("en-IN"), String(item.name).trim()])).values());
+      setCategoryOptions(names);
+      setData((current) => ({...current, category: names.includes(current.category) ? current.category : (names[0] || "")}));
+    }).catch(() => { if (active) setCategoryOptions([]); });
+    return () => { active = false; };
+  }, []);
   const [showPassword,setShowPassword] = useState(false);
   const [step,setStep] = useState(1);
 
@@ -899,7 +901,7 @@ function RegisterPage({ go }) {
               <label>Your name <span className="required">*</span><input value={data.owner} onChange={e=>setData({...data,owner:e.target.value})} maxLength={120} autoComplete="name" required/><small>The name of the owner or main business contact.</small></label>
               <label>Business phone <span className="required">*</span><input type="tel" value={data.phone} onChange={e=>setData({...data,phone:e.target.value})} autoComplete="tel" inputMode="tel" maxLength={20} required aria-describedby="phone-help"/><small id="phone-help">Enter a reachable 10-digit Indian mobile/phone number.</small>{data.phone && !validPhone && <span className="field-feedback error">Enter at least 10 digits.</span>}</label>
               <label>WhatsApp number <span className="required">*</span><input type="tel" value={data.whatsapp} onChange={e=>setData({...data,whatsapp:e.target.value})} autoComplete="tel" inputMode="tel" maxLength={20} required aria-describedby="whatsapp-help"/><small id="whatsapp-help">Use the number customers should message on WhatsApp.</small>{data.whatsapp && !validWhatsapp && <span className="field-feedback error">Enter at least 10 digits.</span>}</label>
-              <label>Business category <span className="optional">(recommended)</span><select value={data.category} onChange={e=>setData({...data,category:e.target.value})}>{categoryNames.map(c=><option key={c}>{c}</option>)}</select><small>Choose the category that best describes your business.</small></label>
+              <label>Business category <span className="optional">(recommended)</span><select value={data.category} onChange={e=>setData({...data,category:e.target.value})}><option value="">Choose a category</option>{categoryOptions.map(c=><option key={c} value={c}>{c}</option>)}</select><small>{categoryOptions.length ? "Choose from categories currently managed by NammaSpot admin." : "Categories are temporarily unavailable. Please try again shortly."}</small></label>
               <label>Business location <span className="required">*</span><input value={data.location} onChange={e=>setData({...data,location:e.target.value})} placeholder="Example: RS Puram, Coimbatore" autoComplete="street-address" maxLength={240} required/><small>Area, town or city where customers can find you.</small></label>
             </div>
             <details className="signup-more-details"><summary>Add more business details now <span>optional</span></summary><div className="form-grid">

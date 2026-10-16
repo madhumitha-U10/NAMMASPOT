@@ -415,6 +415,7 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
   const category = params.get("cat") || "All";
   const near = params.get("near") || "";
   const urlQuery = params.get("search") || "";
+  const searchType = params.get("type") === "product" ? "product" : "seller";
   const area = params.get("area") || "";
   useEffect(() => { if (urlQuery) setQuery(urlQuery); }, [urlQuery, setQuery]);
   useEffect(() => {
@@ -435,7 +436,7 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
     const timer = window.setTimeout(() => setDebouncedQuery(query), 250);
     return () => window.clearTimeout(timer);
   }, [query]);
-  const options = useMemo(() => ({ query: debouncedQuery, category, near: activeNear, sort, resultType }), [debouncedQuery, category, activeNear, sort, resultType]);
+  const options = useMemo(() => ({ query: debouncedQuery, category, near: activeNear, sort, resultType, searchType }), [debouncedQuery, category, activeNear, sort, resultType, searchType]);
   const state = useAsync(() => getPublicSellers(options), [options]);
 
   const categoryState = useAsync(() => getCategories(), []);
@@ -446,7 +447,7 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
       <div className="page-title">
         <div className="eyebrow">{activeNear ? "NEARBY · " + activeNear.toUpperCase() : "DISCOVER"}</div>
         <h1>{near ? "Discover around Chennai." : "Find your next favourite."}</h1>
-        <p>Search by seller, product, category or neighbourhood.</p>
+        <p>Find a seller website by business name, or search for a product.</p>
       </div>
 
       <div className="explore-search" role="search">
@@ -454,6 +455,7 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
         <input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search sellers, products or places" aria-label="Search sellers, products and services"/>
         {query && <button type="button" aria-label="Clear search" onClick={() => setQuery("")}>Clear</button>}
       </div>
+      <div className="search-mode-choices explore-search-modes" aria-label="Choose search type"><button type="button" className={searchType === "seller" ? "active" : ""} onClick={() => go("/explore?type=seller" + (query.trim() ? "&search=" + encodeURIComponent(query.trim()) : ""))}><Store size={15}/> Seller websites</button><button type="button" className={searchType === "product" ? "active" : ""} onClick={() => go("/explore?type=product" + (query.trim() ? "&search=" + encodeURIComponent(query.trim()) : ""))}><Search size={15}/> Products</button></div>
       {!query.trim() && <div className="search-suggestions" aria-label="Popular searches">
         <span>Try searching</span>
         {["Birthday cakes", "Crochet bouquet", "Mehendi", "Handmade jewellery"].map((suggestion) => <button key={suggestion} onClick={() => setQuery(suggestion)}>{suggestion}</button>)}

@@ -456,32 +456,35 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
         <p>Find a seller website by business name, or search for a product.</p>
       </div>
 
-      <div className="explore-search" role="search">
-        <Search size={21} aria-hidden="true"/>
-        <input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search sellers, products or places" aria-label="Search sellers, products and services"/>
-        {query && <button type="button" aria-label="Clear search" onClick={() => setQuery("")}>Clear</button>}
-      </div>
-      <div className="search-mode-choices explore-search-modes" aria-label="Choose search type"><button type="button" className={searchType === "seller" ? "active" : ""} onClick={() => go("/explore?type=seller" + (query.trim() ? "&search=" + encodeURIComponent(query.trim()) : ""))}><Store size={15}/> Seller websites</button><button type="button" className={searchType === "product" ? "active" : ""} onClick={() => go("/explore?type=product" + (query.trim() ? "&search=" + encodeURIComponent(query.trim()) : ""))}><Search size={15}/> Products</button></div>
-      {!query.trim() && <div className="search-suggestions" aria-label="Popular searches">
-        <span>Try searching</span>
-        {["Birthday cakes", "Crochet bouquet", "Mehendi", "Handmade jewellery"].map((suggestion) => <button key={suggestion} onClick={() => setQuery(suggestion)}>{suggestion}</button>)}
-      </div>}
-      <div className="search-controls">
-        <label>Show
-          <select value={resultType} onChange={(event) => setResultType(event.target.value)}>
-            <option value="all">All sellers</option>
-            <option value="services">Service providers</option>
-            <option value="sellers">Businesses</option>
-          </select>
-        </label>
-        <label>Sort
-          <select value={sort} onChange={(event) => setSort(event.target.value)}>
-            <option value="relevant">Most relevant</option>
-            <option value="recent">Recently added</option>
-            <option value="name">Name A–Z</option>
-          </select>
-        </label>
-      </div>
+      <section className="explore-tools" aria-label="Search and filter results">
+        <div className="explore-search" role="search">
+          <Search size={20} aria-hidden="true"/>
+          <input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder={searchType === "product" ? "Search products…" : "Search seller websites…"} aria-label={searchType === "product" ? "Search products" : "Search seller websites"}/>
+          {query && <button type="button" aria-label="Clear search" onClick={() => setQuery("")}>Clear</button>}
+        </div>
+        <div className="explore-toolbar-row">
+          <div className="search-mode-choices explore-search-modes" aria-label="Search type">
+            <button type="button" className={searchType === "seller" ? "active" : ""} onClick={() => go("/explore?type=seller" + (query.trim() ? "&search=" + encodeURIComponent(query.trim()) : ""))}><Store size={15}/> Seller websites</button>
+            <button type="button" className={searchType === "product" ? "active" : ""} onClick={() => go("/explore?type=product" + (query.trim() ? "&search=" + encodeURIComponent(query.trim()) : ""))}><Search size={15}/> Products</button>
+          </div>
+          <div className="search-controls">
+            <label>Show
+              <select value={resultType} onChange={(event) => setResultType(event.target.value)}>
+                <option value="all">All sellers</option>
+                <option value="services">Service providers</option>
+                <option value="sellers">Businesses</option>
+              </select>
+            </label>
+            <label>Sort
+              <select value={sort} onChange={(event) => setSort(event.target.value)}>
+                <option value="relevant">Most relevant</option>
+                <option value="recent">Recently added</option>
+                <option value="name">Name A–Z</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      </section>
 
       <div className="category-row">
         {categories.map((cat) => (

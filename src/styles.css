@@ -4199,3 +4199,275 @@ input, select, textarea { max-width: 100%; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+
+/* Desktop seller catalogue layout: spacious, catalogue-first, while retaining the mobile design below 761px. */
+@media (min-width: 761px) {
+  .ns-mobile-redesign {
+    width: min(1280px, calc(100% - 64px));
+    max-width: none;
+    margin: 28px auto 56px;
+    padding: 0 0 42px;
+    border: 1px solid #e5d8ca;
+    border-radius: 24px;
+    overflow: hidden;
+    background: #fbf7ee;
+    box-shadow: 0 18px 55px rgba(65, 34, 29, .07);
+  }
+
+  .ns-mobile-brandbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 14px 34px;
+    min-height: 76px;
+    border-bottom: 1px solid #e8dbcd;
+    background: #fffaf3;
+  }
+  .ns-mobile-brandbar > button:first-child {
+    display: grid;
+    place-items: center;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    border: 1px solid #e7d9cb;
+    border-radius: 12px;
+    background: #fffdf8;
+  }
+  .ns-mobile-brandbar > .ns-brand-lockup {
+    flex: 1;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .ns-mobile-brandbar strong { font-size: 25px; }
+  .ns-mobile-brandbar small { font-size: 11px; }
+  .ns-brandbar-actions { gap: 9px; }
+  .ns-brandbar-actions > button {
+    width: 44px;
+    height: 44px;
+    border: 1px solid #e7d9cb;
+    background: #fffdf8;
+  }
+
+  .ns-mobile-seller-head {
+    align-items: center;
+    gap: 28px;
+    padding: 38px 42px 30px;
+  }
+  .ns-mobile-seller-avatar {
+    width: 124px;
+    height: 124px;
+    flex: 0 0 124px;
+    border-radius: 22px;
+    border: 1px solid #e6d7c8;
+    box-shadow: 0 10px 28px rgba(65, 34, 29, .10);
+  }
+  .ns-mobile-seller-avatar img {
+    object-fit: contain;
+    padding: 7px;
+  }
+  .ns-mobile-seller-info h1 {
+    margin: 0 0 10px;
+    font: 600 clamp(32px, 3vw, 46px)/1.08 Georgia, "Times New Roman", serif;
+    letter-spacing: -.04em;
+  }
+  .ns-mobile-verified-line { font-size: 13px; }
+  .ns-mobile-bio {
+    max-width: 760px;
+    margin: 12px 0 9px;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #6f625a;
+  }
+  .ns-mobile-location {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: #725b51;
+  }
+
+  .ns-mobile-update {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin: 0 42px 24px;
+    padding: 16px 18px;
+    border: 1px solid #e7d7c8;
+    border-radius: 14px;
+    background: #fffaf3;
+  }
+  .ns-mobile-update > div { min-width: 0; }
+  .ns-mobile-update small {
+    display: block;
+    color: #8a4a51;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .12em;
+  }
+  .ns-mobile-update p {
+    margin: 6px 0 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #4f403a;
+  }
+
+  .ns-mobile-stats {
+    display: flex;
+    justify-content: flex-start;
+    gap: 38px;
+    min-height: 0;
+    margin: 0 42px 22px;
+    padding: 0 0 22px;
+    border: 0;
+    border-bottom: 1px solid #e8dbcd;
+    border-radius: 0;
+    background: transparent;
+  }
+  .ns-mobile-stats > div {
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 4px;
+    padding: 0;
+  }
+  .ns-mobile-stats > div + div { border-left: 0; }
+  .ns-mobile-stats b { font-size: 21px; }
+  .ns-mobile-stats span { font-size: 12px; }
+
+  .ns-mobile-contact { padding: 0 42px 24px; }
+  .ns-mobile-whatsapp {
+    display: inline-flex;
+    width: fit-content;
+    min-width: 245px;
+    min-height: 48px;
+    padding: 0 20px;
+    border-radius: 12px;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .ns-mobile-contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 13px;
+  }
+  .ns-mobile-contact-row a,
+  .ns-mobile-contact-row button {
+    min-width: 112px;
+    min-height: 44px;
+    flex-direction: row;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+  }
+  .ns-mobile-contact-row span { font-size: 13px; }
+
+  .ns-mobile-tabs {
+    position: sticky;
+    top: 0;
+    display: flex;
+    gap: 34px;
+    padding: 0 42px;
+    border-top: 1px solid #e8dbcd;
+    background: rgba(251, 247, 238, .96);
+    backdrop-filter: blur(12px);
+  }
+  .ns-mobile-tabs a {
+    min-height: 56px;
+    padding: 0 3px;
+    font-size: 14px;
+  }
+
+  .ns-mobile-catalogue { padding: 28px 42px 44px; }
+  .ns-mobile-search {
+    max-width: 420px;
+    min-height: 48px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+  }
+  .ns-mobile-product-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+  }
+  .ns-mobile-product {
+    border-radius: 16px;
+    border-color: #e6d8c9;
+    box-shadow: 0 5px 18px rgba(65, 34, 29, .045);
+    transition: transform .18s ease, box-shadow .18s ease;
+  }
+  .ns-mobile-product:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(65, 34, 29, .09);
+  }
+  .ns-mobile-product-image {
+    aspect-ratio: 1 / 1;
+    background: #f7f1e8;
+  }
+  .ns-mobile-product-image img {
+    object-fit: contain;
+    object-position: center;
+    padding: 10px;
+  }
+  .ns-mobile-product-copy { padding: 14px; }
+  .ns-mobile-product-copy h3 {
+    min-height: 0;
+    margin-bottom: 8px;
+    font-size: 15px;
+    line-height: 1.4;
+  }
+  .ns-mobile-product-copy > strong {
+    margin-bottom: 12px;
+    font-size: 17px;
+  }
+  .ns-mobile-product-copy > a {
+    min-height: 42px;
+    border-radius: 10px;
+    font-size: 13px;
+  }
+  .ns-product-save-btn { top: 11px; right: 11px; }
+  .ns-mobile-coming-soon { min-height: 180px; border-radius: 16px; }
+
+  .ns-mobile-about,
+  .ns-mobile-reviews {
+    padding: 34px 42px;
+    border-top: 1px solid #e8dbcd;
+  }
+  .ns-mobile-about h2 {
+    margin: 0 0 14px;
+    font: 600 30px/1.15 Georgia, "Times New Roman", serif;
+    color: #34221f;
+  }
+  .ns-mobile-about p {
+    max-width: 900px;
+    font-size: 15px;
+    line-height: 1.75;
+    color: #6f625a;
+  }
+  .ns-mobile-about p:last-child { gap: 8px; }
+  .ns-mobile-reviews .ns-review-panel { max-width: 980px; }
+  .ns-mobile-bottom-nav { display: none !important; }
+}
+
+@media (min-width: 761px) and (max-width: 1080px) {
+  .ns-mobile-redesign { width: calc(100% - 40px); margin-top: 20px; }
+  .ns-mobile-seller-head { padding: 30px 28px 24px; gap: 22px; }
+  .ns-mobile-seller-avatar { width: 104px; height: 104px; flex-basis: 104px; }
+  .ns-mobile-update,
+  .ns-mobile-stats { margin-left: 28px; margin-right: 28px; }
+  .ns-mobile-contact { padding-left: 28px; padding-right: 28px; }
+  .ns-mobile-tabs { padding-left: 28px; padding-right: 28px; }
+  .ns-mobile-catalogue { padding-left: 28px; padding-right: 28px; }
+  .ns-mobile-product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .ns-mobile-about,
+  .ns-mobile-reviews { padding: 28px; }
+}
+
+@media (min-width: 761px) and (max-width: 900px) {
+  .ns-mobile-redesign { width: calc(100% - 28px); margin-top: 14px; }
+  .ns-mobile-seller-head { align-items: flex-start; }
+  .ns-mobile-seller-avatar { width: 88px; height: 88px; flex-basis: 88px; border-radius: 18px; }
+  .ns-mobile-seller-info h1 { font-size: 30px; }
+  .ns-mobile-product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

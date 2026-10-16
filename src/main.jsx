@@ -490,8 +490,21 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
 
       {state.loading ? <CardSkeletonRow detailed/> :
         state.error ? <ErrorState message={state.error} retry={() => location.reload()}/> :
-        state.data?.length ? <div className="seller-list">{state.data.map((seller,index) => <SellerCard key={seller.id} seller={seller} index={index} go={go} toggleSave={toggleSave} saved={saved.includes(seller.id)} detailed/>)}</div> :
-        <Empty title="No matching sellers yet" text="Try a shorter search, remove a filter, or explore another category." actionLabel="Clear search and filters" onAction={() => { setQuery(""); setResultType("all"); setSort("relevant"); go("/explore"); }}/>}
+        searchType === "product" ? (
+          (state.data || []).flatMap((seller) => (seller.products || [])
+            .filter((product) => !debouncedQuery.trim() || [product.name, product.description].some((value) => String(value || "").toLocaleLowerCase("en-IN").includes(debouncedQuery.trim().toLocaleLowerCase("en-IN"))))
+            .map((product) => ({ ...product, sellerName: seller.name, sellerSlug: seller.slug, sellerLocation: seller.location }))).length ?
+          <div className="product-search-grid">{(state.data || []).flatMap((seller) => (seller.products || [])
+            .filter((product) => !debouncedQuery.trim() || [product.name, product.description].some((value) => String(value || "").toLocaleLowerCase("en-IN").includes(debouncedQuery.trim().toLocaleLowerCase("en-IN"))))
+            .map((product) => ({ ...product, sellerName: seller.name, sellerSlug: seller.slug, sellerLocation: seller.location }))).map((product) => (
+              <article className="product-search-card" key={product.id}>
+                <div className="product-search-image">{product.image_url ? <img src={product.image_url} alt={product.name} loading="lazy"/> : <span>{String(product.name || "P").charAt(0)}</span>}</div>
+                <div className="product-search-info"><h2>{product.name}</h2><strong>{Number(product.price) > 0 ? "₹" + product.price : "Contact for price"}</strong><p>{product.sellerName}{product.sellerLocation ? " · " + product.sellerLocation : ""}</p><button className="card-link" onClick={() => go("/s/" + product.sellerSlug)}>View seller website <ChevronRight size={16}/></button></div>
+              </article>
+            ))}</div> :
+          <Empty title="No matching products yet" text="Try another product name or switch to Seller websites." actionLabel="Search seller websites" onAction={() => go("/explore?type=seller" + (query.trim() ? "&search=" + encodeURIComponent(query.trim()) : ""))}/>
+        ) : state.data?.length ? <div className="seller-list">{state.data.map((seller,index) => <SellerCard key={seller.id} seller={seller} index={index} go={go} toggleSave={toggleSave} saved={saved.includes(seller.id)} detailed/>)}</div> :
+        <Empty title="No matching sellers yet" text="Try a shorter search, remove a filter, or explore another category." actionLabel="Clear search and filters" onAction={() => { setQuery(""); setResultType("all"); setSort("relevant"); go("/explore"); }}/>} 
     </main>
   );
 }

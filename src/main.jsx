@@ -349,6 +349,7 @@ function HomePage({ go, query, setQuery }) {
               />
               <button className="hero-inline-search" onClick={() => search("seller")} aria-label="Search seller websites"><Search size={19}/><span>Search</span></button>
             </div>
+            <div className="search-mode-choices home-search-modes" aria-label="Choose what to search"><button type="button" onClick={() => search("seller")}><Store size={15}/> Seller websites</button><button type="button" onClick={() => search("product")}><Search size={15}/> Products</button></div>
             <div className="hero-discovery">
               <span className="hero-discovery-label">Popular</span>
               <div className="quick-chips" aria-label="Popular categories">

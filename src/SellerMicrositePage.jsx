@@ -174,7 +174,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
     writeSavedProducts(next);
     setSavedProductIds(new Set(next.map(item=>item.id)));
   };
-  return <main className="seller-microsite ns-seller-profile ns-reference-layout ns-mobile-redesign">
+  return <main className="seller-microsite ns-seller-profile ns-mobile-redesign">
     <header className="ns-mobile-brandbar">
       <button onClick={()=>go("/explore")} aria-label="Back to explore"><ArrowLeft size={21}/></button>
       <div className="ns-brand-lockup"><span><strong>NammaSpot</strong><small>Local Sellers · Tamil Nadu</small></span></div>
@@ -204,7 +204,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
       <div className="ns-mobile-contact-row">
         {seller.contact&&<a href={"tel:"+seller.contact}><Phone size={20}/><span>Call</span></a>}
         {instagramProfileUrl(seller.instagram_url)&&<a href={instagramProfileUrl(seller.instagram_url)} target="_blank" rel="noopener noreferrer" aria-label={"Open Instagram profile "+instagramProfileUrl(seller.instagram_url).split("/").filter(Boolean).pop()}><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg><span>Instagram</span></a>}
-        <a href={seller.location_url||("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(seller.location||seller.city||seller.business_name||"Tamil Nadu"))} target="_blank" rel="noreferrer"><MapPin size={20}/><span>Directions</span></a>
+        <a href={seller.location_url||("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(seller.location||seller.city||seller.business_name||"Tamil Nadu"))} target="_blank" rel="noreferrer"><MapPin size={20}/><span>Location</span></a>
         <button onClick={share}><Share2 size={20}/><span>Share</span></button>
       </div>
     </section>

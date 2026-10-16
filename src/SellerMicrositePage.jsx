@@ -191,7 +191,6 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
       <div className="ns-mobile-seller-info">
         <h1>{esc(seller.business_name)} {seller.verified&&<span className="ns-mobile-verified-dot" aria-label="Verified seller">✓</span>}</h1>
         <p className="ns-mobile-verified-line">{seller.verified ? "Verified seller" : "Local seller"} · {esc(seller.category?.name||"Local business")}</p>
-        <p className="ns-mobile-bio">{esc(seller.description||"Discover this local seller on NammaSpot.")}</p>
         <p className="ns-mobile-location"><MapPin size={16}/>{esc(seller.location||"Chennai, Tamil Nadu")}</p>
       </div>
     </section>

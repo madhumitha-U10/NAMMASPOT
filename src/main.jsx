@@ -322,7 +322,7 @@ function useAsync(loader, deps) {
 function HomePage({ go, query, setQuery }) {
   const state = useAsync(() => getPublicSellers(), []);
   const sellers = (state.data || []).slice(0, 3);
-  const search = () => go(query.trim() ? "/explore?search=" + encodeURIComponent(query.trim()) : "/explore");
+  const search = (type = "seller") => go(query.trim() ? "/explore?search=" + encodeURIComponent(query.trim()) + "&type=" + type : "/explore?type=" + type);
 
   return (
     <main>
@@ -343,7 +343,7 @@ function HomePage({ go, query, setQuery }) {
                 placeholder="Search cakes, crafts, mehendi…"
                 aria-label="Search sellers and products"
               />
-              <button className="hero-inline-search" onClick={search} aria-label="Search sellers and products"><Search size={19}/><span>Search</span></button>
+              <button className="hero-inline-search" onClick={() => search("seller")} aria-label="Search seller websites"><Search size={19}/><span>Search</span></button>
             </div>
             <div className="hero-discovery">
               <span className="hero-discovery-label">Popular</span>
@@ -597,8 +597,7 @@ function SellerCard({ seller, index=0, go, toggleSave, saved, detailed=false }) 
           {toggleSave && <button className={saved ? "save-button is-saved" : "save-button"} onClick={() => toggleSave(seller.id)} aria-label={saved ? "Remove saved seller" : "Save seller"}><Heart size={18} fill={saved ? "currentColor" : "none"}/></button>}
         </div>
         {detailed && <p className="seller-description">{seller.description}</p>}
-        <div className="product-lines">{seller.products.slice(0,2).map((product) => <span key={product.id}>{product.name} · ₹{product.price}</span>)}</div>
-        <button className="card-link" onClick={() => go("/s/" + seller.slug)}>View catalogue <ChevronRight size={16}/></button>
+        <button className="card-link" onClick={() => go("/s/" + seller.slug)}>View seller website <ChevronRight size={16}/></button>
       </div>
     </article>
   );

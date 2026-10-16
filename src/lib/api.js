@@ -259,7 +259,7 @@ function extractBudget(query) {
 function queryWithoutBudget(query) {
   return String(query || "").replace(/(?:under|below|less than|within|budget of|upto|up to)\s*₹?\s*\d[\d,]*|₹\s*\d[\d,]*|rs\.?\s*\d[\d,]*/ig, " ").trim();
 }
-export async function getPublicSellers({ query = "", category = "All", near = "", sort = "relevant", resultType = "all" } = {}) {
+export async function getPublicSellers({ query = "", category = "All", near = "", sort = "relevant", resultType = "all", searchType = "seller" } = {}) {
   let rows;
   if (!supabase) {
     const state = demoState();
@@ -295,10 +295,9 @@ export async function getPublicSellers({ query = "", category = "All", near = ""
       if (resultType === "services" && !/service|artist|tailor|makeup|mehendi|photograph/i.test(seller.category + " " + seller.description)) return false;
     }
     if (!effectiveQuery) return true;
-    const searchable = normaliseSearch([
-      seller.name, seller.category, seller.location, seller.city, seller.description,
-      ...(seller.products || []).flatMap((product) => [product.name, product.description]),
-    ].join(" "));
+    const sellerFields = [seller.name, seller.category, seller.location, seller.city, seller.description];
+    const productFields = (seller.products || []).flatMap((product) => [product.name, product.description]);
+    const searchable = normaliseSearch((searchType === "product" ? productFields : sellerFields).join(" "));
     const terms = expandSearchTerms(effectiveQuery);
     return searchable.includes(effectiveQuery) || terms.some((term) => term.length > 1 && searchable.includes(term));
   }).map((seller) => ({ seller, score: sellerSearchScore(seller, effectiveQuery, requestedArea) }));

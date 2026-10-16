@@ -337,7 +337,7 @@ function HomePage({ go, query, setQuery }) {
       <section className="hero">
         <div className="hero-inner">
           <div className="hero-copy-column">
-            <div className="eyebrow">CHENNAI · TAMIL NADU</div>
+            
             <h1>Namma Ooru.<br/>Namma People.<br/><em>Namma Spot.</em></h1>
             <p className="hero-copy">
               Discover thoughtful finds, handmade creations and talented independent sellers around you.

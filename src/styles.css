@@ -4667,3 +4667,27 @@ input, select, textarea { max-width: 100%; }
 .product-search-info .card-link { margin-top:4px; }
 @media (max-width:1000px) { .product-search-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; } }
 @media (max-width:680px) { .product-search-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } .product-search-info { padding:10px; } .product-search-info h2 { font-size:14px; } .product-search-info strong { font-size:16px; } .search-mode-choices button { font-size:13px; } }
+
+
+/* Compact, aligned Explore search toolbar */
+.explore-tools { margin: 0 0 24px; padding: 16px; border: 1px solid #eaded2; border-radius: 16px; background: #fffdf8; box-shadow: 0 4px 16px rgba(66,30,26,.035); }
+.explore-tools .explore-search { display:flex; align-items:center; gap:12px; width:100%; min-height:54px; margin:0; padding:0 15px; border:1px solid #dfcfc1; border-radius:11px; background:#fff; box-sizing:border-box; }
+.explore-tools .explore-search input { flex:1; min-width:0; width:100%; border:0; outline:0; background:transparent; box-shadow:none; }
+.explore-toolbar-row { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:12px; }
+.explore-tools .explore-search-modes { display:inline-flex; flex-wrap:nowrap; align-items:center; gap:4px; margin:0; padding:4px; border-radius:12px; background:#f5eee6; }
+.explore-tools .explore-search-modes button { min-height:36px; padding:7px 12px; border:1px solid transparent; border-radius:9px; white-space:nowrap; }
+.explore-tools .search-controls { display:flex; align-items:center; justify-content:flex-end; gap:12px; margin:0; }
+.explore-tools .search-controls label { display:flex; align-items:center; gap:7px; color:#725e53; font-size:13px; white-space:nowrap; }
+.explore-tools .search-controls select { min-width:132px; max-width:180px; min-height:38px; padding:7px 28px 7px 10px; border:1px solid #dfcfc1; border-radius:9px; background:#fff; color:#432c28; font:inherit; }
+@media (max-width:760px) {
+  .explore-tools { padding:12px; border-radius:13px; }
+  .explore-toolbar-row { align-items:stretch; flex-direction:column; gap:10px; }
+  .explore-tools .explore-search-modes { display:grid; grid-template-columns:1fr 1fr; width:100%; box-sizing:border-box; }
+  .explore-tools .explore-search-modes button { width:100%; }
+  .explore-tools .search-controls { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .explore-tools .search-controls label { min-width:0; flex-direction:column; align-items:stretch; gap:5px; }
+  .explore-tools .search-controls select { width:100%; min-width:0; max-width:none; }
+}
+@media (max-width:360px) {
+  .explore-tools .search-controls { grid-template-columns:1fr; }
+}

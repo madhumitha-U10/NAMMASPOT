@@ -956,6 +956,7 @@ function RegisterPage({ go }) {
 function LoginPage({ go, onSignedIn }) {
   const [data,setData] = useState({nammaspotId:"",password:""});
   const [state,setState] = useState({loading:false,error:""});
+  const [showPassword,setShowPassword] = useState(false);
 
   const submit = async (event) => {
     event.preventDefault();
@@ -990,7 +991,7 @@ function LoginPage({ go, onSignedIn }) {
           <div><strong>NammaSpot seller login</strong><span>Use the NammaSpot ID you created during signup.</span></div>
         </div>
         <label>NammaSpot ID<input value={data.nammaspotId} onChange={(e)=>setData({...data,nammaspotId:e.target.value.toLowerCase().replace(/\s/g,"")})} placeholder="ns-000001" autoCapitalize="none" required/></label>
-        <label>Password<input type="password" autoComplete="current-password" value={data.password} onChange={(e)=>setData({...data,password:e.target.value})} placeholder="Your password" required/></label>
+        <label>Password<div className="password-input-wrap"><input type={showPassword ? "text" : "password"} autoComplete="current-password" value={data.password} onChange={(e)=>setData({...data,password:e.target.value})} placeholder="Your password" required/><button type="button" className="password-toggle" onClick={()=>setShowPassword((value)=>!value)} aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></label>
         {state.error && <div className="inline-error" role="alert" aria-live="assertive"><AlertCircle size={17}/>{state.error}</div>}
         <button className="primary-button full-button" disabled={state.loading}>{state.loading ? "Signing in…" : <><LogIn size={17}/> Sign in</>}</button>
         <button type="button" className="secondary-button full-button" onClick={()=>go("/register")}>Create seller account</button>

@@ -1059,6 +1059,7 @@ function ProfileEditor({ seller,categories,onSaved }) {
     profile_image_url:seller.profile_image_url || ""
   });
   const [state,setState] = useState({saving:false,error:"",success:"",imageBusy:""});
+  const [cropTarget,setCropTarget] = useState(null);
   const [dailyUpdate,setDailyUpdate] = useState("");
   useEffect(() => {
     let alive = true;
@@ -1067,21 +1068,28 @@ function ProfileEditor({ seller,categories,onSaved }) {
     }).catch(() => {});
     return () => { alive = false; };
   }, [seller.id]);
-  const uploadImage = async (event, kind) => {
-    const file=event.target.files?.[0];
-    event.target.value="";
+  const uploadImage = (event, kind) => {
+    const input=event.target, file=input.files?.[0];
+    input.value="";
     if(!file) return;
     if(!["image/jpeg","image/png","image/webp"].includes(file.type)){setState(s=>({...s,error:"Unsupported image format. Use JPG, PNG or WebP."}));return;}
     if(file.size>10*1024*1024){setState(s=>({...s,error:"This image is over 10 MB. Please choose a smaller image."}));return;}
-    setState(s=>({...s,error:"",imageBusy:kind}));
+    setState(s=>({...s,error:"",success:""}));
+    setCropTarget({file,kind});
+  };
+  const confirmLogoCrop = async (croppedFile) => {
+    if(!cropTarget) return;
+    setState(s=>({...s,error:"",imageBusy:"profile",success:""}));
     try{
-      const profile=await getCurrentProfile();
-      const url=await uploadSellerMedia(file,profile.id);
-      if(!url) throw new Error("Could not upload the image.");
+      const session=await getCurrentProfile();
+      if(!session?.id) throw new Error("Your seller session has expired. Sign in again before uploading an image.");
+      const url=await uploadSellerMedia(croppedFile,session.id);
+      if(!url || !/^https:\/\//i.test(url)) throw new Error("NammaSpot could not confirm the uploaded logo URL. Please try again.");
       const next=await updateSellerImages(seller.id,{profile_image_url:url});
       setData(d=>({...d,...next}));
       onSaved(next);
-      setState(s=>({...s,imageBusy:"",success:"Logo/profile image updated."}));
+      setState(s=>({...s,imageBusy:"",success:"Logo cropped and uploaded successfully."}));
+      setCropTarget(null);
     }catch(error){setState(s=>({...s,imageBusy:"",error:friendlyError(error),success:""}));}
   };
   const save = async (event) => {
@@ -1104,10 +1112,11 @@ function ProfileEditor({ seller,categories,onSaved }) {
         <div className="profile-media-card">
           <div className="profile-media-preview">{data.profile_image_url?<img src={data.profile_image_url} alt="Business logo" />:<Store size={34}/>}</div>
           <div><strong>Business logo / profile image</strong><small>Shown beside your business name on your public NammaSpot seller profile.</small></div>
-          <label className="secondary-button upload-button">{state.imageBusy==="profile"?"Uploading…":"Upload logo"}<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e,"profile")} hidden disabled={Boolean(state.imageBusy)}/></label>
+          <label className="secondary-button upload-button">{cropTarget?"Preparing crop…":state.imageBusy==="profile"?"Uploading…":"Choose and crop logo"}<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e,"profile")} hidden disabled={Boolean(state.imageBusy)||Boolean(cropTarget)}/></label>
         </div>
       </div>
-      <div className="image-upload-note">JPG, PNG or WebP · selected file up to 10 MB · automatically optimized before storage.</div>
+      <div className="image-upload-note">Choose an image, adjust it inside the square grid, then confirm the crop. JPG, PNG or WebP · up to 10 MB before cropping.</div>
+      {cropTarget && <ImageCropDialog file={cropTarget.file} onCancel={()=>setCropTarget(null)} onConfirm={confirmLogoCrop} busy={Boolean(state.imageBusy)} squareOnly heading="Crop your business logo"/>}
       <div className="form-grid">
         <label>Business name *<input value={data.business_name} onChange={(e)=>setData({...data,business_name:e.target.value})} required/></label>
         <label>Owner name *<input value={data.owner_name} onChange={(e)=>setData({...data,owner_name:e.target.value})} required/></label>
@@ -1142,7 +1151,7 @@ function ProfileEditor({ seller,categories,onSaved }) {
   );
 }
 
-function ImageCropDialog({ file, onCancel, onConfirm, busy }) {
+function ImageCropDialog({ file, onCancel, onConfirm, busy, squareOnly = false, heading = "Crop your image" }) {
   const [src, setSrc] = useState("");
   const [shape, setShape] = useState("1:1");
   const [zoom, setZoom] = useState(1);
@@ -1150,7 +1159,7 @@ function ImageCropDialog({ file, onCancel, onConfirm, busy }) {
   const [y, setY] = useState(50);
   const [error, setError] = useState("");
   const imageRef = React.useRef(null);
-  const ratios = { "1:1": 1, "4:5": 0.8, "3:2": 1.5, "16:9": 16/9 };
+  const ratios = squareOnly ? { "1:1": 1 } : { "1:1": 1, "4:5": 0.8, "3:2": 1.5, "16:9": 16/9 };
   useEffect(() => { const url = URL.createObjectURL(file); setSrc(url); return () => URL.revokeObjectURL(url); }, [file]);
   const applyCrop = async () => {
     const img = imageRef.current;
@@ -1172,9 +1181,9 @@ function ImageCropDialog({ file, onCancel, onConfirm, busy }) {
     } catch (e) { setError(e.message || "Could not crop this image."); }
   };
   return <div className="ns-crop-backdrop"><section className="ns-crop-dialog" role="dialog" aria-modal="true" aria-labelledby="ns-crop-title">
-    <div className="ns-crop-head"><div><span className="eyebrow">IMAGE EDITOR</span><h2 id="ns-crop-title">Crop your image</h2><p>Adjust the frame before uploading.</p></div><button type="button" className="secondary-button" onClick={onCancel} disabled={busy} aria-label="Close crop editor"><X size={18}/></button></div>
+    <div className="ns-crop-head"><div><span className="eyebrow">IMAGE EDITOR</span><h2 id="ns-crop-title">{heading}</h2><p>Adjust the frame before uploading.</p></div><button type="button" className="secondary-button" onClick={onCancel} disabled={busy} aria-label="Close crop editor"><X size={18}/></button></div>
     <div className="ns-crop-aspects">{Object.keys(ratios).map(k => <button type="button" key={k} className={shape===k?"active":""} onClick={() => setShape(k)}>{k}</button>)}</div>
-    <div className="ns-crop-preview" style={{aspectRatio: String(ratios[shape])}}>{src && <img ref={imageRef} src={src} alt="Crop preview" style={{objectPosition: x+"% "+y+"%", transform: "scale("+zoom+")"}} onError={() => setError("This image cannot be previewed.")}/>}</div>
+    <div className={"ns-crop-preview" + (squareOnly ? " ns-crop-square" : "")} style={{aspectRatio: String(ratios[shape])}}>{src && <img ref={imageRef} src={src} alt="Crop preview" style={{objectPosition: x+"% "+y+"%", transform: "scale("+zoom+")"}} onError={() => setError("This image cannot be previewed.")}/>}<span className="ns-crop-grid" aria-hidden="true"/></div>
     <div className="ns-crop-controls"><label>Zoom <b>{zoom.toFixed(1)}×</b><input type="range" min="1" max="3" step="0.05" value={zoom} onChange={e=>setZoom(Number(e.target.value))}/></label><label>Move left / right<input type="range" min="0" max="100" value={x} onChange={e=>setX(Number(e.target.value))}/></label><label>Move up / down<input type="range" min="0" max="100" value={y} onChange={e=>setY(Number(e.target.value))}/></label></div>
     {error && <p className="inline-error" role="alert">{error}</p>}<div className="ns-crop-actions"><button type="button" className="secondary-button" onClick={onCancel} disabled={busy}>Cancel</button><button type="button" className="primary-button" onClick={applyCrop} disabled={busy}>{busy?"Uploading…":"Crop and upload"}</button></div>
   </section></div>;

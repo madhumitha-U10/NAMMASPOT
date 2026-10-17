@@ -198,3 +198,20 @@
 .ns-catalogue-install-reminder button:hover{background:#50131a}
 .ns-catalogue-install-reminder button:focus-visible{outline:3px solid #bd8a71;outline-offset:3px}
 @media(max-width:640px){.ns-catalogue-install-reminder{margin:24px 14px 28px;padding:13px;gap:10px;flex-wrap:wrap}.ns-catalogue-install-reminder img{width:38px;height:38px;flex-basis:38px}.ns-catalogue-install-reminder>div{flex:1 1 calc(100% - 52px)}.ns-catalogue-install-reminder strong{font-size:14px}.ns-catalogue-install-reminder span{font-size:12px}.ns-catalogue-install-reminder button{width:100%}}
+
+
+/* Install prompt modal: shown on each fresh public-site entry until installed. */
+.ns-install-modal-backdrop{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(35,18,18,.58);backdrop-filter:blur(5px)}
+.ns-install-modal{position:relative;display:flex;flex-direction:column;align-items:center;width:min(430px,100%);max-height:90dvh;overflow:auto;padding:30px 26px 24px;border:1px solid #e3cfc2;border-radius:25px;background:#fffaf2;color:#3e2525;text-align:center;box-shadow:0 22px 70px rgba(25,10,10,.3);animation:ns-install-pop .2s ease-out}
+.ns-install-modal>img{width:64px;height:64px;object-fit:contain;border-radius:16px;margin-bottom:14px}
+.ns-install-modal .ns-install-kicker{align-self:center;margin-bottom:8px}
+.ns-install-modal h2{margin:0 0 10px;color:#6b1a22;font-family:Georgia,"Times New Roman",serif;font-size:clamp(25px,6vw,33px);line-height:1.12;letter-spacing:-.025em}
+.ns-install-modal>p{margin:0 0 17px;color:#6c5954;font-size:14px;line-height:1.6}
+.ns-install-modal .ns-install-help{padding:12px;border-radius:12px;background:#f5e9de;text-align:left;font-size:12px}
+.ns-install-modal-primary{width:100%;min-height:48px;margin-top:3px;font-size:14px}
+.ns-install-modal .ns-install-dismiss{margin-top:8px;min-height:40px}
+.ns-install-modal-close{position:absolute;top:12px;right:12px;width:36px;height:36px;border:0;border-radius:50%;background:#f2e6dc;color:#6b1a22;font-size:27px;line-height:1;cursor:pointer}
+.ns-install-modal button:focus-visible{outline:3px solid #bd8a71;outline-offset:3px}
+@keyframes ns-install-pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:640px){.ns-install-modal-backdrop{padding:16px}.ns-install-modal{padding:28px 21px 20px;border-radius:22px}.seller-microsite{padding-bottom:calc(180px + env(safe-area-inset-bottom))}.ns-catalogue-install-reminder{margin-bottom:calc(112px + env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce){.ns-install-modal{animation:none}}

@@ -2058,9 +2058,10 @@ function InstallNammaSpotPrompt({ visible }) {
   return <aside className="ns-install-prompt" aria-label="Add NammaSpot to home screen">
     <img src="/nammaspot-icon.svg" alt="NammaSpot" width="48" height="48" />
     <div className="ns-install-prompt-copy">
-      <strong>Keep NammaSpot close</strong>
-      <span>Save NammaSpot to your home screen and discover local sellers anytime.</span>
-      {helpOpen && <p className="ns-install-help"> <strong>Android:</strong> open your browser menu and choose “Install app” or “Add to Home screen”. <strong>iPhone:</strong> open this page in Safari, tap Share, then “Add to Home Screen”.</p>}
+      <span className="ns-install-kicker">QUICK ACCESS · FREE</span>
+      <strong>Add NammaSpot to your home screen</strong>
+      <span>Open NammaSpot like an app and find local sellers faster.</span>
+      {helpOpen && <p className="ns-install-help"><strong>Android:</strong> open your browser menu and choose “Install app” or “Add to Home screen”. <strong>iPhone:</strong> open this page in Safari, tap Share, then “Add to Home Screen”.</p>}
     </div>
     <div className="ns-install-prompt-actions">
       <button type="button" className="ns-install-action" onClick={addToHome}>Add to Home Screen</button>

@@ -244,6 +244,7 @@ function App() {
       {route === "not-found" && <main className="page"><Empty title="Page not found" text="That NammaSpot page does not exist." actionLabel="Back home" onAction={() => go("/")}/></main>}
 
       <MobileBottomNav path={path} go={go} profile={profile}/>
+      {route === "seller" && <div className="ns-catalogue-install-reminder" role="region" aria-label="Install NammaSpot app"><img src="/nammaspot-icon.svg" alt="" width="40" height="40"/><div><strong>Enjoying this catalogue?</strong><span>Add NammaSpot to your home screen for quick access to local shops.</span></div><button type="button" onClick={() => window.dispatchEvent(new CustomEvent("nammaspot-open-install-prompt"))}>Install app</button></div>}
       <InstallNammaSpotPrompt visible={route === "seller"}/>
     </div>
   );
@@ -2021,6 +2022,8 @@ function InstallNammaSpotPrompt({ visible }) {
   });
 
   useEffect(() => {
+    const onOpenInstall = () => setHelpOpen(true);
+    window.addEventListener("nammaspot-open-install-prompt", onOpenInstall);
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
     const onBeforeInstall = (event) => {
       event.preventDefault();
@@ -2034,6 +2037,7 @@ function InstallNammaSpotPrompt({ visible }) {
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
     window.addEventListener("appinstalled", onInstalled);
     return () => {
+      window.removeEventListener("nammaspot-open-install-prompt", onOpenInstall);
       window.removeEventListener("beforeinstallprompt", onBeforeInstall);
       window.removeEventListener("appinstalled", onInstalled);
     };

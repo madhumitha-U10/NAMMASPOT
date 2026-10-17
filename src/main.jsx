@@ -244,6 +244,7 @@ function App() {
       {route === "not-found" && <main className="page"><Empty title="Page not found" text="That NammaSpot page does not exist." actionLabel="Back home" onAction={() => go("/")}/></main>}
 
       <MobileBottomNav path={path} go={go} profile={profile}/>
+      <InstallNammaSpotPrompt visible={route === "seller"}/>
     </div>
   );
 }
@@ -2001,6 +2002,69 @@ function AdminStorageManagement() {
       </section>
     </>}
   </div>;
+}
+
+
+function InstallNammaSpotPrompt({ visible }) {
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    try { return localStorage.getItem("nammaspot-install-dismissed") === "1"; } catch { return false; }
+  });
+  const [installed, setInstalled] = useState(() => {
+    try { return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true; } catch { return false; }
+  });
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+    const onBeforeInstall = (event) => {
+      event.preventDefault();
+      setInstallPrompt(event);
+    };
+    const onInstalled = () => {
+      setInstalled(true);
+      setInstallPrompt(null);
+      setHelpOpen(false);
+    };
+    window.addEventListener("beforeinstallprompt", onBeforeInstall);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
+  }, []);
+
+  const dismiss = () => {
+    setDismissed(true);
+    try { localStorage.setItem("nammaspot-install-dismissed", "1"); } catch {}
+  };
+
+  const addToHome = async () => {
+    if (installPrompt) {
+      try {
+        await installPrompt.prompt();
+        const choice = await installPrompt.userChoice;
+        if (choice?.outcome === "accepted") setInstalled(true);
+        setInstallPrompt(null);
+      } catch { setHelpOpen(true); }
+    } else {
+      setHelpOpen((open) => !open);
+    }
+  };
+
+  if (!visible || dismissed || installed) return null;
+  return <aside className="ns-install-prompt" aria-label="Add NammaSpot to home screen">
+    <img src="/nammaspot-icon.svg" alt="NammaSpot" width="48" height="48" />
+    <div className="ns-install-prompt-copy">
+      <strong>Keep NammaSpot close</strong>
+      <span>Save NammaSpot to your home screen and discover local sellers anytime.</span>
+      {helpOpen && <p className="ns-install-help"> <strong>Android:</strong> open your browser menu and choose “Install app” or “Add to Home screen”. <strong>iPhone:</strong> open this page in Safari, tap Share, then “Add to Home Screen”.</p>}
+    </div>
+    <div className="ns-install-prompt-actions">
+      <button type="button" className="ns-install-action" onClick={addToHome}>Add to Home Screen</button>
+      <button type="button" className="ns-install-dismiss" onClick={dismiss} aria-label="Dismiss Add to Home Screen prompt">Not now</button>
+    </div>
+  </aside>;
 }
 
 function CardSkeletonRow({ detailed=false }) {

@@ -4706,3 +4706,5 @@ input, select, textarea { max-width: 100%; }
 .product-card-actions .product-details-button,.product-card-actions .product-enquire-button{flex:1;min-width:0;min-height:40px;padding:9px 10px;font-size:14px}
 .product-description-details{margin:10px 0 0;padding:10px 12px;border-radius:12px;background:#f8f1e8;color:#51443f;overflow-wrap:anywhere}
 @media(max-width:480px){.product-card-actions{gap:7px}.product-card-actions .product-details-button,.product-card-actions .product-enquire-button{padding:8px 6px;font-size:13px}}
+
+/* Product card Details and Enquire compact layout deployment refresh. */

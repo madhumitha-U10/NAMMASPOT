@@ -1,18 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-  <title id="title">NammaSpot app icon</title>
-  <desc id="desc">NammaSpot in bold burgundy lettering, with a small local shop stall replacing the letter o, on a cream background.</desc>
-  <rect width="512" height="512" rx="104" fill="#fff8ef"/>
-  <rect x="18" y="18" width="476" height="476" rx="90" fill="none" stroke="#6b1a22" stroke-width="8"/>
-  <g fill="#6b1a22" font-family="Inter, Arial, Helvetica, sans-serif" font-size="61" font-weight="800" letter-spacing="-3">
-    <text x="42" y="270">NammaSp</text>
-    <text x="410" y="270">t</text>
+  <title id="title">NammaSpot</title>
+  <desc id="desc">A clean NammaSpot app icon in bold burgundy lettering on warm cream, with a friendly local shop stall replacing the o in Spot.</desc>
+  <rect width="512" height="512" rx="112" fill="#fff8ef"/>
+  <path d="M36 116 Q36 36 116 36 H396 Q476 36 476 116 V396 Q476 476 396 476 H116 Q36 476 36 396 Z" fill="none" stroke="#6b1a22" stroke-opacity=".16" stroke-width="3"/>
+  <text x="256" y="205" text-anchor="middle" fill="#6b1a22" font-family="Inter, Arial, Helvetica, sans-serif" font-size="88" font-weight="800" letter-spacing="-5">Namma</text>
+  <g fill="#6b1a22" font-family="Inter, Arial, Helvetica, sans-serif" font-size="88" font-weight="800" letter-spacing="-4">
+    <text x="104" y="333">Sp</text>
+    <text x="365" y="333">t</text>
   </g>
-  <g transform="translate(354 214)" stroke="#6b1a22" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
-    <path d="M-1 16 L5 -1 H43 L49 16" fill="#6b1a22"/>
-    <path d="M0 16 H48 V26 C48 35 36 35 36 26 C36 35 24 35 24 26 C24 35 12 35 12 26 C12 35 0 35 0 26 Z" fill="#fff8ef"/>
-    <path d="M7 38 V19 M41 38 V19" fill="none"/>
-    <path d="M4 38 H44 V67 H4 Z" fill="#6b1a22"/>
-    <path d="M14 67 V47 H34 V67" fill="#fff8ef"/>
-    <path d="M10 46 H38" fill="none"/>
+  <g transform="translate(249 254)">
+    <path d="M-33 20 L-24 -3 H24 L33 20 Z" fill="#6b1a22"/>
+    <path d="M-33 20 H33 V34 C33 44 20 44 20 34 C20 44 7 44 7 34 C7 44 -7 44 -7 34 C-7 44 -20 44 -20 34 C-20 44 -33 44 -33 34 Z" fill="#a9434a"/>
+    <path d="M-25 44 H25 V78 H-25 Z" fill="#6b1a22"/>
+    <path d="M-8 78 V55 H8 V78" fill="#fff8ef"/>
+    <path d="M-25 51 H25" stroke="#fff8ef" stroke-width="4" opacity=".9"/>
   </g>
+  <path d="M166 382 H346" stroke="#6b1a22" stroke-opacity=".22" stroke-width="4" stroke-linecap="round"/>
+  <text x="256" y="420" text-anchor="middle" fill="#6b1a22" font-family="Inter, Arial, Helvetica, sans-serif" font-size="20" font-weight="600" letter-spacing="2">LOCAL DISCOVERY</text>
 </svg>

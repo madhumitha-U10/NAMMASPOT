@@ -245,7 +245,7 @@ function App() {
 
       <MobileBottomNav path={path} go={go} profile={profile}/>
       {route === "seller" && <div className="ns-catalogue-install-reminder" role="region" aria-label="Install NammaSpot app"><img src="/nammaspot-icon.svg" alt="" width="40" height="40"/><div><strong>Enjoying this catalogue?</strong><span>Add NammaSpot to your home screen for quick access to local shops.</span></div><button type="button" onClick={() => window.dispatchEvent(new CustomEvent("nammaspot-open-install-prompt"))}>Install app</button></div>}
-      <InstallNammaSpotPrompt visible={route === "seller"}/>
+      <InstallNammaSpotPrompt visible={["home", "explore", "categories", "featured", "saved", "seller"].includes(route)}/>
     </div>
   );
 }
@@ -2015,15 +2015,22 @@ function AdminStorageManagement() {
 function InstallNammaSpotPrompt({ visible }) {
   const [installPrompt, setInstallPrompt] = useState(null);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [dismissed, setDismissed] = useState(() => {
-    try { return localStorage.getItem("nammaspot-install-dismissed") === "1"; } catch { return false; }
-  });
+  const [popupOpen, setPopupOpen] = useState(false);
   const [installed, setInstalled] = useState(() => {
     try { return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true; } catch { return false; }
   });
 
   useEffect(() => {
-    const onOpenInstall = () => setHelpOpen(true);
+    if (visible && !installed) {
+      setPopupOpen(true);
+      setHelpOpen(false);
+    } else {
+      setPopupOpen(false);
+    }
+  }, [visible, installed]);
+
+  useEffect(() => {
+    const onOpenInstall = () => { setPopupOpen(true); setHelpOpen(true); };
     window.addEventListener("nammaspot-open-install-prompt", onOpenInstall);
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
     const onBeforeInstall = (event) => {
@@ -2034,6 +2041,7 @@ function InstallNammaSpotPrompt({ visible }) {
       setInstalled(true);
       setInstallPrompt(null);
       setHelpOpen(false);
+      setPopupOpen(false);
     };
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
     window.addEventListener("appinstalled", onInstalled);
@@ -2044,11 +2052,6 @@ function InstallNammaSpotPrompt({ visible }) {
     };
   }, []);
 
-  const dismiss = () => {
-    setDismissed(true);
-    try { localStorage.setItem("nammaspot-install-dismissed", "1"); } catch {}
-  };
-
   const addToHome = async () => {
     if (installPrompt) {
       try {
@@ -2056,26 +2059,26 @@ function InstallNammaSpotPrompt({ visible }) {
         const choice = await installPrompt.userChoice;
         if (choice?.outcome === "accepted") setInstalled(true);
         setInstallPrompt(null);
+        if (choice?.outcome !== "accepted") setHelpOpen(true);
       } catch { setHelpOpen(true); }
     } else {
-      setHelpOpen((open) => !open);
+      setHelpOpen(true);
     }
   };
 
-  if (!visible || dismissed || installed) return null;
-  return <aside className="ns-install-prompt" aria-label="Add NammaSpot to home screen">
-    <img src="/nammaspot-icon.svg" alt="NammaSpot" width="48" height="48" />
-    <div className="ns-install-prompt-copy">
+  if (!visible || installed || !popupOpen) return null;
+  return <div className="ns-install-modal-backdrop" role="presentation" onClick={(event) => { if (event.target === event.currentTarget) setPopupOpen(false); }}>
+    <section className="ns-install-modal" role="dialog" aria-modal="true" aria-labelledby="ns-install-title">
+      <button type="button" className="ns-install-modal-close" onClick={() => setPopupOpen(false)} aria-label="Close install reminder">×</button>
+      <img src="/nammaspot-icon.svg" alt="NammaSpot app icon" width="64" height="64" />
       <span className="ns-install-kicker">QUICK ACCESS · FREE</span>
-      <strong>Add NammaSpot to your home screen</strong>
-      <span>Open NammaSpot like an app and find local sellers faster.</span>
-      {helpOpen && <p className="ns-install-help"><strong>Android:</strong> open your browser menu and choose “Install app” or “Add to Home screen”. <strong>iPhone:</strong> open this page in Safari, tap Share, then “Add to Home Screen”.</p>}
-    </div>
-    <div className="ns-install-prompt-actions">
-      <button type="button" className="ns-install-action" onClick={addToHome}>Add to Home Screen</button>
-      <button type="button" className="ns-install-dismiss" onClick={dismiss} aria-label="Dismiss Add to Home Screen prompt">Not now</button>
-    </div>
-  </aside>;
+      <h2 id="ns-install-title">Take NammaSpot with you</h2>
+      <p>Install NammaSpot on your home screen to return to local sellers quickly, just like an app.</p>
+      {helpOpen && <p className="ns-install-help"><strong>Android:</strong> use your browser menu and choose “Install app” or “Add to Home screen”. <strong>iPhone:</strong> open this page in Safari, tap Share, then “Add to Home Screen”.</p>}
+      <button type="button" className="ns-install-action ns-install-modal-primary" onClick={addToHome}>Install app</button>
+      <button type="button" className="ns-install-dismiss" onClick={() => setPopupOpen(false)}>Maybe later</button>
+    </section>
+  </div>;
 }
 
 function CardSkeletonRow({ detailed=false }) {

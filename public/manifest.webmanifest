@@ -1,0 +1,14 @@
+{
+  "id": "/",
+  "name": "NammaSpot",
+  "short_name": "NammaSpot",
+  "description": "Discover local sellers and their catalogues on NammaSpot.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fff8ef",
+  "theme_color": "#6b1a22",
+  "icons": [
+    { "src": "/nammaspot-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

@@ -738,7 +738,7 @@ function ProductCard({ product, index, onEnquire }) {
             {showDetails ? "Less" : "Details"}
           </button>
           <button className="primary-button product-enquire-button" disabled={!product.available} onClick={onEnquire}>
-            <MessageCircle size={16}/> {product.available ? "Enquire" : "Unavailable"}
+            {product.available ? "Enquire" : "Unavailable"}
           </button>
         </div>
       </div>

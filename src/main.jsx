@@ -719,6 +719,7 @@ function SellerPage({ go, slug, saved, toggleSave }) {
 }
 
 function ProductCard({ product, index, onEnquire }) {
+  const [showDetails, setShowDetails] = useState(false);
   return (
     <article className="product-card">
       <div className={"product-image product-" + ((index % 3)+1)}>
@@ -726,11 +727,16 @@ function ProductCard({ product, index, onEnquire }) {
       </div>
       <div className="product-content">
         <h3>{product.name}</h3>
-        <p>{product.description}</p>
         <div className="product-meta"><strong>₹{product.price}</strong><small>{product.available ? "Available" : "Currently unavailable"}</small></div>
-        <button className="primary-button full-button" disabled={!product.available} onClick={onEnquire}>
-          <MessageCircle size={16}/> {product.available ? "Enquire" : "Unavailable"}
-        </button>
+        {showDetails && <p className="product-description-details">{product.description?.trim() || "The seller has not added product details yet."}</p>}
+        <div className="product-card-actions">
+          <button className="secondary-button product-details-button" type="button" aria-expanded={showDetails} onClick={() => setShowDetails(value => !value)}>
+            {showDetails ? "Less" : "Details"}
+          </button>
+          <button className="primary-button product-enquire-button" disabled={!product.available} onClick={onEnquire}>
+            <MessageCircle size={16}/> {product.available ? "Enquire" : "Unavailable"}
+          </button>
+        </div>
       </div>
     </article>
   );

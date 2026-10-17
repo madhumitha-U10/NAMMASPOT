@@ -132,3 +132,20 @@
 .ns-mobile-product-description{margin:11px 0 0;padding:11px 12px;border:1px solid #eee0d2;border-radius:12px;background:#fbf5ec;color:#51443f;line-height:1.5;overflow-wrap:anywhere}
 @media(max-width:360px){.ns-mobile-product-actions{gap:6px}.ns-mobile-product-actions .ns-product-description-btn,.ns-mobile-product-actions>a{padding:9px 5px;font-size:12px}}
 @media(prefers-reduced-motion:reduce){.product-card-actions .product-details-button,.product-card-actions .product-enquire-button,.ns-mobile-product-actions .ns-product-description-btn,.ns-mobile-product-actions>a{transition:none}}
+
+
+/* NammaSpot home-screen install prompt */
+.ns-install-prompt{display:flex;align-items:center;gap:14px;max-width:1080px;margin:20px auto 28px;padding:16px 18px;border:1px solid #e5d1c8;border-radius:18px;background:#fff8ef;color:#3e2525;box-shadow:0 5px 20px rgba(65,24,27,.07)}
+.ns-install-prompt>img{display:block;flex:0 0 48px;width:48px;height:48px;border-radius:12px}
+.ns-install-prompt-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}
+.ns-install-prompt-copy>strong{font-size:15px;color:#6b1a22}
+.ns-install-prompt-copy>span{font-size:13px;line-height:1.45;color:#6c5954}
+.ns-install-prompt-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.ns-install-action{min-height:42px;padding:10px 15px;border:1px solid #6b1a22;border-radius:11px;background:#6b1a22;color:#fff8ef;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.ns-install-action:hover{background:#50131a;border-color:#50131a}
+.ns-install-dismiss{min-height:42px;padding:9px 10px;border:0;background:transparent;color:#6b1a22;font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.ns-install-prompt button:focus-visible{outline:3px solid #bd8a71;outline-offset:3px}
+.ns-install-help{margin:8px 0 0;font-size:12px;line-height:1.55;color:#5d4540}
+.ns-install-help strong{color:#6b1a22}
+@media(max-width:640px){.ns-install-prompt{align-items:flex-start;gap:11px;margin:16px 14px 24px;padding:14px;border-radius:15px;flex-wrap:wrap}.ns-install-prompt>img{width:42px;height:42px;flex-basis:42px}.ns-install-prompt-copy{flex-basis:calc(100% - 58px)}.ns-install-prompt-actions{width:100%;padding-left:53px;gap:7px}.ns-install-action{flex:1;padding:10px 9px}.ns-install-dismiss{padding-inline:8px}}
+@media(prefers-reduced-motion:reduce){.ns-install-prompt *{scroll-behavior:auto!important;transition:none!important}}

@@ -4708,3 +4708,16 @@ input, select, textarea { max-width: 100%; }
 @media(max-width:480px){.product-card-actions{gap:7px}.product-card-actions .product-details-button,.product-card-actions .product-enquire-button{padding:8px 6px;font-size:13px}}
 
 /* Product card Details and Enquire compact layout deployment refresh. */
+
+
+/* Refined Details / Enquire actions — burgundy + cream, clear hierarchy and touch targets. */
+.product-card-actions{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:10px;align-items:stretch;margin-top:14px}
+.product-card-actions .product-details-button,.product-card-actions .product-enquire-button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:0;min-height:44px;padding:10px 12px;border-radius:12px;font-size:14px;font-weight:750;line-height:1.2;white-space:nowrap;transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+.product-card-actions .product-details-button{background:#fffaf3;border:1px solid #d9b9ad;color:#6b1a22;box-shadow:0 1px 2px rgba(61,27,22,.04)}
+.product-card-actions .product-details-button:hover{background:#f7eee5;border-color:#b97d78}
+.product-card-actions .product-enquire-button{background:#6b1a22;border:1px solid #6b1a22;color:#fffaf4;box-shadow:0 3px 8px rgba(107,26,34,.16)}
+.product-card-actions .product-enquire-button:hover:not(:disabled){background:#50131a;border-color:#50131a;box-shadow:0 5px 12px rgba(107,26,34,.2);transform:translateY(-1px)}
+.product-card-actions .product-enquire-button:disabled{opacity:.58;box-shadow:none;cursor:not-allowed}
+.product-card-actions .product-details-button:focus-visible,.product-card-actions .product-enquire-button:focus-visible{outline:3px solid #c89b81;outline-offset:3px}
+.product-description-details{margin-top:12px;padding:12px 14px;border:1px solid #eee0d2;border-radius:12px;background:#fbf5ec;color:#51443f;line-height:1.55;overflow-wrap:anywhere}
+@media(max-width:480px){.product-card-actions{gap:8px}.product-card-actions .product-details-button,.product-card-actions .product-enquire-button{min-height:43px;padding:9px 8px;font-size:13px;border-radius:11px}}

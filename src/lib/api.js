@@ -495,10 +495,10 @@ export async function updateSellerImages(sellerId, values) {
   };
   const { data, error } = await client.from("sellers").update(payload).eq("id", sellerId).eq("user_id", session.user.id).select("profile_image_url,cover_image_url").single();
   if (error) throw error;
-  for (const oldUrl of [current?.profile_image_url, current?.cover_image_url]) {
-    if (oldUrl && !Object.values(payload).includes(oldUrl)) {
-      try { await removeOwnedSellerMedia(oldUrl); } catch {}
-    }
+  const cleanupUrls = new Set([current?.profile_image_url, current?.cover_image_url].filter((url) => url && !Object.values(payload).includes(url)));
+  const cleanupResults = await Promise.allSettled([...cleanupUrls].map((url) => removeMediaIfUnreferenced(url)));
+  if (cleanupResults.some((result) => result.status === "rejected")) {
+    throw new Error("Profile image updated, but an old image could not be fully removed from storage. Please retry or contact NammaSpot support.");
   }
   return data;
 }
@@ -605,7 +605,14 @@ async function removeMediaIfUnreferenced(url) {
     ...(gallery.data || []).map((row) => row.image_url),
   ].filter(Boolean);
   if (references.includes(url)) return;
-  await removeOwnedSellerMedia(url);
+  const marker = "/storage/v1/object/public/seller-media/";
+  if (String(url).includes(marker)) {
+    const session = await getSession();
+    const path = sellerMediaPathFromUrl(url, session?.user?.id);
+    if (!path) throw new Error("Could not verify ownership of this uploaded image, so it was not marked as fully deleted.");
+    const { error } = await supabase.storage.from("seller-media").remove([path]);
+    if (error) throw error;
+  }
 }
 
 async function removeOwnedSellerMedia(url) {

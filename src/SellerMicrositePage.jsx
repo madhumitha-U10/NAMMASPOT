@@ -163,9 +163,9 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
   const currentSellerUrl = sellerPublicUrl(slug);
   const openInChrome = () => {
     const parsed = new URL(currentSellerUrl);
+    // Android Chrome intent opens the normal website in Chrome, not an installed NammaSpot PWA.
     const intent = "intent://" + parsed.host + parsed.pathname + parsed.search + parsed.hash +
-      "#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" +
-      encodeURIComponent(currentSellerUrl) + ";end";
+      "#Intent;scheme=https;package=com.android.chrome;end";
     window.location.href = intent;
   };
   if(state.loading)return <main className="page"><div className="page-title"><div className="eyebrow">NAMMASPOT SELLER</div><h1>Loading seller…</h1></div></main>;

@@ -574,7 +574,10 @@ export async function updateProduct(productId,values) {
     if (nextImage && nextImage !== before?.image_url) { try { await removeMediaIfUnreferenced(nextImage); } catch {} }
     throw error;
   }
-  if(before?.image_url&&before.image_url!==nextImage){try{await removeMediaIfUnreferenced(before.image_url);}catch{}}
+  if(before?.image_url&&before.image_url!==nextImage){
+    try { await removeMediaIfUnreferenced(before.image_url); }
+    catch (cleanupError) { throw new Error("Product updated, but the old image could not be fully deleted from storage. Please contact NammaSpot support."); }
+  }
   return productsOf([data])[0];
 }
 
@@ -623,7 +626,10 @@ export async function deleteProduct(productId) {
   const imageUrls = [...new Set([product?.image_url, ...(gallery||[]).map(item=>item.image_url)].filter(Boolean))];
   const {error}=await client.from("products").delete().eq("id",productId);
   if(error) throw error;
-  for (const url of imageUrls) { try { await removeMediaIfUnreferenced(url); } catch { /* orphan cleanup can retry safely later */ } }
+  const cleanupResults = await Promise.allSettled(imageUrls.map((url) => removeMediaIfUnreferenced(url)));
+  if (cleanupResults.some((result) => result.status === "rejected")) {
+    throw new Error("Product was deleted, but one or more image files could not be removed from storage. Please retry cleanup or contact NammaSpot support.");
+  }
 }
 
 export async function createEnquiry(values) {

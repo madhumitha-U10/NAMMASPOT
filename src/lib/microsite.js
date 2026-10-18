@@ -15,11 +15,26 @@ export function validatePublicUrl(value, label="URL") {
 }
 
 export async function getMicrosite(slug) {
+  // Keep the public seller lookup independent from embedded category joins
+  // and verify approval from the seller row returned by Supabase.
   const { data: seller, error } = await supabase.from("sellers")
-    .select("*,category:categories(id,name)")
-    .eq("slug", slug).eq("verification_status","approved").maybeSingle();
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
   if (error) throw error;
-  if (!seller) return null;
+  if (!seller || seller.verification_status !== "approved") return null;
+
+  // Category information is optional; it should not prevent the catalogue loading.
+  let category = null;
+  if (seller.category_id) {
+    const { data: categoryRow, error: categoryError } = await supabase
+      .from("categories")
+      .select("id,name")
+      .eq("id", seller.category_id)
+      .maybeSingle();
+    if (!categoryError) category = categoryRow || null;
+  }
+  seller.category = category;
   const [{ data: settings, error: se }, { data: hours, error: he }, { data: specialDates, error: de }, { data: products, error: pe }] = await Promise.all([
     supabase.from("seller_website_settings").select("*").eq("seller_id",seller.id).maybeSingle(),
     supabase.from("seller_business_hours").select("*").eq("seller_id",seller.id).order("day_of_week"),

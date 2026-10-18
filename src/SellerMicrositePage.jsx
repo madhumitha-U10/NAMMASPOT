@@ -162,11 +162,27 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
   },[seller,settings,data]);
   const currentSellerUrl = sellerPublicUrl(slug);
   const openInChrome = () => {
-    const parsed = new URL(currentSellerUrl);
-    // Android Chrome intent opens the normal website in Chrome, not an installed NammaSpot PWA.
-    const intent = "intent://" + parsed.host + parsed.pathname + parsed.search + parsed.hash +
-      "#Intent;scheme=https;package=com.android.chrome;end";
-    window.location.href = intent;
+    // Preserve the complete seller path when leaving Instagram's in-app browser.
+    const target = new URL(currentSellerUrl);
+    const sellerUrl = target.origin + target.pathname + target.search + target.hash;
+    const fallback = encodeURIComponent(sellerUrl);
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (isAndroid) {
+      // Chrome intent must include the exact /s/<slug> path and a full-URL fallback.
+      const intent = "intent://" + target.host + target.pathname + target.search + target.hash +
+        "#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" + fallback + ";end";
+      window.location.assign(intent);
+      return;
+    }
+    if (isIOS) {
+      // Open the same seller catalogue in Chrome for iOS when installed.
+      window.location.assign("googlechrome://navigate?url=" + encodeURIComponent(sellerUrl));
+      window.setTimeout(() => window.location.assign(sellerUrl), 700);
+      return;
+    }
+    window.location.assign(sellerUrl);
   };
   if(state.loading)return <main className="page"><div className="page-title"><div className="eyebrow">NAMMASPOT SELLER</div><h1>Loading seller…</h1></div></main>;
   if(state.error)return <main className="page"><div className="error-state"><h2>Could not load this seller</h2><p>{state.error}</p><button className="primary-button" onClick={openInChrome}>Open in Chrome</button><button className="secondary-button" onClick={()=>go("/explore")}>Back to Explore</button></div></main>;

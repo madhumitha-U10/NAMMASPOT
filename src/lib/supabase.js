@@ -16,7 +16,7 @@ export const supabase = isSupabaseConfigured
     })
   : null;
 
-const DEFAULT_MAX_IMAGE_BYTES = 1000000;
+const DEFAULT_MAX_IMAGE_BYTES = 500000;
 const MAX_IMAGE_DIMENSION = 1600;
 const MAX_SOURCE_IMAGE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -98,7 +98,7 @@ export async function uploadSellerMedia(file, userId, bucket = "seller-media") {
     const { data: rows, error: usageError } = await supabase.rpc("seller_storage_usage");
     if (usageError) throw usageError;
     const current = Array.isArray(rows) ? rows[0] : rows;
-    maxImageBytes = Number(current?.max_file_bytes || DEFAULT_MAX_IMAGE_BYTES);
+    maxImageBytes = Math.min(Number(current?.max_file_bytes || DEFAULT_MAX_IMAGE_BYTES), DEFAULT_MAX_IMAGE_BYTES);
   }
   const compressed = await compressImage(file, maxImageBytes);
 

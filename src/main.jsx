@@ -866,7 +866,6 @@ function RegisterPage({ go }) {
     lower: /[a-z]/.test(data.password),
     upper: /[A-Z]/.test(data.password),
     number: /[0-9]/.test(data.password),
-    symbol: /[^A-Za-z0-9]/.test(data.password),
     noSpace: !/\s/.test(data.password),
   };
   const validId = /^ns-[a-z0-9_-]{6,20}$/.test(idValue);
@@ -885,7 +884,7 @@ function RegisterPage({ go }) {
     event.preventDefault();
     if (!accountReady) {
       setStep(1);
-      setState({loading:false,error:"Create a NammaSpot ID and a password that meets all the requirements shown below.",success:"",nammaspotId:""});
+      setState({loading:false,error:"Create a NammaSpot ID and a password that meets the requirements shown below.",success:"",nammaspotId:""});
       return;
     }
     if (!businessReady) {
@@ -950,14 +949,13 @@ function RegisterPage({ go }) {
 
             <label>Create your password <span className="required">*</span>
               <div className="password-input-wrap"><input type={showPassword?"text":"password"} value={data.password} onChange={e=>setData({...data,password:e.target.value})} autoComplete="new-password" spellCheck="false" autoCapitalize="off" aria-describedby="password-help" required/><button type="button" className="password-toggle" onClick={()=>setShowPassword(v=>!v)} aria-label={showPassword?"Hide password":"Show password"}>{showPassword?<EyeOff size={17}/>:<Eye size={17}/>}</button></div>
-              <small id="password-help">Use a password you can remember. Do not use your business name or NammaSpot ID.</small>
+              <small id="password-help">Use at least 10 characters with uppercase and lowercase letters, a number, and no spaces. A special symbol is not required. Do not use your business name or NammaSpot ID.</small>
             </label>
             <div className="password-requirements" aria-live="polite">
               <span className={passwordChecks.length?"pass":""}>✓ At least 10 characters</span>
               <span className={passwordChecks.upper?"pass":""}>✓ One uppercase letter</span>
               <span className={passwordChecks.lower?"pass":""}>✓ One lowercase letter</span>
               <span className={passwordChecks.number?"pass":""}>✓ One number</span>
-              <span className={passwordChecks.symbol?"pass":""}>✓ One symbol</span>
               <span className={passwordChecks.noSpace?"pass":""}>✓ No spaces</span>
             </div>
 

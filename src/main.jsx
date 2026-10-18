@@ -332,7 +332,15 @@ function getRoute(path) {
 }
 
 function getSellerSlug(path) {
-  return decodeURIComponent(path.split("/")[2] || "");
+  // Social apps (especially Instagram) append tracking query parameters to shared links.
+  // A seller slug must come only from the URL pathname, never from "?utm_source=...".
+  const pathname = String(path || "").split(/[?#]/, 1)[0];
+  const rawSlug = pathname.split("/")[2] || "";
+  try {
+    return decodeURIComponent(rawSlug);
+  } catch {
+    return rawSlug;
+  }
 }
 
 function readLocalSaved() {

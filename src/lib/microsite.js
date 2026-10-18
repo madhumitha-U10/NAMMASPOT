@@ -100,15 +100,18 @@ export async function deleteProductGalleryImage(id) {
   const imageUrl=String(image?.image_url||"").trim();
   const index=imageUrl.indexOf(marker);
   let path=null;
-  if(index>=0&&userId){
-    try{const candidate=decodeURIComponent(imageUrl.slice(index+marker.length));if(candidate.startsWith(userId+"/"))path=candidate;}catch{}
+  if(index>=0){
+    if(!userId) throw new Error("Please sign in again before deleting this photo.");
+    try { const candidate=decodeURIComponent(imageUrl.slice(index+marker.length).split("?")[0]); if(candidate.startsWith(userId+"/")) path=candidate; }
+    catch { throw new Error("This photo path is invalid, so it could not be safely deleted."); }
+    if(!path) throw new Error("This photo is not owned by your account, so it cannot be deleted from storage.");
   }
-  // Remove every duplicate row for this same gallery photo, not just one reference.
+  // Remove every duplicate database reference for this gallery photo.
   const {error}=await supabase.from("product_images").delete().eq("product_id",image.product_id).eq("image_url",imageUrl);
   if(error) throw error;
   if(path){
     const {error:storageError}=await supabase.storage.from("seller-media").remove([path]);
-    if(storageError) throw storageError;
+    if(storageError) throw new Error("The photo reference was removed, but its stored file could not be deleted. Please retry or contact NammaSpot support.");
   }
 }
 

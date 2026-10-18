@@ -160,9 +160,17 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
     document.head.appendChild(jsonScript);
     return ()=>jsonScript.remove();
   },[seller,settings,data]);
+  const currentSellerUrl = sellerPublicUrl(slug);
+  const openInChrome = () => {
+    const parsed = new URL(currentSellerUrl);
+    const intent = "intent://" + parsed.host + parsed.pathname + parsed.search + parsed.hash +
+      "#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" +
+      encodeURIComponent(currentSellerUrl) + ";end";
+    window.location.href = intent;
+  };
   if(state.loading)return <main className="page"><div className="page-title"><div className="eyebrow">NAMMASPOT SELLER</div><h1>Loading seller…</h1></div></main>;
-  if(state.error)return <main className="page"><div className="error-state"><h2>Could not load this seller</h2><p>{state.error}</p><button className="secondary-button" onClick={()=>go("/explore")}>Back to Explore</button></div></main>;
-  if(!data)return <main className="page"><div className="empty-state"><h2>Seller not found</h2><p>This NammaSpot seller page is unavailable.</p></div></main>;
+  if(state.error)return <main className="page"><div className="error-state"><h2>Could not load this seller</h2><p>{state.error}</p><button className="primary-button" onClick={openInChrome}>Open in Chrome</button><button className="secondary-button" onClick={()=>go("/explore")}>Back to Explore</button></div></main>;
+  if(!data)return <main className="page"><div className="empty-state"><h2>Seller not found</h2><p>This catalogue could not be loaded in this browser. Try opening it in Chrome.</p><button className="primary-button" onClick={openInChrome}>Open in Chrome</button><button className="secondary-button" onClick={()=>window.location.reload()}>Try again</button></div></main>;
   const products=data.products||[];
   const share=()=>setShareOpen(true);
   const wa=whatsappUrl(seller);

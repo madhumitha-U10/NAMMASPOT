@@ -63,7 +63,7 @@ export default function ServiceProviderCalendarPage({go}){
     return()=>{window.clearInterval(fallback);supabase.removeChannel(channel);};
   },[seller?.id]);
 
-  const services=String(settings.services||"").split(/[\\n,;]+/).map(x=>x.trim()).filter(Boolean);
+  const services=String(settings.services||"").split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean);
   const pendingCount=appointments.filter(a=>a.status==="pending").length;
   const upcomingCount=appointments.filter(a=>a.status==="confirmed"&&a.appointment_date>=dateKey(new Date())).length;
   const monthCells=useMemo(()=>{
@@ -118,11 +118,10 @@ export default function ServiceProviderCalendarPage({go}){
   };
   const phone=(value)=>{const raw=String(value||"").replace(/\\D/g,"");return raw.length===10?"91"+raw:raw.startsWith("0")&&raw.length===11?"91"+raw.slice(1):raw;};
 
-  if(state.loading)return <main className="page service-calendar-page"><p className="ns-calendar-loading"><LoaderCircle size={18}/> Loading your calendar…</p></main>;
-  if(!seller)return <main className="page service-calendar-page"><div className="inline-error">{state.error||"Seller profile not found."}</div><button className="secondary-button" onClick={()=>go("/dashboard")}><ArrowLeft size={16}/> Dashboard</button></main>;
+  if(state.loading)return <section className="service-calendar-page"><p className="ns-calendar-loading"><LoaderCircle size={18}/> Loading your calendar…</p></section>;
+  if(!seller)return <section className="service-calendar-page"><div className="inline-error">{state.error||"Seller profile not found."}</div><button className="secondary-button" onClick={()=>go("/dashboard")}><ArrowLeft size={16}/> Dashboard</button></section>;
 
-  return <main className="page dashboard-page service-calendar-page">
-    <button className="back-button" onClick={()=>go("/dashboard")}><ArrowLeft size={17}/> Dashboard</button>
+  return <section className="service-calendar-page">
     <header className="ns-provider-dashboard-head">
       <div><span className="ns-provider-kicker">SERVICE PROVIDER SPACE</span><h1>Your appointment calendar</h1><p>Manage availability and customer requests from one simple place.</p></div>
       <a className="secondary-button" href={sellerPublicUrl(seller.slug)} target="_blank" rel="noreferrer">Preview public page <CalendarDays size={15}/></a>
@@ -133,7 +132,7 @@ export default function ServiceProviderCalendarPage({go}){
       <div><span>Services listed</span><strong>{services.length}</strong><small>Visible on your NammaSpot page</small></div>
     </div>
     <nav className="ns-provider-tabs" aria-label="Service calendar sections">
-      {[["calendar","Calendar"],["services","My services"],["availability","Availability"]].map(([key,label])=><button type="button" key={key} className={tab===key?"active":""} onClick={()=>setTab(key)}>{key==="calendar"?<CalendarDays size={16}/>:key==="services"?<Settings size={16}/>:<Clock size={16}/>} {label}</button>)}
+      {[["calendar","Appointments"],["settings","Services & hours"]].map(([key,label])=><button type="button" key={key} className={tab===key?"active":""} onClick={()=>setTab(key)}>{key==="calendar"?<CalendarDays size={16}/>:<Settings size={16}/>} {label}</button>)}
     </nav>
 
     {tab==="calendar"&&<section className="ns-provider-calendar-workspace">
@@ -166,14 +165,14 @@ export default function ServiceProviderCalendarPage({go}){
       </div>
     </section>}
 
-    {tab==="services"&&<section className="ns-provider-settings-card">
+    {tab==="settings"&&<section className="ns-provider-settings-card">
       <div className="ns-provider-section-heading"><span className="ns-provider-kicker">YOUR OFFERINGS</span><h2>Make it easy to understand what you do</h2><p>Customers will see these services and choose one before requesting an appointment.</p></div>
       <label>Services you offer<textarea rows={5} maxLength={600} value={settings.services||""} onChange={e=>setSettings({...settings,services:e.target.value})} placeholder={"One service per line\nBridal makeup\nParty makeup\nMehendi design"}/><small>Keep each service name short and clear. One service per line works best.</small></label>
       <div className="ns-provider-form-grid"><label>Business / service type<input maxLength={120} value={settings.business_type||""} onChange={e=>setSettings({...settings,business_type:e.target.value})} placeholder="Example: Beauty professional"/></label><label>Experience<input maxLength={160} value={settings.experience||""} onChange={e=>setSettings({...settings,experience:e.target.value})} placeholder="Example: 3 years"/></label><label>Area you serve<input maxLength={180} value={settings.area_served||""} onChange={e=>setSettings({...settings,area_served:e.target.value})} placeholder="Example: Anna Nagar and nearby areas"/></label><label>Appointment length<select value={String(settings.appointment_duration_minutes||60)} onChange={e=>setSettings({...settings,appointment_duration_minutes:Number(e.target.value)})}>{[30,45,60,90,120].map(n=><option value={n} key={n}>{n} minutes</option>)}</select><small>Each appointment reserves this much time.</small></label></div>
       <div className="ns-provider-preview-note"><CheckCircle size={17}/> Your services appear on your public NammaSpot page with a booking calendar.</div>
     </section>}
 
-    {tab==="availability"&&<section className="ns-provider-settings-card">
+    {tab==="settings"&&<section className="ns-provider-settings-card">
       <div className="ns-provider-section-heading"><span className="ns-provider-kicker">WEEKLY AVAILABILITY</span><h2>When can customers book you?</h2><p>Set your usual working hours once. You can block individual dates from the calendar whenever plans change.</p></div>
       <div className="ns-provider-hours-list">{DAYS.map((day,index)=>{
         const row=hours.find(h=>Number(h.day_of_week)===index)||{day_of_week:index,is_open:false,ranges:[]},range=row.ranges?.[0]||{open:"09:00",close:"17:00"};
@@ -187,6 +186,6 @@ export default function ServiceProviderCalendarPage({go}){
 
     {state.error&&<div className="inline-error" role="alert"><AlertCircle size={16}/>{state.error}</div>}
     {state.notice&&<div className="form-status" role="status"><CheckCircle size={17}/>{state.notice}</div>}
-    <div className="ns-provider-save-bar"><span>Remember to save changes to publish your latest availability.</span><button type="button" onClick={saveAll} disabled={state.saving}><Save size={16}/>{state.saving?"Saving…":"Save changes"}</button></div>
-  </main>;
+    {tab==="settings"&&<div className="ns-provider-save-bar"><span>Save your services and working hours when you're done.</span><button type="button" onClick={saveAll} disabled={state.saving}><Save size={16}/>{state.saving?"Saving…":"Save changes"}</button></div>}
+  </section>;
 }

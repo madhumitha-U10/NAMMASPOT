@@ -76,6 +76,7 @@ export async function saveMicrosite(sellerId, values) {
     services:String(values.services||"").trim().slice(0,600)||null,
     business_type:String(values.business_type||"").trim().slice(0,120)||null,
     area_served:String(values.area_served||"").trim().slice(0,180)||null,
+    appointment_duration_minutes:[30,45,60,90,120].includes(Number(values.appointment_duration_minutes))?Number(values.appointment_duration_minutes):60,
     theme:["classic","warm","minimal"].includes(values.theme)?values.theme:"classic",
     business_highlights:Array.isArray(values.business_highlights)?values.business_highlights.map(x=>String(x).trim().slice(0,120)).filter(Boolean).slice(0,6):[],
     social_youtube_url:validatePublicUrl(values.social_youtube_url,"YouTube URL")||null,
@@ -138,4 +139,65 @@ export function sellerPublicUrl(slug) {
   const configuredOrigin = String(import.meta.env.VITE_PUBLIC_SITE_URL || "").trim().replace(/\/$/, "");
   const origin = configuredOrigin || (window.location.hostname === "nammaspot.vercel.app" ? window.location.origin : "https://nammaspot.vercel.app");
   return origin + "/s/" + encodeURIComponent(slug);
+}
+
+
+export async function getPublicServiceCalendar(sellerId, fromDate, toDate) {
+  const { data, error } = await supabase.rpc("get_public_service_calendar", {
+    p_seller_id: sellerId,
+    p_from_date: fromDate,
+    p_to_date: toDate
+  });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getPublicServiceSlots(sellerId, date) {
+  const { data, error } = await supabase.rpc("get_public_service_slots", {
+    p_seller_id: sellerId,
+    p_date: date
+  });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function createServiceAppointment(values) {
+  const { data, error } = await supabase.rpc("create_service_appointment", {
+    p_seller_id: values.seller_id,
+    p_service_name: String(values.service_name || "").trim(),
+    p_appointment_date: values.appointment_date,
+    p_start_time: values.start_time,
+    p_customer_name: String(values.customer_name || "").trim(),
+    p_customer_contact: String(values.customer_contact || "").trim(),
+    p_customer_note: String(values.customer_note || "").trim()
+  });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row?.id) throw new Error("Your appointment request could not be confirmed. Please try again.");
+  return row;
+}
+
+export async function getMyServiceAppointments(sellerId, fromDate, toDate) {
+  const { data, error } = await supabase.from("service_appointments")
+    .select("id,seller_id,service_name,appointment_date,start_time,end_time,customer_name,customer_contact,customer_note,status,created_at,updated_at")
+    .eq("seller_id", sellerId)
+    .gte("appointment_date", fromDate)
+    .lte("appointment_date", toDate)
+    .order("appointment_date", { ascending: true })
+    .order("start_time", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function updateServiceAppointmentStatus(id, status) {
+  const allowed = ["confirmed", "declined", "cancelled", "completed"];
+  if (!allowed.includes(status)) throw new Error("Choose a valid appointment status.");
+  const { data, error } = await supabase.from("service_appointments")
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select("id,status")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("This appointment could not be updated. Refresh and try again.");
+  return data;
 }

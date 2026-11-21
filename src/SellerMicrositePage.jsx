@@ -63,26 +63,27 @@ function ProductModal({product,onClose,onEnquire,onAppEnquiry}){
 }
 
 
-function buildEnquiryWhatsAppUrl(seller, form, product) {
+function buildEnquiryWhatsAppUrl(seller, form, product, service) {
   const raw = String(seller?.whatsapp_phone || "").replace(/\D/g, "");
   const phone = raw.length === 10 ? "91" + raw : raw.length === 11 && raw.startsWith("0") ? "91" + raw.slice(1) : raw.length === 12 && raw.startsWith("91") ? raw : "";
   if (!phone) return "";
   const item = product?.name || product?.product_name || "";
   const message = "Hi " + (seller.business_name || "there") + ", I'm " + form.customer_name +
     ". My WhatsApp number is " + form.customer_contact + ". " +
-    (item ? "I'm enquiring about " + item + ". " : "") + form.message + " (Sent through NammaSpot)";
+    (item ? "I'm enquiring about " + item + ". " : service ? "I'm requesting a quote for " + service + ". " : "") + form.message + " (Sent through NammaSpot)";
   return "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
 }
 
-function EnquiryModal({seller, product, onClose}) {
-  const [form, setForm] = useState({customer_name:"", customer_contact:"", message: product ? "I would like to know more about " + (product.name || product.product_name || "this product") + "." : "I would like to know more about your products."});
+function EnquiryModal({seller, product, service, settings, onClose}) {
+  const serviceMode = Boolean(service || settings?.business_type || settings?.services);
+  const [form, setForm] = useState({customer_name:"", customer_contact:"", message: product ? "I would like to know more about " + (product.name || product.product_name || "this product") + "." : service ? "I would like to request a quote for " + service + ". Please share the details and price." : serviceMode ? "I would like to know more about your services and request a quote." : "I would like to know more about your products."});
   const [state, setState] = useState({saving:false, error:"", sent:false});
-  const whatsappUrl = state.sent ? buildEnquiryWhatsAppUrl(seller, form, product) : "";
+  const whatsappUrl = state.sent ? buildEnquiryWhatsAppUrl(seller, form, product, service) : "";
   const submit = async (event) => {
     event.preventDefault();
     setState({saving:true,error:"",sent:false});
     try {
-      await createEnquiry({seller_id:seller.id,product_id:product?.id||null,customer_name:form.customer_name,customer_contact:form.customer_contact,message:form.message});
+      await createEnquiry({seller_id:seller.id,product_id:product?.id||null,customer_name:form.customer_name,customer_contact:form.customer_contact,message:(service ? "Service requested: " + service + "\n" : "") + form.message});
       setState({saving:false,error:"",sent:true});
     } catch (error) {
       setState({saving:false,error:error?.message||"Your enquiry could not be sent. Please try again.",sent:false});
@@ -100,8 +101,8 @@ function EnquiryModal({seller, product, onClose}) {
         <button type="button" className="secondary-button full-button" onClick={onClose}>Done</button>
       </div> : <>
         <div className="eyebrow">CONTACT THIS SELLER</div>
-        <h2 id="ns-enquiry-title">Send an enquiry</h2>
-        <p className="muted-note">{product ? "Ask about " + (product.name || product.product_name) + "." : "Tell the seller what you would like to know."} Your message will appear in their NammaSpot enquiries.</p>
+        <h2 id="ns-enquiry-title">{serviceMode ? "Request a service quote" : "Send an enquiry"}</h2>
+        <p className="muted-note">{product ? "Ask about " + (product.name || product.product_name) + "." : service ? "Request details or a quote for " + service + "." : serviceMode ? "Tell the provider what help you need. They can reply with availability and a quote." : "Tell the seller what you would like to know."} Your message will appear in their NammaSpot enquiries.</p>
         <form className="seller-form ns-enquiry-form" onSubmit={submit}>
           <label>Your name<input required maxLength={120} autoComplete="name" value={form.customer_name} onChange={event=>setForm({...form,customer_name:event.target.value})} placeholder="Enter your name"/></label>
           <label>Your WhatsApp number<input required type="tel" inputMode="tel" autoComplete="tel" maxLength={20} pattern="[0-9+() -]{8,20}" value={form.customer_contact} onChange={event=>setForm({...form,customer_contact:event.target.value})} placeholder="10-digit mobile number"/></label>
@@ -164,6 +165,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
   const [product,setProduct]=useState(null);
   const [enquiryOpen,setEnquiryOpen]=useState(false);
   const [enquiryProduct,setEnquiryProduct]=useState(null);
+  const [selectedService,setSelectedService]=useState("");
   const [savedProductIds,setSavedProductIds]=useState(()=>new Set(readSavedProducts().map(item=>item.id)));
   const [catalogueQuery,setCatalogueQuery]=useState("");
   const [expandedDescriptions,setExpandedDescriptions]=useState(()=>new Set());
@@ -254,6 +256,8 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
   if(state.error)return <main className="page"><div className="error-state"><h2>Could not load this seller</h2><p>{state.error}</p><button className="primary-button" onClick={openInChrome}>Open in Chrome</button><button className="secondary-button" onClick={()=>go("/explore")}>Back to Explore</button></div></main>;
   if(!data)return <main className="page"><div className="empty-state"><h2>Seller not found</h2><p>This catalogue could not be loaded in this browser. Try opening it in Chrome.</p><button className="primary-button" onClick={openInChrome}>Open in Chrome</button><button className="secondary-button" onClick={()=>window.location.reload()}>Try again</button></div></main>;
   const products=data.products||[];
+  const serviceItems=String(settings.services||"").split(/[\\n,;]+/).map(item=>item.trim()).filter(Boolean).slice(0,20);
+  const isServiceProvider=serviceItems.length>0||Boolean(String(settings.business_type||"").trim());
   const share=()=>setShareOpen(true);
   const wa=whatsappUrl(seller);
   const productWa=p=>whatsappUrl(seller,p);
@@ -281,16 +285,16 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
       </div>
       <div className="ns-mobile-seller-info">
         <h1>{esc(seller.business_name)} {seller.verified&&<span className="ns-mobile-verified-dot" aria-label="Verified seller">✓</span>}</h1>
-        <p className="ns-mobile-verified-line">{seller.verified ? "Verified seller" : "Local seller"} · {esc(seller.category?.name||"Local business")}</p>
+        <p className="ns-mobile-verified-line">{seller.verified ? "Verified NammaSpot profile" : "NammaSpot business"} · {esc(settings.business_type||seller.category?.name||"Local business")}</p>
         <p className="ns-mobile-location"><MapPin size={16}/>{esc(seller.location||"Chennai, Tamil Nadu")}</p>
       </div>
     </section>
     {(settings.tagline||settings.about)&&<section className="ns-mobile-update"><CalendarDays size={24}/><div><small>UPDATE FROM SELLER{settings.updated_at ? " · "+new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(settings.updated_at)) : ""}</small><p>{esc(settings.tagline||settings.about)}</p></div></section>}
     <section className="ns-mobile-stats" aria-label="Seller details">
-      <div><b>{products.length}</b><span>Products</span></div><div><b>{esc(seller.category?.name||"Local")}</b><span>Category</span></div>
+      <div><b>{products.length}</b><span>{isServiceProvider ? "Products" : "Catalogue items"}</span></div><div><b>{isServiceProvider ? serviceItems.length : esc(seller.category?.name||"Local")}</b><span>{isServiceProvider ? "Services" : "Category"}</span></div>
     </section>
     <section className="ns-mobile-contact">
-      {wa&&<a className="ns-mobile-whatsapp" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={22}/> Enquiry on WhatsApp</a>}
+      {wa&&<a className="ns-mobile-whatsapp" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={22}/> {isServiceProvider ? "Contact provider on WhatsApp" : "Enquiry on WhatsApp"}</a>}
       <button type="button" className="ns-mobile-app-enquiry" onClick={()=>{setEnquiryProduct(null);setEnquiryOpen(true)}}><Send size={19}/> Send enquiry through NammaSpot</button>
       <div className="ns-mobile-contact-row">
         {seller.contact&&<a href={"tel:"+seller.contact}><Phone size={20}/><span>Call</span></a>}
@@ -299,6 +303,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
         <button onClick={share}><Share2 size={20}/><span>Share</span></button>
       </div>
     </section>
+    {isServiceProvider&&<section className="ns-provider-services"><div className="eyebrow">WHAT WE CAN HELP WITH</div><h2>Services offered</h2>{serviceItems.length>0?<div className="ns-provider-service-list">{serviceItems.map((item,index)=><article className="ns-provider-service" key={index}><div><strong>{esc(item)}</strong><small>{settings.experience ? esc(settings.experience) : "Contact for details and pricing"}</small></div><button type="button" className="secondary-button" onClick={()=>{setEnquiryProduct(null);setEnquiryOpen(true);setSelectedService(item)}}>Request quote</button></article>)}</div>:<p>{esc(settings.business_type||"Local service provider")} · Contact to discuss your requirements.</p>}<div className="ns-provider-details">{settings.experience&&<span><b>Experience</b>{esc(settings.experience)}</span>}{settings.area_served&&<span><b>Areas served</b>{esc(settings.area_served)}</span>}</div><button type="button" className="primary-button full-button" onClick={()=>{setEnquiryProduct(null);setSelectedService("");setEnquiryOpen(true)}}>Request a service quote</button></section>}
     <nav className="ns-mobile-tabs" aria-label="Seller page sections"><a className={activeTab==="catalogue"?"active":""} href="#catalogue" onClick={()=>setActiveTab("catalogue")}>Catalogue</a><a className={activeTab==="about"?"active":""} href="#about" onClick={()=>setActiveTab("about")}>About</a><a className={activeTab==="reviews"?"active":""} href="#reviews" onClick={()=>setActiveTab("reviews")}>Reviews</a></nav>
     <section id="catalogue" className="ns-mobile-catalogue">
       <div className="ns-mobile-search"><Search size={19}/><input value={catalogueQuery} onChange={e=>setCatalogueQuery(e.target.value)} placeholder="Search products..." aria-label="Search products"/></div>
@@ -310,7 +315,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
     <nav className="ns-mobile-bottom-nav" aria-label="Main navigation"><button className={location.pathname==="/"?"active":""} aria-current={location.pathname==="/"?"page":undefined} onClick={()=>go("/")}><Home size={21}/><span>Home</span></button><button className={location.pathname.startsWith("/explore")||location.pathname.startsWith("/categories")?"active":""} onClick={()=>go("/explore")}><Compass size={21}/><span>Explore</span></button><button className={location.pathname.startsWith("/saved")?"active":""} onClick={()=>go("/saved")}><Heart size={21}/><span>Saved</span></button><button className={location.search.includes("near=1")?"active":""} onClick={()=>go("/explore?near=1")}><Navigation size={21}/><span>Near me</span></button><button className={location.pathname.startsWith("/featured")?"active":""} onClick={()=>go("/featured")}><Star size={21}/><span>Featured</span></button></nav>
     {shareOpen&&<SellerShareModal seller={seller} url={sellerPublicUrl(seller.slug)} qrUrl={sellerPublicUrl(seller.slug)+"?source=qr"} onClose={()=>setShareOpen(false)}/>}
     {product&&<ProductModal product={product} onClose={()=>setProduct(null)} onEnquire={productWa(product)} onAppEnquiry={()=>{setEnquiryProduct(product);setEnquiryOpen(true);setProduct(null)}}/>}
-    {enquiryOpen&&<EnquiryModal seller={seller} product={enquiryProduct} onClose={()=>setEnquiryOpen(false)}/>}   </main>;
+    {enquiryOpen&&<EnquiryModal seller={seller} product={enquiryProduct} service={selectedService} settings={settings} onClose={()=>{setEnquiryOpen(false);setSelectedService("")}}/>}   </main>;
 }
 
 

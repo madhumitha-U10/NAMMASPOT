@@ -513,13 +513,12 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
   }, [query]);
   const activeNear = area || near;
   const [sort, setSort] = useState("relevant");
-  const [resultType, setResultType] = useState("all");
   const [debouncedQuery, setDebouncedQuery] = useState(urlQuery);
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedQuery(query), 250);
     return () => window.clearTimeout(timer);
   }, [query]);
-  const options = useMemo(() => ({ query: debouncedQuery, category, near: activeNear, sort, resultType, searchType }), [debouncedQuery, category, activeNear, sort, resultType, searchType]);
+  const options = useMemo(() => ({ query: debouncedQuery, category, near: activeNear, sort, searchType }), [debouncedQuery, category, activeNear, sort, searchType]);
   const state = useAsync(() => getPublicSellers(options), [options]);
 
   const categoryState = useAsync(() => getCategories(), []);
@@ -545,13 +544,6 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
             <button type="button" className={searchType === "product" ? "active" : ""} onClick={() => go("/explore?type=product" + (query.trim() ? "&search=" + encodeURIComponent(query.trim()) : ""))}><Search size={15}/> Products</button>
           </div>
           <div className="search-controls">
-            <label>Show
-              <select value={resultType} onChange={(event) => setResultType(event.target.value)}>
-                <option value="all">All sellers</option>
-                <option value="services">Service providers</option>
-                <option value="sellers">Businesses</option>
-              </select>
-            </label>
             <label>Sort
               <select value={sort} onChange={(event) => setSort(event.target.value)}>
                 <option value="relevant">Most relevant</option>

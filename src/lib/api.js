@@ -259,7 +259,7 @@ function extractBudget(query) {
 function queryWithoutBudget(query) {
   return String(query || "").replace(/(?:under|below|less than|within|budget of|upto|up to)\s*₹?\s*\d[\d,]*|₹\s*\d[\d,]*|rs\.?\s*\d[\d,]*/ig, " ").trim();
 }
-export async function getPublicSellers({ query = "", category = "All", near = "", sort = "relevant", resultType = "all", searchType = "seller" } = {}) {
+export async function getPublicSellers({ query = "", category = "All", near = "", sort = "relevant", searchType = "seller" } = {}) {
   let rows;
   if (!supabase) {
     const state = demoState();
@@ -291,9 +291,6 @@ export async function getPublicSellers({ query = "", category = "All", near = ""
     if (!categoryMatches(seller.category, category)) return false;
     if (requestedArea && !normaliseSearch([seller.location, seller.city].join(" ")).includes(normaliseSearch(requestedArea))) return false;
     if (budget !== null && !(seller.products || []).some((product) => Number(product.price) > 0 && Number(product.price) <= budget)) return false;
-    if (resultType === "sellers" || resultType === "services") {
-      if (resultType === "services" && !/service|artist|tailor|makeup|mehendi|photograph/i.test(seller.category + " " + seller.description)) return false;
-    }
     if (!effectiveQuery) return true;
     const sellerFields = [seller.name, seller.category, seller.location, seller.city, seller.description];
     const productFields = (seller.products || []).flatMap((product) => [product.name, product.description]);

@@ -370,14 +370,16 @@ export async function recordSellerPageView(sellerId, source = "direct") {
   }
   if (!visitorKey) return false;
 
-  const { error } = await needBackend().from("seller_page_views").insert({
-    seller_id: sellerId,
-    visitor_key: visitorKey,
-    source: cleanSource,
+  const { data, error } = await needBackend().rpc("record_seller_page_view", {
+    p_seller_id: sellerId,
+    p_visitor_key: visitorKey,
+    p_source: cleanSource,
   });
   if (error) throw error;
-  try { window.sessionStorage.setItem(dedupeKey, String(now)); } catch {}
-  return true;
+  if (data === true) {
+    try { window.sessionStorage.setItem(dedupeKey, String(now)); } catch {}
+  }
+  return data === true;
 }
 
 export async function getSellerPageAnalytics(sellerId, days = 30) {

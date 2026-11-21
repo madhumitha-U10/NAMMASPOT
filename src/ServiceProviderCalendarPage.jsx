@@ -91,6 +91,8 @@ export default function ServiceProviderCalendarPage({go}){
     if(!seller)return;
     setState(s=>({...s,saving:true,error:"",notice:""}));
     try{
+      const invalidDay=hours.find(row=>row.is_open&&(!row.ranges?.[0]?.open||!row.ranges?.[0]?.close||row.ranges[0].close<=row.ranges[0].open));
+      if(invalidDay)throw new Error("Check the opening and closing times for "+DAYS[Number(invalidDay.day_of_week)]+". Closing time must be later than opening time.");
       const clean={...settings,appointment_duration_minutes:Number(settings.appointment_duration_minutes)||60};
       await saveMicrosite(seller.id,clean);
       await saveHours(seller.id,hours);

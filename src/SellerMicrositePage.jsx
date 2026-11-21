@@ -256,7 +256,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
   if(state.error)return <main className="page"><div className="error-state"><h2>Could not load this seller</h2><p>{state.error}</p><button className="primary-button" onClick={openInChrome}>Open in Chrome</button><button className="secondary-button" onClick={()=>go("/explore")}>Back to Explore</button></div></main>;
   if(!data)return <main className="page"><div className="empty-state"><h2>Seller not found</h2><p>This catalogue could not be loaded in this browser. Try opening it in Chrome.</p><button className="primary-button" onClick={openInChrome}>Open in Chrome</button><button className="secondary-button" onClick={()=>window.location.reload()}>Try again</button></div></main>;
   const products=data.products||[];
-  const serviceItems=String(settings.services||"").split(/[\\n,;]+/).map(item=>item.trim()).filter(Boolean).slice(0,20);
+  const serviceItems=String(settings.services||"").split(/[\n,;]+/).map(item=>item.trim()).filter(Boolean).slice(0,20);
   const isServiceProvider=serviceItems.length>0||Boolean(String(settings.business_type||"").trim());
   const share=()=>setShareOpen(true);
   const wa=whatsappUrl(seller);

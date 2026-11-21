@@ -1428,7 +1428,7 @@ function EnquiryManager({ enquiries,onChange,seller }) {
         {visible.length ? visible.map((item)=>{
           const status=normalStatus(item.status);
           const contact=String(item.customer_contact||"").trim();
-          const digits=contact.replace(/\\D/g,"");
+          const digits=contact.replace(/\D/g,"");
           const whatsappNumber=!contact.includes("@") ? (digits.length===10 ? "91"+digits : digits.length===11&&digits.startsWith("0") ? "91"+digits.slice(1) : digits.length===12&&digits.startsWith("91") ? digits : "") : "";
           const replyText="Hi "+(item.customer_name||"there")+", thank you for contacting "+(seller?.business_name||"us")+" through NammaSpot"+(item.product?.product_name?" about "+item.product.product_name:"")+". How can I help you?";
           const date=item.enquiry_date||item.created_at;

@@ -215,3 +215,19 @@
 @keyframes ns-install-pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:640px){.ns-install-modal-backdrop{padding:16px}.ns-install-modal{padding:28px 21px 20px;border-radius:22px}.seller-microsite{padding-bottom:calc(180px + env(safe-area-inset-bottom))}.ns-catalogue-install-reminder{margin-bottom:calc(112px + env(safe-area-inset-bottom))}}
 @media(prefers-reduced-motion:reduce){.ns-install-modal{animation:none}}
+
+
+/* Service-provider profile additions */
+.ns-provider-services{max-width:1040px;margin:26px auto;padding:24px;border:1px solid #ead8cc;border-radius:20px;background:#fffaf4;color:#382625}
+.ns-provider-services h2{margin:5px 0 16px;color:#6b1a22;font-family:Georgia,"Times New Roman",serif;font-size:clamp(24px,4vw,31px)}
+.ns-provider-service-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.ns-provider-service{display:flex;align-items:center;justify-content:space-between;gap:14px;min-width:0;padding:15px;border:1px solid #eee0d6;border-radius:14px;background:#fff}
+.ns-provider-service>div{display:flex;flex-direction:column;gap:5px;min-width:0}
+.ns-provider-service strong{color:#4c2927;font-size:14px}
+.ns-provider-service small{color:#806c65;font-size:12px;line-height:1.4}
+.ns-provider-service .secondary-button{flex:0 0 auto;white-space:nowrap}
+.ns-provider-details{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.ns-provider-details span{display:flex;flex-direction:column;gap:4px;padding:10px 13px;border-radius:12px;background:#f6eee6;color:#65514b;font-size:13px}
+.ns-provider-details b{color:#6b1a22;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.ns-provider-services>.primary-button{margin-top:5px}
+@media(max-width:640px){.ns-provider-services{margin:20px 14px;padding:18px 14px;border-radius:16px}.ns-provider-service-list{grid-template-columns:1fr}.ns-provider-service{align-items:flex-start;flex-direction:column}.ns-provider-service .secondary-button{width:100%;justify-content:center}.ns-provider-details{display:grid;grid-template-columns:1fr 1fr}}

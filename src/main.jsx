@@ -1419,11 +1419,11 @@ function EnquiryManager({ enquiries,onChange,seller }) {
   });
   return (
     <section className="enquiry-manager">
-      <div className="dashboard-section-head"><div><h2>Customer enquiries</h2><p>Reply to customers using the contact details they shared, then update the status so you know what needs attention.</p></div><button className="secondary-button" onClick={()=>{setSearch("");setFilter("all");setError("");setNotice("");}}>Reset</button></div>
+      <div className="dashboard-section-head"><div><h2>Customer inbox</h2><p>Manage product questions and service requests in one place. Mark a new request as Interested, Replied or Completed as you follow up.</p></div><button className="secondary-button" onClick={()=>{setSearch("");setFilter("all");setError("");setNotice("");}}>Reset</button></div>
       <div className="enquiry-summary">
-        {[["all","All"],["new","New"],["read","Read"],["replied","Replied"],["closed","Closed"]].map(([key,label])=><button type="button" key={key} className={filter===key?"active":""} onClick={()=>setFilter(key)}><span>{label}</span><strong>{counts[key]}</strong></button>)}
+        {[["all","All"],["new","New"],["read","Interested"],["replied","Replied"],["closed","Completed"]].map(([key,label])=><button type="button" key={key} className={filter===key?"active":""} onClick={()=>setFilter(key)}><span>{label}</span><strong>{counts[key]}</strong></button>)}
       </div>
-      <label className="enquiry-search-label">Search enquiries<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, contact, product or message…"/></label>
+      <label className="enquiry-search-label">Search customer requests<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, contact, product, service or message…"/></label>
       {error&&<div className="inline-error" role="alert">{error}</div>}
       {notice&&<p className="inline-success" role="status">{notice}</p>}
       <div className="dashboard-list">
@@ -1436,14 +1436,14 @@ function EnquiryManager({ enquiries,onChange,seller }) {
           const date=item.enquiry_date||item.created_at;
           return <article className="dashboard-item enquiry-item" key={item.id}>
             <div className="enquiry-item-main">
-              <div className="enquiry-item-heading"><strong>{item.customer_name||"Customer"} · {item.product?.product_name||"General enquiry"}</strong><span className={"status-pill status-"+status}>{status==="new"?"New":status==="read"?"Read":status==="replied"?"Replied":"Closed"}</span></div>
+              <div className="enquiry-item-heading"><strong>{item.customer_name||"Customer"} · {item.product?.product_name||"Service / general request"}</strong><span className={"status-pill status-"+status}>{status==="new"?"New":status==="read"?"Interested":status==="replied"?"Replied":"Completed"}</span></div>
               <p className="enquiry-contact">{item.customer_contact||"No contact supplied"}</p>
               <p className="enquiry-message">{item.message}</p>
               {date&&<small className="muted-note">Received {new Intl.DateTimeFormat("en-IN",{dateStyle:"medium",timeStyle:"short"}).format(new Date(date))}</small>}
-              <div className="button-row enquiry-actions">{whatsappNumber&&<a className="secondary-button" href={"https://wa.me/"+whatsappNumber+"?text="+encodeURIComponent(replyText)} target="_blank" rel="noreferrer"><MessageCircle size={15}/> Reply on WhatsApp</a>}{contact&&contact.includes("@")&&<a className="secondary-button" href={"mailto:"+contact}><Send size={15}/> Email</a>}</div>
+              <div className="button-row enquiry-actions">{whatsappNumber&&<a className="secondary-button" href={"https://wa.me/"+whatsappNumber+"?text="+encodeURIComponent(replyText)} target="_blank" rel="noreferrer"><MessageCircle size={15}/> Reply on WhatsApp</a>}{contact&&!contact.includes("@")&&<a className="secondary-button" href={"tel:"+contact}><Phone size={15}/> Call customer</a>}{contact&&contact.includes("@")&&<a className="secondary-button" href={"mailto:"+contact}><Send size={15}/> Email</a>}</div>
               {whatsappNumber&&<small className="muted-note">WhatsApp opens with a suggested reply. Mark this enquiry as Replied only after you send your message.</small>}
             </div>
-            <label className="enquiry-status-control">Status<select value={status} disabled={busyId===item.id} onChange={event=>update(item.id,event.target.value)}><option value="new">New</option><option value="read">Read</option><option value="replied">Replied</option><option value="closed">Closed</option></select>{busyId===item.id&&<small>Saving…</small>}</label>
+            <label className="enquiry-status-control">Status<select value={status} disabled={busyId===item.id} onChange={event=>update(item.id,event.target.value)}><option value="new">New</option><option value="read">Interested</option><option value="replied">Replied</option><option value="closed">Completed</option></select>{busyId===item.id&&<small>Saving…</small>}</label>
           </article>;
         }) : <Empty title={enquiries.length?"No matching enquiries":"No enquiries yet"} text={enquiries.length?"Try another status or search term.":"New customer messages will appear here. Respond promptly and mark each one as replied or closed."}/>}
       </div>

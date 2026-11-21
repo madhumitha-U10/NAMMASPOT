@@ -439,7 +439,7 @@
 .ns-mobile-catalogue{max-width:1180px;margin:0 auto;padding:22px clamp(14px,4vw,32px) 36px}
 .ns-mobile-search{max-width:520px;margin:0 0 18px;border:1px solid #e8dcd3;border-radius:12px;background:#fff}
 .ns-mobile-search input{min-height:44px;color:#43322e}
-.ns-mobile-product-grid{gap:15px}
+.ns-mobile-product-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;gap:15px}
 .ns-mobile-product{min-width:0;border:1px solid #ebded5;border-radius:17px;background:#fffdf9;box-shadow:0 6px 20px rgba(55,29,24,.045);overflow:hidden;transition:transform .18s ease,box-shadow .18s ease}
 .ns-mobile-product:hover{transform:translateY(-2px);box-shadow:0 11px 28px rgba(55,29,24,.09)}
 .ns-mobile-product-image{aspect-ratio:1/1;background:#f7f1e9}
@@ -459,10 +459,10 @@
  .ns-mobile-tabs{top:59px}
  .ns-mobile-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
  .ns-mobile-product-copy{padding:11px 10px 12px}
- .ns-mobile-product-actions{grid-template-columns:1fr;gap:6px}
- .ns-mobile-product-actions .ns-product-enquire-btn,.ns-mobile-product-actions .ns-product-description-btn{width:100%}
+ .ns-mobile-product-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ .ns-mobile-product-actions .ns-product-enquire-btn,.ns-mobile-product-actions .ns-product-description-btn{width:100%;min-width:0;padding-left:5px;padding-right:5px;font-size:11px}
 }
-@media(max-width:360px){.ns-mobile-product-grid{grid-template-columns:1fr}}
+@media(max-width:360px){.ns-mobile-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.ns-mobile-product-copy{padding:9px 8px 10px}.ns-mobile-product-copy h3{font-size:12px}.ns-mobile-product-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.ns-mobile-product-actions button{min-height:38px;padding:7px 4px;font-size:10px}}
 
 .ns-public-location-line{display:flex;align-items:center;gap:7px}
 .ns-public-hours{max-width:620px;margin:20px 0 0;padding:16px;border:1px solid #eaded5;border-radius:15px;background:#fffaf5}
@@ -471,3 +471,16 @@
 .ns-public-hours>div:last-child{border-bottom:0}
 .ns-public-hours span{color:#806e66}
 .ns-public-hours strong{color:#563638;text-align:right;font-weight:750}
+
+/* Final mobile catalogue layout: always a real two-column grid on phones. */
+@media(max-width:760px){
+  .seller-microsite .ns-mobile-product-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+  .seller-microsite .ns-mobile-product{width:auto;min-width:0}
+  .seller-microsite .ns-mobile-product-image{display:grid;width:100%;aspect-ratio:1/1;height:auto}
+}
+@media(max-width:360px){
+  .seller-microsite .ns-mobile-product-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important}
+}
+.ns-booking-setup-note{display:grid;gap:5px;margin:0 0 16px;padding:13px 15px;border:1px solid #ead8cc;border-radius:12px;background:#fff8f1;color:#65433d}
+.ns-booking-setup-note strong{font-size:13px}
+.ns-booking-setup-note span{font-size:12px;line-height:1.5;color:#806d64}

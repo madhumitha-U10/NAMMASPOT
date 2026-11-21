@@ -327,6 +327,69 @@ export async function getSession() {
   return data.session ?? null;
 }
 
+export function subscribeToAuthChanges(callback) {
+  if (!supabase) return () => {};
+  const { data } = supabase.auth.onAuthStateChange((event, session) => {
+    callback?.(event, session);
+  });
+  return () => data?.subscription?.unsubscribe?.();
+}
+
+/**
+ * Count a public seller catalogue visit without collecting names, phone numbers,
+ * IP addresses or full user-agent strings. A browser is counted once per seller
+ * every 30 minutes; the random visitor key is first-party and pseudonymous.
+ */
+export async function recordSellerPageView(sellerId, source = "direct") {
+  if (!supabase || !sellerId || typeof window === "undefined") return false;
+  const allowedSources = new Set(["direct", "whatsapp", "instagram", "qr", "search"]);
+  const cleanSource = allowedSources.has(String(source).toLowerCase())
+    ? String(source).toLowerCase()
+    : "other";
+  const dedupeKey = "nammaspot-view-" + sellerId;
+  const now = Date.now();
+  try {
+    const previous = Number(window.sessionStorage.getItem(dedupeKey) || 0);
+    if (previous && now - previous < 30 * 60 * 1000) return false;
+  } catch {}
+
+  let visitorKey = "";
+  try {
+    visitorKey = window.localStorage.getItem("nammaspot-visitor-key") || "";
+    if (!visitorKey) {
+      visitorKey = window.crypto?.randomUUID
+        ? window.crypto.randomUUID()
+        : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+            const r = Math.random() * 16 | 0;
+            return (c === "x" ? r : (r & 3 | 8)).toString(16);
+          });
+      window.localStorage.setItem("nammaspot-visitor-key", visitorKey);
+    }
+  } catch {
+    visitorKey = window.crypto?.randomUUID?.() || "";
+  }
+  if (!visitorKey) return false;
+
+  const { error } = await needBackend().from("seller_page_views").insert({
+    seller_id: sellerId,
+    visitor_key: visitorKey,
+    source: cleanSource,
+  });
+  if (error) throw error;
+  try { window.sessionStorage.setItem(dedupeKey, String(now)); } catch {}
+  return true;
+}
+
+export async function getSellerPageAnalytics(sellerId, days = 30) {
+  if (!supabase) return { total_views: 0, unique_visitors: 0, today_views: 0, daily: [], sources: [] };
+  const { data, error } = await needBackend().rpc("get_seller_page_analytics", {
+    p_seller_id: sellerId,
+    p_days: Math.max(1, Math.min(90, Number(days) || 30)),
+  });
+  if (error) throw error;
+  return data || { total_views: 0, unique_visitors: 0, today_views: 0, daily: [], sources: [] };
+}
+
 export function normalizeEmail(value) {
   return String(value ?? "").trim().toLowerCase().slice(0,320);
 }

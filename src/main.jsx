@@ -1110,19 +1110,22 @@ function DashboardPage({ go }) {
   };
 
   useEffect(()=>{load(); const timer=window.setInterval(load,60000); const onFocus=()=>load(); const onVisible=()=>{if(document.visibilityState==="visible")load();}; window.addEventListener("focus",onFocus); document.addEventListener("visibilitychange",onVisible); return ()=>{window.clearInterval(timer);window.removeEventListener("focus",onFocus);document.removeEventListener("visibilitychange",onVisible);};},[]);
+  const isServiceProvider=Boolean(seller&&/service|provider|professional/i.test(String(seller.category||"")));
+  useEffect(()=>{if(!seller)return;setTab(current=>isServiceProvider?(current==="overview"?"services":current):current==="services"?"overview":current);},[seller?.category]);
 
   if (state.loading) return <main className="page"><div className="page-title"><div className="eyebrow">SELLER DASHBOARD</div><h1>Loading your spot…</h1></div><CardSkeletonRow detailed/></main>;
   if (state.error) return <main className="page"><ErrorState message={state.error} retry={load}/></main>;
 
+  const dashboardTabs=isServiceProvider?["services","profile","public"]:["overview","profile","services","products","enquiries","growth","public"];
   return (
     <main className="page dashboard-page">
       <div className="dashboard-head">
-        <div><div className="eyebrow">SELLER DASHBOARD</div><h1>Your spot, your catalogue.</h1><p>{seller.verification_status === "approved" ? "Your public page is live." : "Your profile is " + seller.verification_status + "."}</p></div>
+        <div><div className="eyebrow">SELLER DASHBOARD</div><h1>{isServiceProvider?"Your service business.":"Your spot, your catalogue."}</h1><p>{seller.verification_status === "approved" ? (isServiceProvider?"Manage appointments and keep your service profile up to date.":"Your public page is live.") : "Your profile is " + seller.verification_status + "."}</p></div>
         <span className={"status-pill status-"+seller.verification_status}>{seller.verification_status}</span>
       </div>
 
       <div className="dashboard-tabs">
-        {["overview","profile","services","products","enquiries","growth","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item==="public"?"Public profile":item==="growth"?"Growth & sharing":item==="services"?"Service calendar":item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
+        {dashboardTabs.map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item==="public"?(isServiceProvider?"Public page":"Public profile"):item==="growth"?"Growth & sharing":item==="services"?(isServiceProvider?"Appointments":"Service calendar"):item==="profile"?(isServiceProvider?"Business profile":"Profile"):item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
       </div>
 
       {tab==="overview" && <SellerGrowthHub seller={seller} products={products} enquiries={enquiries} analytics={analytics} onNavigate={setTab}/>}

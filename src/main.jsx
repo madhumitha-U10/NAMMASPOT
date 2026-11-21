@@ -11,7 +11,6 @@ import "./styles.css";
 import "./microsite.css";
 const SellerMicrositePage = lazy(() => import("./SellerMicrositePage.jsx"));
 const WebsiteEditorPage = lazy(() => import("./WebsiteEditorPage.jsx"));
-const ServiceProviderCalendarPage = lazy(() => import("./ServiceProviderCalendarPage.jsx"));
 import {
   isSupabaseConfigured,
   isProductionConfigurationError,
@@ -290,10 +289,6 @@ function getRoute(path) {
   if (path.startsWith("/saved")) return "saved";
   if (path.startsWith("/login")) return "login";
   if (path === "/register") return "register";
-  if (path.startsWith("/dashboard/website")) return "website-editor";
-  if (path.startsWith("/dashboard/website")) return "website-editor";
-  if (path.startsWith("/dashboard/website")) return "website-editor";
-  if (path.startsWith("/dashboard/website")) return "website-editor";
   if (path.startsWith("/dashboard/website")) return "website-editor";
   if (path.startsWith("/dashboard/website")) return "website-editor";
   if (path.startsWith("/dashboard/website")) return "website-editor";
@@ -1111,27 +1106,23 @@ function DashboardPage({ go }) {
   };
 
   useEffect(()=>{load(); const timer=window.setInterval(load,60000); const onFocus=()=>load(); const onVisible=()=>{if(document.visibilityState==="visible")load();}; window.addEventListener("focus",onFocus); document.addEventListener("visibilitychange",onVisible); return ()=>{window.clearInterval(timer);window.removeEventListener("focus",onFocus);document.removeEventListener("visibilitychange",onVisible);};},[]);
-  const isServiceProvider=Boolean(seller&&/service|provider|professional/i.test(String(seller.category||"")));
-  useEffect(()=>{if(!seller)return;setTab(current=>isServiceProvider?(current==="overview"?"services":current):current==="services"?"overview":current);},[seller?.category]);
 
   if (state.loading) return <main className="page"><div className="page-title"><div className="eyebrow">SELLER DASHBOARD</div><h1>Loading your spot…</h1></div><CardSkeletonRow detailed/></main>;
   if (state.error) return <main className="page"><ErrorState message={state.error} retry={load}/></main>;
 
-  const dashboardTabs=isServiceProvider?["services","profile","public"]:["overview","profile","services","products","enquiries","growth","public"];
   return (
     <main className="page dashboard-page">
       <div className="dashboard-head">
-        <div><div className="eyebrow">SELLER DASHBOARD</div><h1>{isServiceProvider?"Your service business.":"Your spot, your catalogue."}</h1><p>{seller.verification_status === "approved" ? (isServiceProvider?"Manage appointments and keep your service profile up to date.":"Your public page is live.") : "Your profile is " + seller.verification_status + "."}</p></div>
+        <div><div className="eyebrow">SELLER DASHBOARD</div><h1>Your spot, your catalogue.</h1><p>{seller.verification_status === "approved" ? "Your public page is live." : "Your profile is " + seller.verification_status + "."}</p></div>
         <span className={"status-pill status-"+seller.verification_status}>{seller.verification_status}</span>
       </div>
 
       <div className="dashboard-tabs">
-        {dashboardTabs.map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item==="public"?(isServiceProvider?"Public page":"Public profile"):item==="growth"?"Growth & sharing":item==="services"?(isServiceProvider?"Appointments":"Service calendar"):item==="profile"?(isServiceProvider?"Business profile":"Profile"):item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
+        {["overview","profile","products","enquiries","growth","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item==="public"?"Public profile":item==="growth"?"Growth & sharing":item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
       </div>
 
       {tab==="overview" && <SellerGrowthHub seller={seller} products={products} enquiries={enquiries} analytics={analytics} onNavigate={setTab}/>}
       {tab==="profile" && <ProfileEditor seller={seller} categories={categories} onSaved={(next)=>setSeller((current)=>({...current,...next}))}/>}
-      {tab==="services" && <ServiceProviderCalendarPage go={go}/>}
       {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} storageUsage={storageUsage} onStorageUsageChange={setStorageUsage} onChange={setProducts}/>}
       {tab==="enquiries" && <EnquiryManager enquiries={enquiries} onChange={setEnquiries} seller={seller}/>}
       {tab==="growth" && <SellerGrowthSharing seller={seller} analytics={analytics}/>}
@@ -1428,11 +1419,11 @@ function EnquiryManager({ enquiries,onChange,seller }) {
   });
   return (
     <section className="enquiry-manager">
-      <div className="dashboard-section-head"><div><h2>Customer inbox</h2><p>Manage product questions and service requests in one place. Mark a new request as Interested, Replied or Completed as you follow up.</p></div><button className="secondary-button" onClick={()=>{setSearch("");setFilter("all");setError("");setNotice("");}}>Reset</button></div>
+      <div className="dashboard-section-head"><div><h2>Customer enquiries</h2><p>Reply to customers using the contact details they shared, then update the status so you know what needs attention.</p></div><button className="secondary-button" onClick={()=>{setSearch("");setFilter("all");setError("");setNotice("");}}>Reset</button></div>
       <div className="enquiry-summary">
-        {[["all","All"],["new","New"],["read","Interested"],["replied","Replied"],["closed","Completed"]].map(([key,label])=><button type="button" key={key} className={filter===key?"active":""} onClick={()=>setFilter(key)}><span>{label}</span><strong>{counts[key]}</strong></button>)}
+        {[["all","All"],["new","New"],["read","Read"],["replied","Replied"],["closed","Closed"]].map(([key,label])=><button type="button" key={key} className={filter===key?"active":""} onClick={()=>setFilter(key)}><span>{label}</span><strong>{counts[key]}</strong></button>)}
       </div>
-      <label className="enquiry-search-label">Search customer requests<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, contact, product, service or message…"/></label>
+      <label className="enquiry-search-label">Search enquiries<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, contact, product or message…"/></label>
       {error&&<div className="inline-error" role="alert">{error}</div>}
       {notice&&<p className="inline-success" role="status">{notice}</p>}
       <div className="dashboard-list">
@@ -1445,14 +1436,14 @@ function EnquiryManager({ enquiries,onChange,seller }) {
           const date=item.enquiry_date||item.created_at;
           return <article className="dashboard-item enquiry-item" key={item.id}>
             <div className="enquiry-item-main">
-              <div className="enquiry-item-heading"><strong>{item.customer_name||"Customer"} · {item.product?.product_name||"Service / general request"}</strong><span className={"status-pill status-"+status}>{status==="new"?"New":status==="read"?"Interested":status==="replied"?"Replied":"Completed"}</span></div>
+              <div className="enquiry-item-heading"><strong>{item.customer_name||"Customer"} · {item.product?.product_name||"General enquiry"}</strong><span className={"status-pill status-"+status}>{status==="new"?"New":status==="read"?"Read":status==="replied"?"Replied":"Closed"}</span></div>
               <p className="enquiry-contact">{item.customer_contact||"No contact supplied"}</p>
               <p className="enquiry-message">{item.message}</p>
               {date&&<small className="muted-note">Received {new Intl.DateTimeFormat("en-IN",{dateStyle:"medium",timeStyle:"short"}).format(new Date(date))}</small>}
-              <div className="button-row enquiry-actions">{whatsappNumber&&<a className="secondary-button" href={"https://wa.me/"+whatsappNumber+"?text="+encodeURIComponent(replyText)} target="_blank" rel="noreferrer"><MessageCircle size={15}/> Reply on WhatsApp</a>}{contact&&!contact.includes("@")&&<a className="secondary-button" href={"tel:"+contact}><Phone size={15}/> Call customer</a>}{contact&&contact.includes("@")&&<a className="secondary-button" href={"mailto:"+contact}><Send size={15}/> Email</a>}</div>
+              <div className="button-row enquiry-actions">{whatsappNumber&&<a className="secondary-button" href={"https://wa.me/"+whatsappNumber+"?text="+encodeURIComponent(replyText)} target="_blank" rel="noreferrer"><MessageCircle size={15}/> Reply on WhatsApp</a>}{contact&&contact.includes("@")&&<a className="secondary-button" href={"mailto:"+contact}><Send size={15}/> Email</a>}</div>
               {whatsappNumber&&<small className="muted-note">WhatsApp opens with a suggested reply. Mark this enquiry as Replied only after you send your message.</small>}
             </div>
-            <label className="enquiry-status-control">Status<select value={status} disabled={busyId===item.id} onChange={event=>update(item.id,event.target.value)}><option value="new">New</option><option value="read">Interested</option><option value="replied">Replied</option><option value="closed">Completed</option></select>{busyId===item.id&&<small>Saving…</small>}</label>
+            <label className="enquiry-status-control">Status<select value={status} disabled={busyId===item.id} onChange={event=>update(item.id,event.target.value)}><option value="new">New</option><option value="read">Read</option><option value="replied">Replied</option><option value="closed">Closed</option></select>{busyId===item.id&&<small>Saving…</small>}</label>
           </article>;
         }) : <Empty title={enquiries.length?"No matching enquiries":"No enquiries yet"} text={enquiries.length?"Try another status or search term.":"New customer messages will appear here. Respond promptly and mark each one as replied or closed."}/>}
       </div>

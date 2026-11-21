@@ -309,7 +309,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
     <section id="reviews" className="ns-mobile-reviews" onMouseEnter={()=>setActiveTab("reviews")}><ReviewPanel seller={seller}/></section>
     <nav className="ns-mobile-bottom-nav" aria-label="Main navigation"><button className={location.pathname==="/"?"active":""} aria-current={location.pathname==="/"?"page":undefined} onClick={()=>go("/")}><Home size={21}/><span>Home</span></button><button className={location.pathname.startsWith("/explore")||location.pathname.startsWith("/categories")?"active":""} onClick={()=>go("/explore")}><Compass size={21}/><span>Explore</span></button><button className={location.pathname.startsWith("/saved")?"active":""} onClick={()=>go("/saved")}><Heart size={21}/><span>Saved</span></button><button className={location.search.includes("near=1")?"active":""} onClick={()=>go("/explore?near=1")}><Navigation size={21}/><span>Near me</span></button><button className={location.pathname.startsWith("/featured")?"active":""} onClick={()=>go("/featured")}><Star size={21}/><span>Featured</span></button></nav>
     {shareOpen&&<SellerShareModal seller={seller} url={sellerPublicUrl(seller.slug)} onClose={()=>setShareOpen(false)}/>}
-    {product&&<ProductModal product={product} onClose={()=>setProduct(null)} onEnquire={productWa(product)}/>}
+    {product&&<ProductModal product={product} onClose={()=>setProduct(null)} onEnquire={productWa(product)} onAppEnquiry={()=>{setEnquiryProduct(product);setEnquiryOpen(true);setProduct(null)}}/>}
     {enquiryOpen&&<EnquiryModal seller={seller} product={enquiryProduct} onClose={()=>setEnquiryOpen(false)}/>}   </main>;
 }
 

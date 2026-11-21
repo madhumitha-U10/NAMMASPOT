@@ -3,19 +3,20 @@ import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,CheckCircle,ExternalLink,X,C
 import {QRCodeCanvas} from "qrcode.react";
 import {createReview,getPublicReviews,createEnquiry,recordSellerPageView} from "./lib/api";
 import {getMicrosite,sellerPublicUrl} from "./lib/microsite";
+import ServiceBookingCalendar from "./ServiceBookingCalendar.jsx";
 
 const esc=(v)=>String(v||"").replace(/[<>]/g,"");
 const SAVED_PRODUCTS_KEY="nammaspot-saved-products";
 const readSavedProducts=()=>{try{const items=JSON.parse(localStorage.getItem(SAVED_PRODUCTS_KEY)||"[]");return Array.isArray(items)?items:[]}catch{return[]}};
 const writeSavedProducts=(items)=>{try{localStorage.setItem(SAVED_PRODUCTS_KEY,JSON.stringify(items));window.dispatchEvent(new window.CustomEvent("nammaspot-saved-products-change"))}catch{}};
-const whatsappUrl=(seller,product=null)=>{
+const whatsappUrl=(seller,product=null,serviceMode=false)=>{
   const raw=String(seller?.whatsapp_phone||"").replace(/\D/g,"");
   if(!raw)return null;
   const phone=raw.length===10?"91"+raw:raw.startsWith("0")&&raw.length===11?"91"+raw.slice(1):raw;
   // Keep the opening message consistent for every seller and product.
   // Customers can freely continue in English, Tamil, or Tanglish.
   const itemName = String(product?.name || product?.product_name || "").trim();
-  const message = itemName ? `Hi! 👋 I found “${itemName}” on NammaSpot and would like to enquire about it.` : "Hi! 👋 Contacting you via NammaSpot. I would like to know more about your products.";
+  const message = itemName ? `Hi! 👋 I found “${itemName}” on NammaSpot and would like to enquire about it.` : serviceMode ? "Hi! 👋 I found your service profile on NammaSpot and would like to know about your services and availability." : "Hi! 👋 Contacting you via NammaSpot. I would like to know more about your products.";
   return "https://wa.me/"+phone+"?text="+encodeURIComponent(message);
 };
 
@@ -259,7 +260,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
   const serviceItems=String(settings.services||"").split(/[\n,;]+/).map(item=>item.trim()).filter(Boolean).slice(0,20);
   const isServiceProvider=serviceItems.length>0||Boolean(String(settings.business_type||"").trim());
   const share=()=>setShareOpen(true);
-  const wa=whatsappUrl(seller);
+  const wa=whatsappUrl(seller,null,isServiceProvider);
   const productWa=p=>whatsappUrl(seller,p);
   const filteredProducts=products.filter(p=>String(p.name||"").toLowerCase().includes(catalogueQuery.toLowerCase()));
   const toggleProductSave=(p)=>{
@@ -291,11 +292,11 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
     </section>
     {(settings.tagline||settings.about)&&<section className="ns-mobile-update"><CalendarDays size={24}/><div><small>UPDATE FROM SELLER{settings.updated_at ? " · "+new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(settings.updated_at)) : ""}</small><p>{esc(settings.tagline||settings.about)}</p></div></section>}
     <section className="ns-mobile-stats" aria-label="Seller details">
-      <div><b>{products.length}</b><span>{isServiceProvider ? "Products" : "Catalogue items"}</span></div><div><b>{isServiceProvider ? serviceItems.length : esc(seller.category?.name||"Local")}</b><span>{isServiceProvider ? "Services" : "Category"}</span></div>
+      {isServiceProvider?<><div><b>{serviceItems.length}</b><span>Services</span></div><div><b>{esc(settings.area_served||seller.location||"Local area")}</b><span>Service area</span></div></>:<><div><b>{products.length}</b><span>Catalogue items</span></div><div><b>{esc(seller.category?.name||"Local")}</b><span>Category</span></div></>}
     </section>
     <section className="ns-mobile-contact">
       {wa&&<a className="ns-mobile-whatsapp" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={22}/> {isServiceProvider ? "Contact provider on WhatsApp" : "Enquiry on WhatsApp"}</a>}
-      <button type="button" className="ns-mobile-app-enquiry" onClick={()=>{setEnquiryProduct(null);setSelectedService("");setEnquiryOpen(true)}}><Send size={19}/> {isServiceProvider ? "Request a service quote" : "Send enquiry through NammaSpot"}</button>
+      {isServiceProvider?<button type="button" className="ns-mobile-app-enquiry" onClick={()=>document.getElementById("ns-service-booking")?.scrollIntoView({behavior:"smooth",block:"start"})}><CalendarDays size={19}/> View appointment times</button>:<button type="button" className="ns-mobile-app-enquiry" onClick={()=>{setEnquiryProduct(null);setSelectedService("");setEnquiryOpen(true)}}><Send size={19}/> Send enquiry through NammaSpot</button>}
       <div className="ns-mobile-contact-row">
         {seller.contact&&<a href={"tel:"+seller.contact}><Phone size={20}/><span>Call</span></a>}
         {instagramProfileUrl(seller.instagram_url)&&<a href={instagramProfileUrl(seller.instagram_url)} target="_blank" rel="noopener noreferrer" aria-label={"Open Instagram profile "+instagramProfileUrl(seller.instagram_url).split("/").filter(Boolean).pop()}><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg><span>Instagram</span></a>}
@@ -303,13 +304,13 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
         <button onClick={share}><Share2 size={20}/><span>Share</span></button>
       </div>
     </section>
-    {isServiceProvider&&<section className="ns-provider-services"><div className="eyebrow">WHAT WE CAN HELP WITH</div><h2>Services offered</h2>{serviceItems.length>0?<div className="ns-provider-service-list">{serviceItems.map((item,index)=><article className="ns-provider-service" key={index}><div><strong>{esc(item)}</strong><small>{settings.experience ? esc(settings.experience) : "Contact for details and pricing"}</small></div><button type="button" className="secondary-button" onClick={()=>{setEnquiryProduct(null);setEnquiryOpen(true);setSelectedService(item)}}>Request quote</button></article>)}</div>:<p>{esc(settings.business_type||"Local service provider")} · Contact to discuss your requirements.</p>}<div className="ns-provider-details">{settings.experience&&<span><b>Experience</b>{esc(settings.experience)}</span>}{settings.area_served&&<span><b>Areas served</b>{esc(settings.area_served)}</span>}</div><button type="button" className="primary-button full-button" onClick={()=>{setEnquiryProduct(null);setSelectedService("");setEnquiryOpen(true)}}>Request a service quote</button></section>}
-    <nav className="ns-mobile-tabs" aria-label="Seller page sections"><a className={activeTab==="catalogue"?"active":""} href="#catalogue" onClick={()=>setActiveTab("catalogue")}>Catalogue</a><a className={activeTab==="about"?"active":""} href="#about" onClick={()=>setActiveTab("about")}>About</a><a className={activeTab==="reviews"?"active":""} href="#reviews" onClick={()=>setActiveTab("reviews")}>Reviews</a></nav>
-    <section id="catalogue" className="ns-mobile-catalogue">
+    {isServiceProvider&&<section className="ns-provider-services" id="ns-service-booking"><div className="ns-provider-public-intro"><div><span className="ns-booking-kicker">LOCAL SERVICE PROVIDER</span><h2>{esc(settings.business_type||"Services & appointments")}</h2><p>{settings.experience?esc(settings.experience)+" experience · ":""}{settings.area_served?"Serving "+esc(settings.area_served):"Choose a service and find a convenient time."}</p></div>{settings.area_served&&<span className="ns-provider-area-pill"><MapPin size={14}/>{esc(settings.area_served)}</span>}</div><ServiceBookingCalendar seller={seller} serviceItems={serviceItems}/></section>}
+    <nav className="ns-mobile-tabs" aria-label="Seller page sections"><a className={activeTab==="catalogue"?"active":""} href={isServiceProvider?"#ns-service-booking":"#catalogue"} onClick={()=>setActiveTab("catalogue")}>{isServiceProvider?"Appointments":"Catalogue"}</a>{(!isServiceProvider||products.length>0)&&<a href="#catalogue" onClick={()=>setActiveTab("catalogue")}>Catalogue</a>}<a className={activeTab==="about"?"active":""} href="#about" onClick={()=>setActiveTab("about")}>About</a><a className={activeTab==="reviews"?"active":""} href="#reviews" onClick={()=>setActiveTab("reviews")}>Reviews</a></nav>
+    {(!isServiceProvider||products.length>0)&&<section id="catalogue" className="ns-mobile-catalogue">
       <div className="ns-mobile-search"><Search size={19}/><input value={catalogueQuery} onChange={e=>setCatalogueQuery(e.target.value)} placeholder="Search products..." aria-label="Search products"/></div>
       {filteredProducts.length?<div className="ns-mobile-product-grid">{filteredProducts.map(p=><article className="ns-mobile-product" key={p.id}><button className="ns-mobile-product-image" onClick={()=>setProduct(p)} aria-label={"View "+p.name}>{p.image_url?<img src={p.image_url} alt={p.name} loading="lazy"/>:<span>{String(p.name||"").charAt(0)}</span>}</button><button type="button" className={"ns-product-save-btn"+(savedProductIds.has(p.id)?" is-saved":"")} onClick={()=>toggleProductSave(p)} aria-label={savedProductIds.has(p.id)?"Remove "+p.name+" from saved products":"Save "+p.name} title={savedProductIds.has(p.id)?"Saved product":"Save product"}><Heart size={19} fill={savedProductIds.has(p.id)?"currentColor":"none"}/></button><div className="ns-mobile-product-copy"><h3>{esc(p.name)}</h3><strong>₹{p.price}</strong><div className="ns-mobile-product-actions"><button type="button" className="ns-product-description-btn" aria-expanded={expandedDescriptions.has(p.id)} onClick={()=>setExpandedDescriptions(current=>{const next=new Set(current);if(next.has(p.id))next.delete(p.id);else next.add(p.id);return next})}>{expandedDescriptions.has(p.id)?"Less":"Details"}</button><button type="button" className="ns-product-enquire-btn" onClick={()=>{setEnquiryProduct(p);setEnquiryOpen(true)}}>Enquire</button></div>{expandedDescriptions.has(p.id)&&<p className="ns-mobile-product-description">{esc(p.description||"The seller has not added a description for this product yet.")}</p>}</div></article>)}
       <article className="ns-mobile-coming-soon"><span>✧</span><strong>More products<br/>coming soon</strong><small>♡</small></article></div>:<div className="ns-mobile-coming-soon ns-mobile-empty"><span>✧</span><strong>{catalogueQuery?"No matching products":"More products coming soon"}</strong><small>{catalogueQuery?"Try another search":isServiceProvider?"Use the service options above to request a quote ♡":"This seller will add more soon ♡"}</small></div>}
-    </section>
+    </section>}
     <section id="about" className="ns-mobile-about" onMouseEnter={()=>setActiveTab("about")}><h2>About</h2><p>{esc(seller.description||"This seller is part of the NammaSpot community.")}</p><p><MapPin size={16}/>{esc(seller.location||"Chennai, Tamil Nadu")}</p></section>
     <section id="reviews" className="ns-mobile-reviews" onMouseEnter={()=>setActiveTab("reviews")}><ReviewPanel seller={seller}/></section>
     <nav className="ns-mobile-bottom-nav" aria-label="Main navigation"><button className={location.pathname==="/"?"active":""} aria-current={location.pathname==="/"?"page":undefined} onClick={()=>go("/")}><Home size={21}/><span>Home</span></button><button className={location.pathname.startsWith("/explore")||location.pathname.startsWith("/categories")?"active":""} onClick={()=>go("/explore")}><Compass size={21}/><span>Explore</span></button><button className={location.pathname.startsWith("/saved")?"active":""} onClick={()=>go("/saved")}><Heart size={21}/><span>Saved</span></button><button className={location.search.includes("near=1")?"active":""} onClick={()=>go("/explore?near=1")}><Navigation size={21}/><span>Near me</span></button><button className={location.pathname.startsWith("/featured")?"active":""} onClick={()=>go("/featured")}><Star size={21}/><span>Featured</span></button></nav>

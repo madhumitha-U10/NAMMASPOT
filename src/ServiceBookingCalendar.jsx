@@ -105,6 +105,7 @@ export default function ServiceBookingCalendar({seller,serviceItems=[]}){
           })}</div>
           <div className="ns-booking-legend"><span><i className="available-dot"/> Available</span><span><i className="unavailable-dot"/> Unavailable</span></div>
           {calendarLoading&&<p className="ns-booking-muted"><LoaderCircle size={14}/> Checking dates…</p>}
+          {!calendarLoading&&!calendarError&&!Object.keys(available).length&&<p className="ns-booking-empty">This provider has not opened any appointment dates yet. Please contact them directly.</p>}
           {calendarError&&<p className="ns-booking-error" role="alert">{calendarError}</p>}
         </div>
         <div className="ns-booking-slot-panel">

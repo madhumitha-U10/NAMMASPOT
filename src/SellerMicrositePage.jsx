@@ -308,13 +308,13 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
     <section id="about" className="ns-mobile-about" onMouseEnter={()=>setActiveTab("about")}><h2>About</h2><p>{esc(seller.description||"This seller is part of the NammaSpot community.")}</p><p><MapPin size={16}/>{esc(seller.location||"Chennai, Tamil Nadu")}</p></section>
     <section id="reviews" className="ns-mobile-reviews" onMouseEnter={()=>setActiveTab("reviews")}><ReviewPanel seller={seller}/></section>
     <nav className="ns-mobile-bottom-nav" aria-label="Main navigation"><button className={location.pathname==="/"?"active":""} aria-current={location.pathname==="/"?"page":undefined} onClick={()=>go("/")}><Home size={21}/><span>Home</span></button><button className={location.pathname.startsWith("/explore")||location.pathname.startsWith("/categories")?"active":""} onClick={()=>go("/explore")}><Compass size={21}/><span>Explore</span></button><button className={location.pathname.startsWith("/saved")?"active":""} onClick={()=>go("/saved")}><Heart size={21}/><span>Saved</span></button><button className={location.search.includes("near=1")?"active":""} onClick={()=>go("/explore?near=1")}><Navigation size={21}/><span>Near me</span></button><button className={location.pathname.startsWith("/featured")?"active":""} onClick={()=>go("/featured")}><Star size={21}/><span>Featured</span></button></nav>
-    {shareOpen&&<SellerShareModal seller={seller} url={sellerPublicUrl(seller.slug)+"?source=qr"} onClose={()=>setShareOpen(false)}/>}
+    {shareOpen&&<SellerShareModal seller={seller} url={sellerPublicUrl(seller.slug)} qrUrl={sellerPublicUrl(seller.slug)+"?source=qr"} onClose={()=>setShareOpen(false)}/>}
     {product&&<ProductModal product={product} onClose={()=>setProduct(null)} onEnquire={productWa(product)} onAppEnquiry={()=>{setEnquiryProduct(product);setEnquiryOpen(true);setProduct(null)}}/>}
     {enquiryOpen&&<EnquiryModal seller={seller} product={enquiryProduct} onClose={()=>setEnquiryOpen(false)}/>}   </main>;
 }
 
 
-function SellerShareModal({seller,url,onClose}){
+function SellerShareModal({seller,url,qrUrl,onClose}){
   const qrCanvasRef=useRef(null);
   const [imageUrl,setImageUrl]=useState("");
   const [state,setState]=useState({loading:true,error:"",notice:""});
@@ -490,7 +490,7 @@ function SellerShareModal({seller,url,onClose}){
         <button type="button" className="secondary-button" onClick={printQr} disabled={!imageUrl||state.loading}><ExternalLink size={16}/> Print QR</button>
       </div>
       {state.notice&&<p className="ns-share-notice" role="status" aria-live="polite">{state.notice}</p>}
-      <div className="ns-share-qr-source" aria-hidden="true"><QRCodeCanvas ref={qrCanvasRef} value={url} size={360} level="H" includeMargin bgColor="#ffffff" fgColor="#111111"/></div>
+      <div className="ns-share-qr-source" aria-hidden="true"><QRCodeCanvas ref={qrCanvasRef} value={qrUrl||url} size={360} level="H" includeMargin bgColor="#ffffff" fgColor="#111111"/></div>
     </section>
   </div>;
 }

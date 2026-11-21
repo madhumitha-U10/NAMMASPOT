@@ -69,14 +69,15 @@ export default function ServiceBookingCalendar({seller,serviceItems=[]}){
       setState({saving:false,error:"",success:true,appointmentId:result.id});
       const updated=await getPublicServiceSlots(seller.id,selectedDate);
       setSlots(updated);
-      setSelectedSlot("");
     }catch(error){setState({saving:false,error:error?.message||"Could not send your appointment request. Please choose another time.",success:false,appointmentId:""});try{setSlots(await getPublicServiceSlots(seller.id,selectedDate));}catch{}}
   };
 
   const phone=String(seller.whatsapp_phone||"").replace(/\\D/g,"");
   const whatsappNumber=phone.length===10?"91"+phone:phone.startsWith("0")&&phone.length===11?"91"+phone.slice(1):phone;
-  const whatsappMessage="Hi "+(seller.business_name||"there")+", I have sent an appointment request on NammaSpot for "+service+" on "+(selectedDate?prettyDate(selectedDate):"")+" at "+(state.appointmentId?"the selected time":"")+" . Please confirm when convenient.";
+  const whatsappMessage="Hi "+(seller.business_name||"there")+", I have sent an appointment request on NammaSpot for "+service+" on "+(selectedDate?prettyDate(selectedDate):"")+" at "+(selectedSlot?timeLabel(selectedSlot):"the selected time")+". Please confirm when convenient.";
   const whatsappUrl=whatsappNumber?"https://wa.me/"+whatsappNumber+"?text="+encodeURIComponent(whatsappMessage):"";
+
+  if(!serviceItems.length)return <div className="ns-booking-card ns-booking-not-ready"><strong>Appointment booking is not set up yet.</strong><p>This provider has not added bookable services. You can contact them directly using the WhatsApp or call options above.</p></div>;
 
   return <section className="ns-booking-card" id="ns-service-booking">
     <div className="ns-booking-heading">

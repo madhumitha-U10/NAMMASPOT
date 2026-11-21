@@ -11,6 +11,7 @@ export default function SellerGrowthHub({ seller, products = [], enquiries = [],
   const publicUrl = typeof window !== "undefined" && seller?.slug
     ? window.location.origin + "/s/" + seller.slug
     : "";
+  const qrUrl = publicUrl ? publicUrl + "?source=qr" : "";
 
   const metrics = useMemo(() => {
     const newEnquiries = enquiries.filter((item) => ["new", "pending"].includes(formatStatus(item.status))).length;
@@ -137,8 +138,10 @@ export default function SellerGrowthHub({ seller, products = [], enquiries = [],
 export function SellerGrowthSharing({ seller }) {
   const [notice, setNotice] = useState("");
   const publicUrl = typeof window !== "undefined" && seller?.slug ? window.location.origin + "/s/" + seller.slug : "";
+  const qrUrl = publicUrl ? publicUrl + "?source=qr" : "";
+  const whatsappShareUrl = publicUrl ? publicUrl + "?source=whatsapp" : "";
   const businessName = seller?.business_name || seller?.name || "My business";
-  const shareText = "Discover " + businessName + " on NammaSpot. Browse the catalogue here: " + publicUrl;
+  const shareText = "Discover " + businessName + " on NammaSpot. Browse the catalogue here: " + whatsappShareUrl;
 
   const copyLink = async () => {
     try {
@@ -151,7 +154,7 @@ export function SellerGrowthSharing({ seller }) {
 
   const share = () => {
     if (navigator.share) {
-      navigator.share({ title: businessName + " on NammaSpot", text: shareText, url: publicUrl }).catch(() => {});
+      navigator.share({ title: businessName + " on NammaSpot", text: shareText, url: whatsappShareUrl }).catch(() => {});
     } else {
       window.open("https://wa.me/?text=" + encodeURIComponent(shareText), "_blank", "noopener,noreferrer");
     }
@@ -174,7 +177,7 @@ export function SellerGrowthSharing({ seller }) {
     <section className="ns-growth-share">
       <div className="ns-growth-share-intro"><span className="eyebrow">GET DISCOVERED</span><h2>Take your catalogue everywhere.</h2><p>Share your NammaSpot link online or display this QR code at your shop, stall, packaging or business card.</p></div>
       <div className="ns-growth-share-card">
-        <div className="ns-growth-qr" id="nammaspot-growth-qr"><QRCodeSVG value={publicUrl || "https://nammaspot.vercel.app"} size={190} level="H" includeMargin/></div>
+        <div className="ns-growth-qr" id="nammaspot-growth-qr"><QRCodeSVG value={qrUrl || "https://nammaspot.vercel.app"} size={190} level="H" includeMargin/></div>
         <div className="ns-growth-share-copy"><span className="eyebrow">YOUR PUBLIC CATALOGUE</span><h3>{businessName}</h3><p>Customers can scan this code to open your NammaSpot catalogue.</p><code>{publicUrl}</code><div className="button-row"><button type="button" className="primary-button" onClick={downloadQr}><Download size={16}/> Download QR</button><button type="button" className="secondary-button" onClick={copyLink}><Copy size={16}/> Copy link</button></div><button type="button" className="ns-growth-whatsapp" onClick={share}><Share2 size={16}/> Share catalogue</button>{notice && <p className="ns-growth-share-notice" role="status">{notice}</p>}</div>
       </div>
       <div className="ns-growth-share-tips"><h3>Where can you use your QR?</h3><div><span>01</span><p>Display it near your shop counter or stall.</p></div><div><span>02</span><p>Add it to packaging, thank-you cards or printed flyers.</p></div><div><span>03</span><p>Share your catalogue link in WhatsApp and Instagram.</p></div></div>

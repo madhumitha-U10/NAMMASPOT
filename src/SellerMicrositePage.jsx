@@ -1,7 +1,7 @@
 import {useEffect,useRef,useState} from "react";
-import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Heart,Home,Compass,Search,Navigation,Star,CalendarDays} from "lucide-react";
+import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Heart,Home,Compass,Search,Navigation,Star,CalendarDays,Send} from "lucide-react";
 import {QRCodeCanvas} from "qrcode.react";
-import {createReview,getPublicReviews} from "./lib/api";
+import {createReview,getPublicReviews,createEnquiry,recordSellerPageView} from "./lib/api";
 import {getMicrosite,sellerPublicUrl} from "./lib/microsite";
 
 const esc=(v)=>String(v||"").replace(/[<>]/g,"");
@@ -37,7 +37,7 @@ function instagramProfileUrl(value) {
 }
 
 
-function ProductModal({product,onClose,onEnquire}){
+function ProductModal({product,onClose,onEnquire,onAppEnquiry}){
   const imgs=[...new Set([product.image_url,...(product.images||[]).map(x=>x.image_url)].map(x=>String(x||"").trim()).filter(Boolean))];
   const [i,setI]=useState(0);
   const touchStart=useRef(null);
@@ -57,7 +57,60 @@ function ProductModal({product,onClose,onEnquire}){
       </div>
       {imgs.length>1&&<div className="microsite-gallery-count" aria-live="polite">{i+1} / {imgs.length}</div>}
       <div className="microsite-thumbs">{imgs.map((u,n)=><button key={u+n} className={n===i?"active":""} onClick={()=>setI(n)}><img src={u} alt=""/></button>)}</div>
-      <div className="microsite-product-copy"><div className="eyebrow">{product.category?.name||"CATALOGUE"}</div><h2>{esc(product.name||product.product_name)}</h2>{product.price!=null&&<strong className="microsite-price">₹{product.price}</strong>}<p>{esc(product.description)}</p><a className="primary-button full-button" href={onEnquire||undefined} target="_blank" rel="noreferrer" onClick={e=>{if(!onEnquire)e.preventDefault()}}><MessageCircle size={16}/> Enquire on WhatsApp</a></div>
+      <div className="microsite-product-copy"><div className="eyebrow">{product.category?.name||"CATALOGUE"}</div><h2>{esc(product.name||product.product_name)}</h2>{product.price!=null&&<strong className="microsite-price">₹{product.price}</strong>}<p>{esc(product.description)}</p><a className="primary-button full-button" href={onEnquire||undefined} target="_blank" rel="noreferrer" onClick={e=>{if(!onEnquire)e.preventDefault()}}><MessageCircle size={16}/> Enquire on WhatsApp</a>{onAppEnquiry&&<button type="button" className="secondary-button full-button" onClick={onAppEnquiry}>Send enquiry through NammaSpot</button>}</div>
+    </section>
+  </div>;
+}
+
+
+function buildEnquiryWhatsAppUrl(seller, form, product) {
+  const raw = String(seller?.whatsapp_phone || "").replace(/\D/g, "");
+  const phone = raw.length === 10 ? "91" + raw : raw.length === 11 && raw.startsWith("0") ? "91" + raw.slice(1) : raw.length === 12 && raw.startsWith("91") ? raw : "";
+  if (!phone) return "";
+  const item = product?.name || product?.product_name || "";
+  const message = "Hi " + (seller.business_name || "there") + ", I'm " + form.customer_name +
+    ". My WhatsApp number is " + form.customer_contact + ". " +
+    (item ? "I'm enquiring about " + item + ". " : "") + form.message + " (Sent through NammaSpot)";
+  return "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
+}
+
+function EnquiryModal({seller, product, onClose}) {
+  const [form, setForm] = useState({customer_name:"", customer_contact:"", message: product ? "I would like to know more about " + (product.name || product.product_name || "this product") + "." : "I would like to know more about your products."});
+  const [state, setState] = useState({saving:false, error:"", sent:false});
+  const whatsappUrl = state.sent ? buildEnquiryWhatsAppUrl(seller, form, product) : "";
+  const submit = async (event) => {
+    event.preventDefault();
+    setState({saving:true,error:"",sent:false});
+    try {
+      await createEnquiry({seller_id:seller.id,product_id:product?.id||null,customer_name:form.customer_name,customer_contact:form.customer_contact,message:form.message});
+      setState({saving:false,error:"",sent:true});
+    } catch (error) {
+      setState({saving:false,error:error?.message||"Your enquiry could not be sent. Please try again.",sent:false});
+    }
+  };
+  return <div className="modal-backdrop ns-enquiry-backdrop" onMouseDown={event=>event.target===event.currentTarget&&onClose()}>
+    <section className="modal ns-enquiry-modal" role="dialog" aria-modal="true" aria-labelledby="ns-enquiry-title">
+      <button type="button" className="modal-close" onClick={onClose} aria-label="Close enquiry form"><X/></button>
+      {state.sent ? <div className="ns-enquiry-success">
+        <span className="ns-enquiry-success-icon"><CheckCircle size={28}/></span>
+        <div className="eyebrow">ENQUIRY SAVED</div>
+        <h2 id="ns-enquiry-title">Your message is with the seller.</h2>
+        <p>Your enquiry has been saved in NammaSpot. You can also send it to the seller's WhatsApp for a quicker conversation.</p>
+        {whatsappUrl ? <a className="primary-button full-button" href={whatsappUrl} target="_blank" rel="noreferrer"><MessageCircle size={17}/> Continue on WhatsApp</a> : <p className="muted-note">This seller has not added a WhatsApp number. They can still view your enquiry in their NammaSpot dashboard.</p>}
+        <button type="button" className="secondary-button full-button" onClick={onClose}>Done</button>
+      </div> : <>
+        <div className="eyebrow">CONTACT THIS SELLER</div>
+        <h2 id="ns-enquiry-title">Send an enquiry</h2>
+        <p className="muted-note">{product ? "Ask about " + (product.name || product.product_name) + "." : "Tell the seller what you would like to know."} Your message will appear in their NammaSpot enquiries.</p>
+        <form className="seller-form ns-enquiry-form" onSubmit={submit}>
+          <label>Your name<input required maxLength={120} autoComplete="name" value={form.customer_name} onChange={event=>setForm({...form,customer_name:event.target.value})} placeholder="Enter your name"/></label>
+          <label>Your WhatsApp number<input required type="tel" inputMode="tel" autoComplete="tel" maxLength={20} pattern="[0-9+() -]{8,20}" value={form.customer_contact} onChange={event=>setForm({...form,customer_contact:event.target.value})} placeholder="10-digit mobile number"/></label>
+          <label>Your message<textarea required minLength={1} maxLength={2000} rows={4} value={form.message} onChange={event=>setForm({...form,message:event.target.value})}/></label>
+          {state.error&&<div className="inline-error" role="alert">{state.error}</div>}
+          <button type="submit" className="primary-button full-button" disabled={state.saving}>{state.saving?"Sending…":"Send enquiry"}</button>
+          <button type="button" className="secondary-button full-button" onClick={onClose} disabled={state.saving}>Cancel</button>
+        </form>
+      </>}
     </section>
   </div>;
 }
@@ -109,12 +162,25 @@ function ReviewPanel({seller}) {
 export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave}){
   const [state,setState]=useState({loading:true,error:"",data:null});
   const [product,setProduct]=useState(null);
+  const [enquiryOpen,setEnquiryOpen]=useState(false);
+  const [enquiryProduct,setEnquiryProduct]=useState(null);
   const [savedProductIds,setSavedProductIds]=useState(()=>new Set(readSavedProducts().map(item=>item.id)));
   const [catalogueQuery,setCatalogueQuery]=useState("");
   const [expandedDescriptions,setExpandedDescriptions]=useState(()=>new Set());
   const [activeTab,setActiveTab]=useState("catalogue");
   const [shareOpen,setShareOpen]=useState(false);
-  useEffect(()=>{let alive=true;getMicrosite(slug).then(data=>alive&&setState({loading:false,error:"",data})).catch(e=>alive&&setState({loading:false,error:e.message||"Could not load this seller.",data:null}));return()=>{alive=false}},[slug]);
+  useEffect(()=>{
+    let alive=true;
+    getMicrosite(slug).then(data=>{
+      if(!alive)return;
+      setState({loading:false,error:"",data});
+      if(data?.seller?.id){
+        const params=new URLSearchParams(window.location.search);
+        recordSellerPageView(data.seller.id,params.get("utm_source")||params.get("source")||"direct").catch(()=>{});
+      }
+    }).catch(e=>alive&&setState({loading:false,error:e.message||"Could not load this seller.",data:null}));
+    return()=>{alive=false};
+  },[slug]);
   const data=state.data,seller=data?.seller,settings=data?.settings||{};
   useEffect(()=>{
     if(!seller)return;
@@ -225,6 +291,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
     </section>
     <section className="ns-mobile-contact">
       {wa&&<a className="ns-mobile-whatsapp" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={22}/> Enquiry on WhatsApp</a>}
+      <button type="button" className="ns-mobile-app-enquiry" onClick={()=>{setEnquiryProduct(null);setEnquiryOpen(true)}}><Send size={19}/> Send enquiry through NammaSpot</button>
       <div className="ns-mobile-contact-row">
         {seller.contact&&<a href={"tel:"+seller.contact}><Phone size={20}/><span>Call</span></a>}
         {instagramProfileUrl(seller.instagram_url)&&<a href={instagramProfileUrl(seller.instagram_url)} target="_blank" rel="noopener noreferrer" aria-label={"Open Instagram profile "+instagramProfileUrl(seller.instagram_url).split("/").filter(Boolean).pop()}><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg><span>Instagram</span></a>}
@@ -235,7 +302,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
     <nav className="ns-mobile-tabs" aria-label="Seller page sections"><a className={activeTab==="catalogue"?"active":""} href="#catalogue" onClick={()=>setActiveTab("catalogue")}>Catalogue</a><a className={activeTab==="about"?"active":""} href="#about" onClick={()=>setActiveTab("about")}>About</a><a className={activeTab==="reviews"?"active":""} href="#reviews" onClick={()=>setActiveTab("reviews")}>Reviews</a></nav>
     <section id="catalogue" className="ns-mobile-catalogue">
       <div className="ns-mobile-search"><Search size={19}/><input value={catalogueQuery} onChange={e=>setCatalogueQuery(e.target.value)} placeholder="Search products..." aria-label="Search products"/></div>
-      {filteredProducts.length?<div className="ns-mobile-product-grid">{filteredProducts.map(p=><article className="ns-mobile-product" key={p.id}><button className="ns-mobile-product-image" onClick={()=>setProduct(p)} aria-label={"View "+p.name}>{p.image_url?<img src={p.image_url} alt={p.name} loading="lazy"/>:<span>{String(p.name||"").charAt(0)}</span>}</button><button type="button" className={"ns-product-save-btn"+(savedProductIds.has(p.id)?" is-saved":"")} onClick={()=>toggleProductSave(p)} aria-label={savedProductIds.has(p.id)?"Remove "+p.name+" from saved products":"Save "+p.name} title={savedProductIds.has(p.id)?"Saved product":"Save product"}><Heart size={19} fill={savedProductIds.has(p.id)?"currentColor":"none"}/></button><div className="ns-mobile-product-copy"><h3>{esc(p.name)}</h3><strong>₹{p.price}</strong><div className="ns-mobile-product-actions"><button type="button" className="ns-product-description-btn" aria-expanded={expandedDescriptions.has(p.id)} onClick={()=>setExpandedDescriptions(current=>{const next=new Set(current);if(next.has(p.id))next.delete(p.id);else next.add(p.id);return next})}>{expandedDescriptions.has(p.id)?"Less":"Details"}</button>{productWa(p)&&<a href={productWa(p)} target="_blank" rel="noreferrer">Enquire</a>}</div>{expandedDescriptions.has(p.id)&&<p className="ns-mobile-product-description">{esc(p.description||"The seller has not added a description for this product yet.")}</p>}</div></article>)}
+      {filteredProducts.length?<div className="ns-mobile-product-grid">{filteredProducts.map(p=><article className="ns-mobile-product" key={p.id}><button className="ns-mobile-product-image" onClick={()=>setProduct(p)} aria-label={"View "+p.name}>{p.image_url?<img src={p.image_url} alt={p.name} loading="lazy"/>:<span>{String(p.name||"").charAt(0)}</span>}</button><button type="button" className={"ns-product-save-btn"+(savedProductIds.has(p.id)?" is-saved":"")} onClick={()=>toggleProductSave(p)} aria-label={savedProductIds.has(p.id)?"Remove "+p.name+" from saved products":"Save "+p.name} title={savedProductIds.has(p.id)?"Saved product":"Save product"}><Heart size={19} fill={savedProductIds.has(p.id)?"currentColor":"none"}/></button><div className="ns-mobile-product-copy"><h3>{esc(p.name)}</h3><strong>₹{p.price}</strong><div className="ns-mobile-product-actions"><button type="button" className="ns-product-description-btn" aria-expanded={expandedDescriptions.has(p.id)} onClick={()=>setExpandedDescriptions(current=>{const next=new Set(current);if(next.has(p.id))next.delete(p.id);else next.add(p.id);return next})}>{expandedDescriptions.has(p.id)?"Less":"Details"}</button><button type="button" className="ns-product-enquire-btn" onClick={()=>{setEnquiryProduct(p);setEnquiryOpen(true)}}>Enquire</button></div>{expandedDescriptions.has(p.id)&&<p className="ns-mobile-product-description">{esc(p.description||"The seller has not added a description for this product yet.")}</p>}</div></article>)}
       <article className="ns-mobile-coming-soon"><span>✧</span><strong>More products<br/>coming soon</strong><small>♡</small></article></div>:<div className="ns-mobile-coming-soon ns-mobile-empty"><span>✧</span><strong>{catalogueQuery?"No matching products":"More products coming soon"}</strong><small>{catalogueQuery?"Try another search":"This seller will add more soon ♡"}</small></div>}
     </section>
     <section id="about" className="ns-mobile-about" onMouseEnter={()=>setActiveTab("about")}><h2>About</h2><p>{esc(seller.description||"This seller is part of the NammaSpot community.")}</p><p><MapPin size={16}/>{esc(seller.location||"Chennai, Tamil Nadu")}</p></section>
@@ -243,7 +310,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
     <nav className="ns-mobile-bottom-nav" aria-label="Main navigation"><button className={location.pathname==="/"?"active":""} aria-current={location.pathname==="/"?"page":undefined} onClick={()=>go("/")}><Home size={21}/><span>Home</span></button><button className={location.pathname.startsWith("/explore")||location.pathname.startsWith("/categories")?"active":""} onClick={()=>go("/explore")}><Compass size={21}/><span>Explore</span></button><button className={location.pathname.startsWith("/saved")?"active":""} onClick={()=>go("/saved")}><Heart size={21}/><span>Saved</span></button><button className={location.search.includes("near=1")?"active":""} onClick={()=>go("/explore?near=1")}><Navigation size={21}/><span>Near me</span></button><button className={location.pathname.startsWith("/featured")?"active":""} onClick={()=>go("/featured")}><Star size={21}/><span>Featured</span></button></nav>
     {shareOpen&&<SellerShareModal seller={seller} url={sellerPublicUrl(seller.slug)} onClose={()=>setShareOpen(false)}/>}
     {product&&<ProductModal product={product} onClose={()=>setProduct(null)} onEnquire={productWa(product)}/>}
-  </main>;
+    {enquiryOpen&&<EnquiryModal seller={seller} product={enquiryProduct} onClose={()=>setEnquiryOpen(false)}/>}   </main>;
 }
 
 

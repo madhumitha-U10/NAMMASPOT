@@ -19,6 +19,8 @@ import {
   getPublicSeller,
   getCategories,
   getCurrentProfile,
+  subscribeToAuthChanges,
+  getSellerPageAnalytics,
   getMySeller,
   getMyEnquiries,
   signInSeller,
@@ -106,17 +108,45 @@ function App() {
   useEffect(() => {
     if (!isSupabaseConfigured) return undefined;
     let alive = true;
-    getCurrentProfile().then(async (next) => {
-      if (!alive) return;
-      setProfile(next);
-      if (next) {
-        try {
-          const remote = await listMyFavourites();
-          if (alive && remote.length) setSaved(remote);
-        } catch {}
+    let requestId = 0;
+    const syncProfile = async () => {
+      const currentRequest = ++requestId;
+      try {
+        const next = await getCurrentProfile();
+        if (!alive || currentRequest !== requestId) return;
+        setProfile(next);
+        if (next) {
+          try {
+            const remote = await listMyFavourites();
+            if (alive && currentRequest === requestId && remote.length) setSaved(remote);
+          } catch {}
+        }
+      } catch {
+        if (alive && currentRequest === requestId) setProfile(null);
       }
-    }).catch(() => {});
-    return () => { alive = false; };
+    };
+    const unsubscribe = subscribeToAuthChanges((event, session) => {
+      if (event === "SIGNED_OUT" || !session?.user) {
+        requestId += 1;
+        if (alive) setProfile(null);
+        return;
+      }
+      if (["INITIAL_SESSION", "SIGNED_IN", "TOKEN_REFRESHED", "USER_UPDATED"].includes(event)) {
+        // Fetch profile after the auth callback returns to avoid holding the auth lock.
+        Promise.resolve().then(() => { if (alive) syncProfile(); });
+      }
+    });
+    const onPageShow = () => syncProfile();
+    const onVisibility = () => { if (document.visibilityState === "visible") syncProfile(); };
+    window.addEventListener("pageshow", onPageShow);
+    document.addEventListener("visibilitychange", onVisibility);
+    syncProfile();
+    return () => {
+      alive = false;
+      unsubscribe?.();
+      window.removeEventListener("pageshow", onPageShow);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, []);
 
   const go = (next) => {
@@ -1052,6 +1082,7 @@ function DashboardPage({ go }) {
   const [tab,setTab] = useState("overview");
   const [state,setState] = useState({loading:true,error:""});
   const [storageUsage,setStorageUsage] = useState(null);
+  const [analytics,setAnalytics] = useState(null);
 
   const load = async () => {
     try {
@@ -1059,10 +1090,11 @@ function DashboardPage({ go }) {
       if (!profile || profile.role !== "seller") { go("/login"); return; }
       const [mySeller,cats] = await Promise.all([getMySeller(),getCategories()]);
       if (!mySeller) throw new Error("Seller profile not found.");
-      const [myProducts,myEnquiries] = await Promise.all([listMyProducts(mySeller.id),getMyEnquiries(mySeller.id)]);
+      const [myProducts,myEnquiries,myAnalytics] = await Promise.all([listMyProducts(mySeller.id),getMyEnquiries(mySeller.id),getSellerPageAnalytics(mySeller.id,30).catch(()=>null)]);
       setSeller(mySeller);
       setProducts(myProducts);
       setEnquiries(myEnquiries);
+      setAnalytics(myAnalytics);
       setCategories(cats);
       try { setStorageUsage(await getSellerStorageUsage()); } catch {}
       setState({loading:false,error:""});
@@ -1071,7 +1103,7 @@ function DashboardPage({ go }) {
     }
   };
 
-  useEffect(()=>{load(); const timer=window.setInterval(load,300000); return ()=>window.clearInterval(timer);},[]);
+  useEffect(()=>{load(); const timer=window.setInterval(load,60000); const onFocus=()=>load(); const onVisible=()=>{if(document.visibilityState==="visible")load();}; window.addEventListener("focus",onFocus); document.addEventListener("visibilitychange",onVisible); return ()=>{window.clearInterval(timer);window.removeEventListener("focus",onFocus);document.removeEventListener("visibilitychange",onVisible);};},[]);
 
   if (state.loading) return <main className="page"><div className="page-title"><div className="eyebrow">SELLER DASHBOARD</div><h1>Loading your spot…</h1></div><CardSkeletonRow detailed/></main>;
   if (state.error) return <main className="page"><ErrorState message={state.error} retry={load}/></main>;
@@ -1087,10 +1119,10 @@ function DashboardPage({ go }) {
         {["overview","profile","products","enquiries","growth","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item==="public"?"Public profile":item==="growth"?"Growth & sharing":item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
       </div>
 
-      {tab==="overview" && <SellerGrowthHub seller={seller} products={products} enquiries={enquiries} onNavigate={setTab}/>}
+      {tab==="overview" && <SellerGrowthHub seller={seller} products={products} enquiries={enquiries} analytics={analytics} onNavigate={setTab}/>}
       {tab==="profile" && <ProfileEditor seller={seller} categories={categories} onSaved={(next)=>setSeller((current)=>({...current,...next}))}/>}
       {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} storageUsage={storageUsage} onStorageUsageChange={setStorageUsage} onChange={setProducts}/>}
-      {tab==="enquiries" && <EnquiryManager enquiries={enquiries} onChange={setEnquiries}/>}
+      {tab==="enquiries" && <EnquiryManager enquiries={enquiries} onChange={setEnquiries} seller={seller}/>}
       {tab==="growth" && <SellerGrowthSharing seller={seller}/>}
       {tab==="public" && <PublicTools seller={seller} go={go}/>} 
     </main>
@@ -1358,7 +1390,7 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
   );
 }
 
-function EnquiryManager({ enquiries,onChange }) {
+function EnquiryManager({ enquiries,onChange,seller }) {
   const [filter,setFilter] = useState("all");
   const [search,setSearch] = useState("");
   const [busyId,setBusyId] = useState("");
@@ -1395,7 +1427,10 @@ function EnquiryManager({ enquiries,onChange }) {
       <div className="dashboard-list">
         {visible.length ? visible.map((item)=>{
           const status=normalStatus(item.status);
-          const phone=String(item.customer_contact||"").replace(/[^+\\d]/g,"");
+          const contact=String(item.customer_contact||"").trim();
+          const digits=contact.replace(/\D/g,"");
+          const whatsappNumber=!contact.includes("@") ? (digits.length===10 ? "91"+digits : digits.length===11&&digits.startsWith("0") ? "91"+digits.slice(1) : digits.length===12&&digits.startsWith("91") ? digits : "") : "";
+          const replyText="Hi "+(item.customer_name||"there")+", thank you for contacting "+(seller?.business_name||"us")+" through NammaSpot"+(item.product?.product_name?" about "+item.product.product_name:"")+". How can I help you?";
           const date=item.enquiry_date||item.created_at;
           return <article className="dashboard-item enquiry-item" key={item.id}>
             <div className="enquiry-item-main">
@@ -1403,7 +1438,8 @@ function EnquiryManager({ enquiries,onChange }) {
               <p className="enquiry-contact">{item.customer_contact||"No contact supplied"}</p>
               <p className="enquiry-message">{item.message}</p>
               {date&&<small className="muted-note">Received {new Intl.DateTimeFormat("en-IN",{dateStyle:"medium",timeStyle:"short"}).format(new Date(date))}</small>}
-              <div className="button-row enquiry-actions">{phone&&<a className="secondary-button" href={"https://wa.me/"+phone.replace(/^\\+/,"")} target="_blank" rel="noreferrer"><MessageCircle size={15}/> WhatsApp</a>}{item.customer_contact&&item.customer_contact.includes("@")&&<a className="secondary-button" href={"mailto:"+item.customer_contact}><Send size={15}/> Email</a>}</div>
+              <div className="button-row enquiry-actions">{whatsappNumber&&<a className="secondary-button" href={"https://wa.me/"+whatsappNumber+"?text="+encodeURIComponent(replyText)} target="_blank" rel="noreferrer"><MessageCircle size={15}/> Reply on WhatsApp</a>}{contact&&contact.includes("@")&&<a className="secondary-button" href={"mailto:"+contact}><Send size={15}/> Email</a>}</div>
+              {whatsappNumber&&<small className="muted-note">WhatsApp opens with a suggested reply. Mark this enquiry as Replied only after you send your message.</small>}
             </div>
             <label className="enquiry-status-control">Status<select value={status} disabled={busyId===item.id} onChange={event=>update(item.id,event.target.value)}><option value="new">New</option><option value="read">Read</option><option value="replied">Replied</option><option value="closed">Closed</option></select>{busyId===item.id&&<small>Saving…</small>}</label>
           </article>;
@@ -1415,6 +1451,7 @@ function EnquiryManager({ enquiries,onChange }) {
 
 function PublicTools({ seller, go }) {
   const publicUrl=location.origin+"/s/"+seller.slug;
+  const qrUrl=publicUrl+"?source=qr";
   const copy=async()=>{try{await navigator.clipboard.writeText(publicUrl);alert("Seller link copied.");}catch{alert(publicUrl);}};
   return (
     <div className="public-tools">
@@ -1422,7 +1459,7 @@ function PublicTools({ seller, go }) {
         <div className="eyebrow">YOUR QR</div>
         <h2>Offline → online.</h2>
         <p>Print this QR or share it with customers. It opens the seller page.</p>
-        <div className="qr-wrap"><Suspense fallback={<span className="muted">Preparing QR code…</span>}><QRCodeSVG value={publicUrl} size={190} includeMargin/></Suspense></div>
+        <div className="qr-wrap"><Suspense fallback={<span className="muted">Preparing QR code…</span>}><QRCodeSVG value={qrUrl} size={190} includeMargin/></Suspense></div>
         <code>{publicUrl}</code>
         <div className="button-row">
           <button className="primary-button" onClick={copy}>Copy link</button>

@@ -4774,3 +4774,31 @@ input, select, textarea { max-width: 100%; }
 .ns-growth-share-tips>div p{margin:0;color:#5f5952;font-size:13px}
 @media(max-width:760px){.ns-growth-columns{grid-template-columns:1fr}.ns-growth-share-card{grid-template-columns:1fr}.ns-growth-qr{min-height:210px}.ns-growth-welcome{padding:20px}.ns-growth-metric{padding:14px}.ns-growth-metric strong{font-size:29px}}
 @media(max-width:460px){.ns-growth-metrics{grid-template-columns:1fr 1fr}.ns-growth-metric:last-child{grid-column:1/-1}.ns-growth-welcome-icon{display:none}.ns-growth-panel{padding:17px}.ns-growth-share-card{padding:16px}}
+
+
+/* Seller growth analytics and customer enquiry improvements */
+.ns-growth-metrics { grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); }
+.ns-growth-analytics { margin-top: 18px; }
+.ns-growth-range { color: var(--muted, #766d68); font-size: 12px; white-space: nowrap; }
+.ns-growth-chart { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; align-items: end; min-height: 150px; padding: 14px 4px 0; }
+.ns-growth-chart-day { display: flex; min-width: 0; flex-direction: column; align-items: center; gap: 7px; }
+.ns-growth-chart-day strong { font-size: 12px; font-weight: 700; }
+.ns-growth-chart-track { display: flex; width: 100%; height: 104px; align-items: end; justify-content: center; border-radius: 8px; background: rgba(117, 79, 72, .07); overflow: hidden; }
+.ns-growth-chart-track i { display: block; width: min(28px, 65%); min-height: 3px; border-radius: 7px 7px 2px 2px; background: var(--burgundy, #7a263a); }
+.ns-growth-chart-day small { font-size: 11px; color: var(--muted, #766d68); }
+.ns-growth-empty-note { margin: 12px 0 0; color: var(--muted, #766d68); font-size: 13px; line-height: 1.5; }
+.ns-growth-sources { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(120, 90, 80, .14); }
+.ns-growth-sources > strong { width: 100%; font-size: 13px; }
+.ns-growth-sources > span { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; padding: 6px 10px; background: rgba(120, 90, 80, .08); font-size: 12px; }
+.ns-mobile-app-enquiry { display: flex; width: 100%; align-items: center; justify-content: center; gap: 9px; border: 1px solid var(--burgundy, #7a263a); border-radius: 14px; padding: 13px 16px; color: var(--burgundy, #7a263a); background: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.ns-product-enquire-btn { border: 0; border-radius: 8px; padding: 7px 12px; color: #fff; background: var(--burgundy, #7a263a); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.ns-enquiry-modal { width: min(520px, calc(100vw - 28px)); max-height: min(88vh, 760px); overflow-y: auto; padding: 26px; }
+.ns-enquiry-modal h2 { margin: 8px 0; }
+.ns-enquiry-form { margin-top: 18px; }
+.ns-enquiry-success { display: flex; flex-direction: column; gap: 12px; padding-top: 10px; }
+.ns-enquiry-success-icon { display: inline-flex; width: 52px; height: 52px; align-items: center; justify-content: center; border-radius: 50%; color: #28734c; background: rgba(40, 115, 76, .1); }
+@media (max-width: 560px) {
+  .ns-growth-chart { gap: 5px; }
+  .ns-growth-chart-track { height: 86px; }
+  .ns-enquiry-modal { padding: 22px 18px; }
+}

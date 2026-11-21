@@ -1,16 +1,17 @@
 import React, { useMemo, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Activity, ArrowUpRight, CheckCircle2, Copy, Download, ExternalLink, MessageCircle, Package, Share2, ShoppingBag, Sparkles, Users } from "lucide-react";
+import { Activity, ArrowUpRight, CheckCircle2, Copy, Download, ExternalLink, Eye, MessageCircle, Package, Share2, ShoppingBag, Sparkles, Users } from "lucide-react";
 
 function formatStatus(value) {
   return String(value || "new").toLowerCase() === "pending" ? "new" : String(value || "new").toLowerCase();
 }
 
-export default function SellerGrowthHub({ seller, products = [], enquiries = [], onNavigate }) {
+export default function SellerGrowthHub({ seller, products = [], enquiries = [], analytics = null, onNavigate }) {
   const [notice, setNotice] = useState("");
   const publicUrl = typeof window !== "undefined" && seller?.slug
     ? window.location.origin + "/s/" + seller.slug
     : "";
+
 
   const metrics = useMemo(() => {
     const newEnquiries = enquiries.filter((item) => ["new", "pending"].includes(formatStatus(item.status))).length;
@@ -29,6 +30,20 @@ export default function SellerGrowthHub({ seller, products = [], enquiries = [],
   ];
   const completed = profileTasks.filter(([, done]) => done).length;
   const completion = Math.round((completed / profileTasks.length) * 100);
+  const totalViews = Number(analytics?.total_views || 0);
+  const uniqueVisitors = Number(analytics?.unique_visitors || 0);
+  const todayViews = Number(analytics?.today_views || 0);
+  const dailyRows = Array.isArray(analytics?.daily) ? analytics.daily : [];
+  const dailyMax = Math.max(1, ...dailyRows.map((item) => Number(item.views || 0)));
+  const recentDays = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (6 - index));
+    const key = date.toISOString().slice(0, 10);
+    const row = dailyRows.find((item) => String(item.date).slice(0, 10) === key);
+    return { key, label: date.toLocaleDateString("en-IN", { weekday: "short" }), views: Number(row?.views || 0) };
+  });
+  const sourceLabels = { direct: "Direct link", whatsapp: "WhatsApp", instagram: "Instagram", qr: "QR code", search: "Search", other: "Other" };
+  const sourceRows = Array.isArray(analytics?.sources) ? analytics.sources : [];
 
   const copyLink = async () => {
     if (!publicUrl) return;
@@ -78,11 +93,21 @@ export default function SellerGrowthHub({ seller, products = [], enquiries = [],
       </div>
 
       <div className="ns-growth-metrics" aria-label="Seller activity summary">
+        <article className="ns-growth-metric"><span><Eye size={17}/> Page visits · 30 days</span><strong>{totalViews}</strong><small>{todayViews} today</small></article>
+        <article className="ns-growth-metric"><span><Users size={17}/> Visitors · 30 days</span><strong>{uniqueVisitors}</strong><small>Estimated unique browsers</small></article>
         <article className="ns-growth-metric"><span><Package size={17}/> Catalogue items</span><strong>{products.length}</strong><small>{metrics.available} currently available</small></article>
-        <article className="ns-growth-metric"><span><Users size={17}/> Enquiries</span><strong>{enquiries.length}</strong><small>{metrics.newEnquiries} need your attention</small></article>
-        <article className="ns-growth-metric"><span><MessageCircle size={17}/> Replied</span><strong>{metrics.replied}</strong><small>Marked as replied</small></article>
+        <article className="ns-growth-metric"><span><MessageCircle size={17}/> Enquiries</span><strong>{enquiries.length}</strong><small>{metrics.newEnquiries} need your attention</small></article>
+        <article className="ns-growth-metric"><span><CheckCircle2 size={17}/> Replied</span><strong>{metrics.replied}</strong><small>Marked as replied</small></article>
       </div>
-      <p className="ns-growth-data-note"><Activity size={14}/> These are counts from your current catalogue and enquiry records. Catalogue visits and QR scans are not tracked yet.</p>
+      <p className="ns-growth-data-note"><Activity size={14}/> Visits start counting after this update. A browser is counted once per seller every 30 minutes; older visits are not available.</p>
+      <article className="ns-growth-panel ns-growth-analytics">
+        <div className="ns-growth-panel-head"><div><span className="eyebrow">CUSTOMER ACTIVITY</span><h3>People visiting your page</h3></div><span className="ns-growth-range">Last 7 days</span></div>
+        <div className="ns-growth-chart" role="img" aria-label="Seller page visits over the last seven days">
+          {recentDays.map((day) => <div className="ns-growth-chart-day" key={day.key}><strong>{day.views}</strong><span className="ns-growth-chart-track"><i style={{ height: (day.views ? Math.max(8, day.views / dailyMax * 100) : 3) + "%" }}/></span><small>{day.label}</small></div>)}
+        </div>
+        {analytics === null ? <p className="ns-growth-empty-note">Customer analytics could not load just now. Refresh the dashboard to try again.</p> : !totalViews ? <p className="ns-growth-empty-note">No visits recorded yet. Share your catalogue link or QR code to start seeing customer activity.</p> : null}
+        {sourceRows.length > 0 && <div className="ns-growth-sources"><strong>How customers found you</strong>{sourceRows.map((item) => <span key={item.source}>{sourceLabels[item.source] || "Other"} <b>{Number(item.views || 0)}</b></span>)}</div>}
+      </article>
 
       <div className="ns-growth-columns">
         <article className="ns-growth-panel">
@@ -113,8 +138,11 @@ export default function SellerGrowthHub({ seller, products = [], enquiries = [],
 export function SellerGrowthSharing({ seller }) {
   const [notice, setNotice] = useState("");
   const publicUrl = typeof window !== "undefined" && seller?.slug ? window.location.origin + "/s/" + seller.slug : "";
+  const qrUrl = publicUrl ? publicUrl + "?source=qr" : "";
+  const whatsappShareUrl = publicUrl ? publicUrl + "?source=whatsapp" : "";
+  const instagramUrl = publicUrl ? publicUrl + "?source=instagram" : "";
   const businessName = seller?.business_name || seller?.name || "My business";
-  const shareText = "Discover " + businessName + " on NammaSpot. Browse the catalogue here: " + publicUrl;
+  const shareText = "Discover " + businessName + " on NammaSpot. Browse the catalogue here: " + whatsappShareUrl;
 
   const copyLink = async () => {
     try {
@@ -127,9 +155,18 @@ export function SellerGrowthSharing({ seller }) {
 
   const share = () => {
     if (navigator.share) {
-      navigator.share({ title: businessName + " on NammaSpot", text: shareText, url: publicUrl }).catch(() => {});
+      navigator.share({ title: businessName + " on NammaSpot", text: shareText, url: whatsappShareUrl }).catch(() => {});
     } else {
       window.open("https://wa.me/?text=" + encodeURIComponent(shareText), "_blank", "noopener,noreferrer");
+    }
+  };
+
+  const copyInstagramLink = async () => {
+    try {
+      await navigator.clipboard.writeText(instagramUrl);
+      setNotice("Instagram bio link copied. Paste it into your Instagram profile.");
+    } catch {
+      setNotice("Copy is unavailable. Select and copy the Instagram link below: " + instagramUrl);
     }
   };
 
@@ -150,8 +187,8 @@ export function SellerGrowthSharing({ seller }) {
     <section className="ns-growth-share">
       <div className="ns-growth-share-intro"><span className="eyebrow">GET DISCOVERED</span><h2>Take your catalogue everywhere.</h2><p>Share your NammaSpot link online or display this QR code at your shop, stall, packaging or business card.</p></div>
       <div className="ns-growth-share-card">
-        <div className="ns-growth-qr" id="nammaspot-growth-qr"><QRCodeSVG value={publicUrl || "https://nammaspot.vercel.app"} size={190} level="H" includeMargin/></div>
-        <div className="ns-growth-share-copy"><span className="eyebrow">YOUR PUBLIC CATALOGUE</span><h3>{businessName}</h3><p>Customers can scan this code to open your NammaSpot catalogue.</p><code>{publicUrl}</code><div className="button-row"><button type="button" className="primary-button" onClick={downloadQr}><Download size={16}/> Download QR</button><button type="button" className="secondary-button" onClick={copyLink}><Copy size={16}/> Copy link</button></div><button type="button" className="ns-growth-whatsapp" onClick={share}><Share2 size={16}/> Share catalogue</button>{notice && <p className="ns-growth-share-notice" role="status">{notice}</p>}</div>
+        <div className="ns-growth-qr" id="nammaspot-growth-qr"><QRCodeSVG value={qrUrl || "https://nammaspot.vercel.app"} size={190} level="H" includeMargin/></div>
+        <div className="ns-growth-share-copy"><span className="eyebrow">YOUR PUBLIC CATALOGUE</span><h3>{businessName}</h3><p>Customers can scan this code to open your NammaSpot catalogue.</p><code>{publicUrl}</code><div className="button-row"><button type="button" className="primary-button" onClick={downloadQr}><Download size={16}/> Download QR</button><button type="button" className="secondary-button" onClick={copyLink}><Copy size={16}/> Copy link</button><button type="button" className="secondary-button" onClick={copyInstagramLink}><Copy size={16}/> Instagram bio link</button></div><button type="button" className="ns-growth-whatsapp" onClick={share}><Share2 size={16}/> Share catalogue</button>{notice && <p className="ns-growth-share-notice" role="status">{notice}</p>}</div>
       </div>
       <div className="ns-growth-share-tips"><h3>Where can you use your QR?</h3><div><span>01</span><p>Display it near your shop counter or stall.</p></div><div><span>02</span><p>Add it to packaging, thank-you cards or printed flyers.</p></div><div><span>03</span><p>Share your catalogue link in WhatsApp and Instagram.</p></div></div>
     </section>

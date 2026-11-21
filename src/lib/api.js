@@ -327,6 +327,71 @@ export async function getSession() {
   return data.session ?? null;
 }
 
+export function subscribeToAuthChanges(callback) {
+  if (!supabase) return () => {};
+  const { data } = supabase.auth.onAuthStateChange((event, session) => {
+    callback?.(event, session);
+  });
+  return () => data?.subscription?.unsubscribe?.();
+}
+
+/**
+ * Count a public seller catalogue visit without collecting names, phone numbers,
+ * IP addresses or full user-agent strings. A browser is counted once per seller
+ * every 30 minutes; the random visitor key is first-party and pseudonymous.
+ */
+export async function recordSellerPageView(sellerId, source = "direct") {
+  if (!supabase || !sellerId || typeof window === "undefined") return false;
+  const allowedSources = new Set(["direct", "whatsapp", "instagram", "qr", "search"]);
+  const cleanSource = allowedSources.has(String(source).toLowerCase())
+    ? String(source).toLowerCase()
+    : "other";
+  const dedupeKey = "nammaspot-view-" + sellerId;
+  const now = Date.now();
+  try {
+    const previous = Number(window.sessionStorage.getItem(dedupeKey) || 0);
+    if (previous && now - previous < 30 * 60 * 1000) return false;
+  } catch {}
+
+  let visitorKey = "";
+  try {
+    visitorKey = window.localStorage.getItem("nammaspot-visitor-key") || "";
+    if (!visitorKey) {
+      visitorKey = window.crypto?.randomUUID
+        ? window.crypto.randomUUID()
+        : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+            const r = Math.random() * 16 | 0;
+            return (c === "x" ? r : (r & 3 | 8)).toString(16);
+          });
+      window.localStorage.setItem("nammaspot-visitor-key", visitorKey);
+    }
+  } catch {
+    visitorKey = window.crypto?.randomUUID?.() || "";
+  }
+  if (!visitorKey) return false;
+
+  const { data, error } = await needBackend().rpc("record_seller_page_view", {
+    p_seller_id: sellerId,
+    p_visitor_key: visitorKey,
+    p_source: cleanSource,
+  });
+  if (error) throw error;
+  if (data === true) {
+    try { window.sessionStorage.setItem(dedupeKey, String(now)); } catch {}
+  }
+  return data === true;
+}
+
+export async function getSellerPageAnalytics(sellerId, days = 30) {
+  if (!supabase) return { total_views: 0, unique_visitors: 0, today_views: 0, daily: [], sources: [] };
+  const { data, error } = await needBackend().rpc("get_seller_page_analytics", {
+    p_seller_id: sellerId,
+    p_days: Math.max(1, Math.min(90, Number(days) || 30)),
+  });
+  if (error) throw error;
+  return data || { total_views: 0, unique_visitors: 0, today_views: 0, daily: [], sources: [] };
+}
+
 export function normalizeEmail(value) {
   return String(value ?? "").trim().toLowerCase().slice(0,320);
 }
@@ -645,7 +710,18 @@ export async function createEnquiry(values) {
     state.enquiries.unshift({id:uid("enquiry"),user_id:currentDemoUser()?.id||null,seller_id:values.seller_id,product_id:values.product_id||null,customer_name:text(values.customer_name,120),customer_contact:text(values.customer_contact,160),message:text(values.message,1000),status:"pending",enquiry_date:new Date().toISOString(),product:{product_name:demoState().products.find((p)=>p.id===values.product_id)?.name||""}});
     saveDemo(state); return {id:state.enquiries[0].id,status:"pending"};
   }
-  const client=needBackend(); const session=await getSession(); const {data,error}=await client.from("enquiries").insert({user_id:session?.user?.id||null,seller_id:values.seller_id,product_id:values.product_id||null,customer_name:text(values.customer_name,120),customer_contact:text(values.customer_contact,160),message:text(values.message,1000),status:"pending"}).select("id,status").single(); if(error) throw error; return data;
+  const client=needBackend();
+  const {data,error}=await client.rpc("create_public_enquiry",{
+    p_seller_id:values.seller_id,
+    p_product_id:values.product_id||null,
+    p_customer_name:text(values.customer_name,120),
+    p_customer_contact:text(values.customer_contact,160),
+    p_message:text(values.message,2000)
+  });
+  if(error) throw error;
+  const row=Array.isArray(data)?data[0]:data;
+  if(!row?.id) throw new Error("Your enquiry could not be confirmed. Please try again.");
+  return row;
 }
 
 export async function getMyEnquiries(sellerId) {

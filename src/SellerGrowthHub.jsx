@@ -11,7 +11,7 @@ export default function SellerGrowthHub({ seller, products = [], enquiries = [],
   const publicUrl = typeof window !== "undefined" && seller?.slug
     ? window.location.origin + "/s/" + seller.slug
     : "";
-  const qrUrl = publicUrl ? publicUrl + "?source=qr" : "";
+
 
   const metrics = useMemo(() => {
     const newEnquiries = enquiries.filter((item) => ["new", "pending"].includes(formatStatus(item.status))).length;

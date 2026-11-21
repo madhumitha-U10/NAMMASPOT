@@ -1124,7 +1124,7 @@ function DashboardPage({ go }) {
       {tab==="profile" && <ProfileEditor seller={seller} categories={categories} onSaved={(next)=>setSeller((current)=>({...current,...next}))}/>}
       {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} storageUsage={storageUsage} onStorageUsageChange={setStorageUsage} onChange={setProducts}/>}
       {tab==="enquiries" && <EnquiryManager enquiries={enquiries} onChange={setEnquiries} seller={seller}/>}
-      {tab==="growth" && <SellerGrowthSharing seller={seller}/>}
+      {tab==="growth" && <SellerGrowthSharing seller={seller} analytics={analytics}/>}
       {tab==="public" && <PublicTools seller={seller} go={go}/>} 
     </main>
   );

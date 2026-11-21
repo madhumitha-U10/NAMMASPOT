@@ -1421,7 +1421,7 @@ function EnquiryManager({ enquiries,onChange,seller }) {
     <section className="enquiry-manager">
       <div className="dashboard-section-head"><div><h2>Customer inbox</h2><p>Manage product questions and service requests in one place. Mark a new request as Interested, Replied or Completed as you follow up.</p></div><button className="secondary-button" onClick={()=>{setSearch("");setFilter("all");setError("");setNotice("");}}>Reset</button></div>
       <div className="enquiry-summary">
-        {[["all","All"],["new","New"],["read","Read"],["replied","Replied"],["closed","Closed"]].map(([key,label])=><button type="button" key={key} className={filter===key?"active":""} onClick={()=>setFilter(key)}><span>{label}</span><strong>{counts[key]}</strong></button>)}
+        {[["all","All"],["new","New"],["read","Interested"],["replied","Replied"],["closed","Completed"]].map(([key,label])=><button type="button" key={key} className={filter===key?"active":""} onClick={()=>setFilter(key)}><span>{label}</span><strong>{counts[key]}</strong></button>)}
       </div>
       <label className="enquiry-search-label">Search customer requests<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, contact, product, service or message…"/></label>
       {error&&<div className="inline-error" role="alert">{error}</div>}

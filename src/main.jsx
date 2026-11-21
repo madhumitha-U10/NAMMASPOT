@@ -11,6 +11,7 @@ import "./styles.css";
 import "./microsite.css";
 const SellerMicrositePage = lazy(() => import("./SellerMicrositePage.jsx"));
 const WebsiteEditorPage = lazy(() => import("./WebsiteEditorPage.jsx"));
+const ServiceProviderCalendarPage = lazy(() => import("./ServiceProviderCalendarPage.jsx"));
 import {
   isSupabaseConfigured,
   isProductionConfigurationError,
@@ -1120,12 +1121,12 @@ function DashboardPage({ go }) {
       </div>
 
       <div className="dashboard-tabs">
-        {["overview","profile","services","products","enquiries","growth","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item==="public"?"Public profile":item==="growth"?"Growth & sharing":item==="services"?"Services & hours":item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
+        {["overview","profile","services","products","enquiries","growth","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item==="public"?"Public profile":item==="growth"?"Growth & sharing":item==="services"?"Service calendar":item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
       </div>
 
       {tab==="overview" && <SellerGrowthHub seller={seller} products={products} enquiries={enquiries} analytics={analytics} onNavigate={setTab}/>}
       {tab==="profile" && <ProfileEditor seller={seller} categories={categories} onSaved={(next)=>setSeller((current)=>({...current,...next}))}/>}
-      {tab==="services" && <WebsiteEditorPage go={go}/>}
+      {tab==="services" && <ServiceProviderCalendarPage go={go}/>}
       {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} storageUsage={storageUsage} onStorageUsageChange={setStorageUsage} onChange={setProducts}/>}
       {tab==="enquiries" && <EnquiryManager enquiries={enquiries} onChange={setEnquiries} seller={seller}/>}
       {tab==="growth" && <SellerGrowthSharing seller={seller} analytics={analytics}/>}

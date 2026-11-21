@@ -231,3 +231,243 @@
 .ns-provider-details b{color:#6b1a22;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
 .ns-provider-services>.primary-button{margin-top:5px}
 @media(max-width:640px){.ns-provider-services{margin:20px 14px;padding:18px 14px;border-radius:16px}.ns-provider-service-list{grid-template-columns:1fr}.ns-provider-service{align-items:flex-start;flex-direction:column}.ns-provider-service .secondary-button{width:100%;justify-content:center}.ns-provider-details{display:grid;grid-template-columns:1fr 1fr}}
+
+/* NammaSpot service booking calendar — customer experience */
+.ns-provider-services{max-width:1120px;margin:28px auto;padding:0 18px;border:0;background:transparent}
+.ns-provider-public-intro{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:0 0 15px;padding:0 2px}
+.ns-provider-public-intro h2{margin:5px 0 6px;color:#4f1e22;font-family:Georgia,"Times New Roman",serif;font-size:clamp(25px,4vw,34px);line-height:1.12}
+.ns-provider-public-intro p{margin:0;color:#75615b;font-size:14px;line-height:1.5}
+.ns-provider-area-pill{display:inline-flex;align-items:center;gap:6px;max-width:240px;padding:9px 12px;border:1px solid #ead8cc;border-radius:999px;background:#fffaf4;color:#6b1a22;font-size:12px;font-weight:750}
+.ns-booking-card{padding:24px;border:1px solid #eadbd0;border-radius:22px;background:#fffdf9;box-shadow:0 12px 34px rgba(67,32,25,.07);color:#3f302c}
+.ns-booking-heading{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}
+.ns-booking-kicker{display:inline-block;color:#8a4b4c;font-size:10px;font-weight:850;letter-spacing:.14em}
+.ns-booking-heading h2{margin:5px 0 7px;color:#552127;font-family:Georgia,"Times New Roman",serif;font-size:clamp(23px,4vw,31px);line-height:1.12}
+.ns-booking-heading p{max-width:620px;margin:0;color:#75635c;font-size:13px;line-height:1.55}
+.ns-booking-heading-icon{display:grid;place-items:center;flex:0 0 46px;width:46px;height:46px;border-radius:15px;background:#f8eee6;color:#7b2931}
+.ns-booking-service-label{display:grid;gap:7px;max-width:420px;margin-bottom:17px;color:#513b36;font-size:13px;font-weight:800}
+.ns-booking-service-label select,.ns-booking-form input,.ns-booking-form textarea{width:100%;min-height:44px;padding:11px 12px;border:1px solid #e5d6cb;border-radius:11px;background:#fff;color:#382d29;font:inherit;font-size:14px;box-sizing:border-box}
+.ns-booking-service-label select:focus,.ns-booking-form input:focus,.ns-booking-form textarea:focus{outline:3px solid rgba(148,75,76,.16);border-color:#9b5c5c}
+.ns-booking-layout{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(250px,.95fr);gap:16px}
+.ns-booking-calendar-panel,.ns-booking-slot-panel{min-width:0;padding:16px;border:1px solid #eee3db;border-radius:16px;background:#fff}
+.ns-booking-month-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.ns-booking-month-head strong{color:#4d2529;font-size:15px}
+.ns-booking-month-head button{display:grid;place-items:center;width:36px;height:36px;border:1px solid #eadbd1;border-radius:10px;background:#fffaf5;color:#702932;cursor:pointer}
+.ns-booking-month-head button:disabled{opacity:.35;cursor:not-allowed}
+.ns-booking-weekdays,.ns-booking-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.ns-booking-weekdays span{text-align:center;color:#8b7a72;font-size:10px;font-weight:800;padding:4px 0}
+.ns-booking-days button,.ns-booking-day-empty{min-width:0;min-height:46px;border:1px solid transparent;border-radius:11px;background:#f7f4f0;color:#b0a39b;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:inherit;font-size:13px}
+.ns-booking-days button.available{border-color:#d5e7d9;background:#f0f7f0;color:#315d3c;cursor:pointer;font-weight:800}
+.ns-booking-days button.available:hover{border-color:#7da987;background:#e7f3e8}
+.ns-booking-days button.selected{border-color:#702932;background:#702932;color:#fff;box-shadow:0 4px 10px rgba(112,41,50,.2)}
+.ns-booking-days button:disabled{cursor:not-allowed;opacity:.65}
+.ns-booking-days button i{font-size:9px;font-style:normal;font-weight:700;opacity:.85}
+.ns-booking-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:13px;color:#80716b;font-size:10px}
+.ns-booking-legend span{display:inline-flex;align-items:center;gap:5px}
+.ns-booking-legend i{display:inline-block;width:8px;height:8px;border-radius:50%}
+.ns-booking-legend .available-dot{background:#6e9b75}.ns-booking-legend .unavailable-dot{background:#d8d0c9}
+.ns-booking-slot-title{display:grid;gap:5px;padding-bottom:12px;border-bottom:1px solid #f0e7e0}
+.ns-booking-slot-title strong{color:#4d2529;font-size:14px}
+.ns-booking-slot-title small{color:#8a7770;font-size:11px}
+.ns-booking-slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding-top:14px}
+.ns-booking-slots button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:42px;padding:8px;border:1px solid #e8d8cd;border-radius:11px;background:#fffaf5;color:#5e3536;font-size:12px;font-weight:800;cursor:pointer}
+.ns-booking-slots button:hover{border-color:#9e6668;background:#fbf1eb}
+.ns-booking-slots button.selected{border-color:#702932;background:#702932;color:#fff}
+.ns-booking-empty{display:flex;align-items:center;justify-content:center;min-height:135px;padding:15px;color:#8a7b74;font-size:12px;line-height:1.5;text-align:center}
+.ns-booking-empty-icon{flex-direction:column;gap:8px;color:#a08c82}
+.ns-booking-muted{display:flex;align-items:center;gap:7px;color:#86766f;font-size:12px}
+.ns-booking-error{margin:12px 0 0;color:#a12828;font-size:12px;line-height:1.5}
+.ns-booking-form{display:grid;gap:13px;margin-top:18px;padding:17px;border:1px solid #eadbd0;border-radius:15px;background:#fff9f3}
+.ns-booking-selected-summary{display:grid;gap:4px;padding-bottom:12px;border-bottom:1px solid #eddfd5}
+.ns-booking-selected-summary span{color:#946365;font-size:9px;font-weight:850;letter-spacing:.13em}
+.ns-booking-selected-summary strong{color:#4d2529;font-size:15px}
+.ns-booking-selected-summary small{color:#806e66;font-size:12px}
+.ns-booking-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ns-booking-form label{display:grid;gap:6px;color:#533c37;font-size:12px;font-weight:800}
+.ns-booking-form label span{display:inline;color:#9a8880;font-weight:500}
+.ns-booking-form textarea{resize:vertical;min-height:65px}
+.ns-booking-submit{display:flex;align-items:center;justify-content:center;gap:9px;min-height:48px;padding:12px 18px;border:0;border-radius:12px;background:#702932;color:#fffaf4;font:inherit;font-size:14px;font-weight:850;cursor:pointer;box-shadow:0 5px 14px rgba(112,41,50,.16)}
+.ns-booking-submit:hover{background:#541c24}
+.ns-booking-submit:disabled{opacity:.55;cursor:wait}
+.ns-booking-footnote{margin:0;color:#8b7b73;font-size:10px;line-height:1.5;text-align:center}
+.ns-booking-success{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:12px;padding:16px;border:1px solid #cfe3d2;border-radius:15px;background:#f2faf2}
+.ns-booking-success>span{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:#dcefe0;color:#327447}
+.ns-booking-success>div{display:grid;gap:4px}
+.ns-booking-success strong{color:#285e39;font-size:15px}
+.ns-booking-success p,.ns-booking-success small{margin:0;color:#59715e;font-size:12px;line-height:1.5}
+.ns-booking-success a,.ns-booking-success button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:9px 12px;border:1px solid #d8c6bc;border-radius:10px;background:#fff;color:#68272f;font:inherit;font-size:12px;font-weight:800;text-decoration:none;cursor:pointer}
+.ns-booking-success a{grid-column:1 / -1}
+.ns-booking-success button{grid-column:1 / -1;background:transparent}
+.ns-booking-not-ready{padding:20px}.ns-booking-not-ready strong{color:#57242b}.ns-booking-not-ready p{margin:7px 0 0;color:#7d6c64;font-size:13px;line-height:1.5}
+
+/* Service-provider dashboard — calendar first, with short, clear controls */
+.service-calendar-page{max-width:1180px}
+.ns-provider-dashboard-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin:18px 0 22px}
+.ns-provider-dashboard-head h1{margin:6px 0;color:#492127;font-family:Georgia,"Times New Roman",serif;font-size:clamp(30px,4vw,42px);letter-spacing:-.03em}
+.ns-provider-dashboard-head p{margin:0;color:#78665f;font-size:14px}
+.ns-provider-dashboard-head .secondary-button{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.ns-provider-kicker{color:#945c5c;font-size:10px;font-weight:850;letter-spacing:.14em}
+.ns-provider-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}
+.ns-provider-metrics>div{display:grid;gap:4px;padding:16px;border:1px solid #eadbd1;border-radius:15px;background:#fffaf5}
+.ns-provider-metrics span{color:#745b54;font-size:12px;font-weight:800}
+.ns-provider-metrics strong{color:#652831;font-size:28px;line-height:1.1}
+.ns-provider-metrics small{color:#9a8880;font-size:11px}
+.ns-provider-tabs{display:flex;gap:8px;overflow-x:auto;padding:5px 0 12px;border-bottom:1px solid #e9ddd4;margin-bottom:17px}
+.ns-provider-tabs button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:9px 15px;border:1px solid #eadbd1;border-radius:11px;background:#fffaf5;color:#735b54;font:inherit;font-size:12px;font-weight:800;white-space:nowrap;cursor:pointer}
+.ns-provider-tabs button.active{border-color:#702932;background:#702932;color:#fffaf4}
+.ns-provider-calendar-workspace{display:grid;grid-template-columns:minmax(280px,.9fr) minmax(0,1.1fr);gap:15px;align-items:start}
+.ns-provider-calendar-panel,.ns-provider-day-panel,.ns-provider-settings-card{min-width:0;padding:19px;border:1px solid #eadbd1;border-radius:17px;background:#fffdf9;box-shadow:0 6px 22px rgba(67,32,25,.04)}
+.ns-provider-month-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:17px}
+.ns-provider-month-head h2,.ns-provider-day-heading h2,.ns-provider-section-heading h2{margin:5px 0 0;color:#51242a;font-family:Georgia,"Times New Roman",serif;font-size:23px;line-height:1.15}
+.ns-provider-month-head>div:last-child{display:flex;gap:6px}
+.ns-provider-month-head button{display:grid;place-items:center;width:35px;height:35px;border:1px solid #eadbd1;border-radius:10px;background:#fff;color:#702932;cursor:pointer}
+.ns-provider-weekdays,.ns-provider-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.ns-provider-weekdays span{text-align:center;padding:5px 0;color:#948179;font-size:10px;font-weight:850}
+.ns-provider-days button,.ns-provider-days>span{position:relative;min-width:0;min-height:43px;border:1px solid transparent;border-radius:10px;background:#f7f3ef;color:#b0a49c;font:inherit;font-size:12px}
+.ns-provider-days button{cursor:pointer}
+.ns-provider-days button.open{border-color:#d6e6d7;background:#f0f7ef;color:#376441;font-weight:800}
+.ns-provider-days button.selected{border-color:#702932;background:#702932;color:#fff}
+.ns-provider-days button.has-appointments:after{content:"";position:absolute;bottom:5px;left:50%;width:5px;height:5px;transform:translateX(-50%);border-radius:50%;background:#c48a43}
+.ns-provider-days button.selected.has-appointments:after{background:#fff}
+.ns-provider-calendar-legend{display:flex;flex-wrap:wrap;gap:13px;margin-top:13px;color:#87766e;font-size:10px}
+.ns-provider-calendar-legend span{display:inline-flex;align-items:center;gap:6px}
+.ns-provider-calendar-legend i{width:8px;height:8px;border-radius:50%}
+.legend-open{background:#80a989}.legend-booked{background:#c48a43}
+.ns-provider-day-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-bottom:15px;border-bottom:1px solid #f0e7e0}
+.ns-provider-day-heading h2{font-size:21px}
+.ns-provider-day-heading p{margin:5px 0 0;color:#89786f;font-size:11px}
+.ns-day-block,.ns-day-unblock{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:8px 10px;border:1px solid #ead5d0;border-radius:10px;background:#fff7f2;color:#8a3037;font:inherit;font-size:11px;font-weight:800;white-space:nowrap;cursor:pointer}
+.ns-day-unblock{border-color:#d6e6d7;background:#f2f8f1;color:#3c7047}
+.ns-provider-appointment-list{display:grid;gap:11px;padding-top:14px}
+.ns-provider-appointment{display:grid;grid-template-columns:72px minmax(0,1fr);gap:12px;padding:13px;border:1px solid #eee2d9;border-radius:13px;background:#fff}
+.ns-provider-appointment-time{display:flex;flex-direction:column;gap:4px;padding:9px 7px;border-radius:10px;background:#f8f0e9;text-align:center}
+.ns-provider-appointment-time strong{color:#5d252c;font-size:13px}
+.ns-provider-appointment-time small{color:#947f75;font-size:10px}
+.ns-provider-appointment-details{min-width:0}
+.ns-provider-appointment-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ns-provider-appointment-top>strong{color:#50312e;font-size:13px}
+.ns-appointment-status{padding:5px 8px;border-radius:999px;font-size:9px;font-weight:850;white-space:nowrap}
+.ns-appointment-status.status-pending{background:#fff2d9;color:#94631f}
+.ns-appointment-status.status-confirmed{background:#eaf5e9;color:#347046}
+.ns-appointment-status.status-declined,.ns-appointment-status.status-cancelled{background:#f8eaea;color:#9a3d42}
+.ns-appointment-status.status-completed{background:#eeeaf5;color:#655080}
+.ns-provider-appointment-details p{margin:6px 0;color:#78645d;font-size:11px}
+.ns-provider-appointment-details>small{display:block;color:#88776f;font-size:11px;line-height:1.45}
+.ns-provider-contact-actions,.ns-provider-request-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.ns-provider-contact-actions a,.ns-provider-request-actions button{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:33px;padding:7px 9px;border:1px solid #eadbd1;border-radius:9px;background:#fffaf5;color:#6d3438;font:inherit;font-size:10px;font-weight:800;text-decoration:none;cursor:pointer}
+.ns-provider-request-actions button:first-child{border-color:#6e343b;background:#6e343b;color:#fff}
+.ns-provider-request-actions button:disabled{opacity:.5;cursor:wait}
+.ns-provider-empty-day{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:210px;color:#9b8980;text-align:center}
+.ns-provider-empty-day svg{color:#b18c7b}
+.ns-provider-empty-day strong{color:#62423e;font-size:13px}
+.ns-provider-empty-day span{font-size:11px}
+.ns-provider-settings-card{display:grid;gap:17px}
+.ns-provider-section-heading h2{font-size:25px}
+.ns-provider-section-heading p{margin:7px 0 0;color:#827169;font-size:12px;line-height:1.5}
+.ns-provider-settings-card>label,.ns-provider-form-grid label{display:grid;gap:7px;color:#583f38;font-size:12px;font-weight:800}
+.ns-provider-settings-card textarea,.ns-provider-form-grid input,.ns-provider-form-grid select{width:100%;min-height:44px;padding:11px 12px;border:1px solid #e4d7ce;border-radius:11px;background:#fff;color:#3f302c;font:inherit;font-size:13px;box-sizing:border-box}
+.ns-provider-settings-card textarea{resize:vertical}
+.ns-provider-settings-card small{color:#94837a;font-size:10px;font-weight:500;line-height:1.5}
+.ns-provider-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.ns-provider-preview-note{display:flex;align-items:center;gap:8px;margin:0;padding:12px;border-radius:11px;background:#f4f8f1;color:#4d7252;font-size:11px;line-height:1.45}
+.ns-provider-hours-list{display:grid;border-top:1px solid #eee4dc}
+.ns-provider-hours-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:61px;padding:9px 0;border-bottom:1px solid #eee4dc}
+.ns-provider-day-toggle{display:flex;align-items:center;gap:9px;min-width:130px;color:#533b35;font-size:12px;font-weight:800}
+.ns-provider-day-toggle input{width:17px;height:17px;accent-color:#702932}
+.ns-provider-time-fields{display:flex;align-items:center;gap:8px}
+.ns-provider-time-fields label{display:grid;gap:4px;color:#907e75;font-size:9px;font-weight:800}
+.ns-provider-time-fields input{width:112px;min-height:36px;padding:7px 8px;border:1px solid #e5d8cf;border-radius:9px;background:#fff;color:#4c3432;font:inherit;font-size:12px}
+.ns-provider-time-fields>span{color:#9a8981;font-size:11px}
+.ns-provider-closed-label{color:#a08f87;font-size:11px}
+.ns-provider-save-bar{position:sticky;bottom:10px;z-index:15;display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:17px;padding:12px 14px;border:1px solid #e5d4c9;border-radius:13px;background:rgba(255,250,244,.96);box-shadow:0 7px 24px rgba(58,27,24,.1);backdrop-filter:blur(10px)}
+.ns-provider-save-bar span{color:#806d65;font-size:11px}
+.ns-provider-save-bar button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:41px;padding:9px 14px;border:0;border-radius:10px;background:#702932;color:#fffaf4;font:inherit;font-size:12px;font-weight:850;cursor:pointer;white-space:nowrap}
+.ns-provider-save-bar button:disabled{opacity:.6;cursor:wait}
+.ns-calendar-loading{display:flex;align-items:center;gap:9px;color:#6f5952}
+.service-calendar-page :is(button,a,input,select,textarea):focus-visible{outline:3px solid rgba(145,79,79,.28);outline-offset:2px}
+@media(max-width:800px){
+ .ns-provider-calendar-workspace{grid-template-columns:1fr}
+ .ns-provider-dashboard-head{align-items:flex-start;flex-direction:column}
+ .ns-provider-dashboard-head .secondary-button{width:100%;justify-content:center}
+ .ns-booking-layout{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+ .ns-provider-services{margin:22px auto;padding:0 12px}
+ .ns-provider-public-intro{align-items:flex-start;flex-direction:column}
+ .ns-booking-card{padding:17px 13px;border-radius:17px}
+ .ns-booking-heading{gap:9px}
+ .ns-booking-heading-icon{width:39px;height:39px;flex-basis:39px;border-radius:12px}
+ .ns-booking-calendar-panel,.ns-booking-slot-panel{padding:12px}
+ .ns-booking-days button,.ns-booking-day-empty{min-height:40px;border-radius:9px}
+ .ns-booking-slots{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ns-booking-form{padding:13px}
+ .ns-booking-form-grid{grid-template-columns:1fr}
+ .ns-booking-success{grid-template-columns:auto 1fr}
+ .ns-provider-metrics{gap:7px}
+ .ns-provider-metrics>div{padding:11px 9px}
+ .ns-provider-metrics span{font-size:10px}
+ .ns-provider-metrics strong{font-size:23px}
+ .ns-provider-metrics small{font-size:9px}
+ .ns-provider-calendar-panel,.ns-provider-day-panel,.ns-provider-settings-card{padding:13px}
+ .ns-provider-day-heading{flex-direction:column}
+ .ns-provider-appointment{grid-template-columns:58px minmax(0,1fr);gap:8px;padding:10px}
+ .ns-provider-appointment-top{align-items:flex-start;flex-direction:column}
+ .ns-provider-form-grid{grid-template-columns:1fr}
+ .ns-provider-hours-row{align-items:flex-start;flex-direction:column;padding:12px 0}
+ .ns-provider-time-fields{width:100%;justify-content:flex-start}
+ .ns-provider-time-fields input{width:min(36vw,125px)}
+ .ns-provider-save-bar{align-items:stretch;flex-direction:column;bottom:8px}
+ .ns-provider-save-bar button{width:100%}
+}
+@media(prefers-reduced-motion:reduce){.ns-booking-card *,.service-calendar-page *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Seller public-page polish: clearer hierarchy, readable cards and consistent touch targets */
+.ns-mobile-brandbar{position:sticky;top:0;z-index:45;background:rgba(255,250,244,.96);border-bottom:1px solid #eaded5;backdrop-filter:blur(16px);box-shadow:0 3px 15px rgba(55,27,23,.035)}
+.ns-mobile-seller-head{max-width:1120px;margin:0 auto;padding:25px clamp(16px,4vw,34px) 18px;gap:16px}
+.ns-mobile-seller-info h1{color:#482329;letter-spacing:-.025em}
+.ns-mobile-verified-line{color:#8b625b}
+.ns-mobile-location{color:#7e6a61}
+.ns-mobile-stats{max-width:1120px;margin:0 auto 15px;padding:0 clamp(16px,4vw,34px)}
+.ns-mobile-stats>div{min-width:0;padding:12px 14px;border:1px solid #ecded4;border-radius:13px;background:#fffaf4}
+.ns-mobile-stats b{color:#692b32;font-size:16px}
+.ns-mobile-stats span{color:#88756d;font-size:10px}
+.ns-mobile-contact{max-width:1120px;margin:0 auto;padding:0 clamp(16px,4vw,34px) 16px}
+.ns-mobile-whatsapp,.ns-mobile-app-enquiry{min-height:48px;border-radius:12px;box-shadow:0 3px 9px rgba(90,32,37,.08)}
+.ns-mobile-contact-row a,.ns-mobile-contact-row button{border:1px solid #eee2d9;border-radius:12px;background:#fffdf9;color:#70544e}
+.ns-mobile-tabs{position:sticky;top:60px;z-index:30;justify-content:flex-start;gap:6px;padding:9px clamp(16px,4vw,34px);background:rgba(255,251,246,.96);backdrop-filter:blur(12px);border-top:1px solid #f0e6df;border-bottom:1px solid #e9ddd4}
+.ns-mobile-tabs a{padding:9px 13px;border-radius:999px;color:#78635c;font-size:12px;font-weight:800;text-decoration:none}
+.ns-mobile-tabs a.active{background:#702932;color:#fffaf4}
+.ns-mobile-catalogue{max-width:1180px;margin:0 auto;padding:22px clamp(14px,4vw,32px) 36px}
+.ns-mobile-search{max-width:520px;margin:0 0 18px;border:1px solid #e8dcd3;border-radius:12px;background:#fff}
+.ns-mobile-search input{min-height:44px;color:#43322e}
+.ns-mobile-product-grid{gap:15px}
+.ns-mobile-product{min-width:0;border:1px solid #ebded5;border-radius:17px;background:#fffdf9;box-shadow:0 6px 20px rgba(55,29,24,.045);overflow:hidden;transition:transform .18s ease,box-shadow .18s ease}
+.ns-mobile-product:hover{transform:translateY(-2px);box-shadow:0 11px 28px rgba(55,29,24,.09)}
+.ns-mobile-product-image{aspect-ratio:1/1;background:#f7f1e9}
+.ns-mobile-product-image img{width:100%;height:100%;object-fit:contain;padding:8px;box-sizing:border-box}
+.ns-mobile-product-copy{padding:13px 14px 15px}
+.ns-mobile-product-copy h3{color:#4d2b2a;font-size:14px;line-height:1.35}
+.ns-mobile-product-copy>strong{color:#702932;font-size:15px}
+.ns-mobile-product-actions .ns-product-enquire-btn{min-height:44px;border-radius:11px;background:#702932;color:#fffaf4;font-size:12px;font-weight:850}
+.ns-mobile-product-actions .ns-product-description-btn{min-height:44px;border-radius:11px;border-color:#e4d1c7;background:#fff8f1;color:#6c3539;font-size:12px;box-shadow:none}
+.ns-mobile-about{max-width:1120px;margin:0 auto;padding:28px clamp(16px,4vw,34px);color:#66534d}
+.ns-mobile-about h2{color:#4d252a;font-family:Georgia,"Times New Roman",serif;font-size:25px}
+.ns-mobile-about p{line-height:1.65}
+.ns-mobile-reviews{max-width:1120px;margin:0 auto;padding:20px clamp(16px,4vw,34px) 45px}
+.ns-mobile-bottom-nav{z-index:55;border-top:1px solid #e9ddd4;background:rgba(255,251,246,.97);backdrop-filter:blur(14px)}
+@media(max-width:760px){
+ .ns-mobile-seller-head{padding-top:19px}
+ .ns-mobile-tabs{top:59px}
+ .ns-mobile-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .ns-mobile-product-copy{padding:11px 10px 12px}
+ .ns-mobile-product-actions{grid-template-columns:1fr;gap:6px}
+ .ns-mobile-product-actions .ns-product-enquire-btn,.ns-mobile-product-actions .ns-product-description-btn{width:100%}
+}
+@media(max-width:360px){.ns-mobile-product-grid{grid-template-columns:1fr}}
+
+.ns-public-location-line{display:flex;align-items:center;gap:7px}
+.ns-public-hours{max-width:620px;margin:20px 0 0;padding:16px;border:1px solid #eaded5;border-radius:15px;background:#fffaf5}
+.ns-public-hours h3{margin:0 0 10px;color:#54262c;font-size:14px}
+.ns-public-hours>div{display:flex;justify-content:space-between;gap:15px;padding:8px 0;border-bottom:1px solid #f0e6df;font-size:12px}
+.ns-public-hours>div:last-child{border-bottom:0}
+.ns-public-hours span{color:#806e66}
+.ns-public-hours strong{color:#563638;text-align:right;font-weight:750}

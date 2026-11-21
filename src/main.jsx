@@ -66,6 +66,7 @@ import { categoryNames } from "./lib/seed";
 import CategoryIcon from "./components/brand/CategoryIcon.jsx";
 import { addProductGalleryImage, deleteProductGalleryImage, getMyMicrosite, saveMicrosite } from "./lib/microsite";
 import { formatBytes } from "./lib/storage";
+import SellerGrowthHub, { SellerGrowthSharing } from "./SellerGrowthHub.jsx";
 
 const popularCategories = ["Bakery", "Mehendi", "Crochet", "Makeup", "Art"];
 const SAVED_PRODUCTS_KEY = "nammaspot-saved-products";
@@ -1047,7 +1048,7 @@ function DashboardPage({ go }) {
   const [products,setProducts] = useState([]);
   const [enquiries,setEnquiries] = useState([]);
   const [categories,setCategories] = useState([]);
-  const [tab,setTab] = useState("products");
+  const [tab,setTab] = useState("overview");
   const [state,setState] = useState({loading:true,error:""});
   const [storageUsage,setStorageUsage] = useState(null);
 
@@ -1082,13 +1083,15 @@ function DashboardPage({ go }) {
       </div>
 
       <div className="dashboard-tabs">
-        {["profile","products","enquiries","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item==="public"?"Public profile":item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
+        {["overview","profile","products","enquiries","growth","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item==="public"?"Public profile":item==="growth"?"Growth & sharing":item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
       </div>
 
+      {tab==="overview" && <SellerGrowthHub seller={seller} products={products} enquiries={enquiries} onNavigate={setTab}/>}
       {tab==="profile" && <ProfileEditor seller={seller} categories={categories} onSaved={(next)=>setSeller((current)=>({...current,...next}))}/>}
       {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} storageUsage={storageUsage} onStorageUsageChange={setStorageUsage} onChange={setProducts}/>}
       {tab==="enquiries" && <EnquiryManager enquiries={enquiries} onChange={setEnquiries}/>}
-      {tab==="public" && <PublicTools seller={seller} go={go}/>}
+      {tab==="growth" && <SellerGrowthSharing seller={seller}/>}
+      {tab==="public" && <PublicTools seller={seller} go={go}/>} 
     </main>
   );
 }

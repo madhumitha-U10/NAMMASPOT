@@ -1451,6 +1451,7 @@ function EnquiryManager({ enquiries,onChange,seller }) {
 
 function PublicTools({ seller, go }) {
   const publicUrl=location.origin+"/s/"+seller.slug;
+  const qrUrl=publicUrl+"?source=qr";
   const copy=async()=>{try{await navigator.clipboard.writeText(publicUrl);alert("Seller link copied.");}catch{alert(publicUrl);}};
   return (
     <div className="public-tools">
@@ -1458,7 +1459,7 @@ function PublicTools({ seller, go }) {
         <div className="eyebrow">YOUR QR</div>
         <h2>Offline → online.</h2>
         <p>Print this QR or share it with customers. It opens the seller page.</p>
-        <div className="qr-wrap"><Suspense fallback={<span className="muted">Preparing QR code…</span>}><QRCodeSVG value={publicUrl} size={190} includeMargin/></Suspense></div>
+        <div className="qr-wrap"><Suspense fallback={<span className="muted">Preparing QR code…</span>}><QRCodeSVG value={qrUrl} size={190} includeMargin/></Suspense></div>
         <code>{publicUrl}</code>
         <div className="button-row">
           <button className="primary-button" onClick={copy}>Copy link</button>

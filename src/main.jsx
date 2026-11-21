@@ -1103,7 +1103,7 @@ function DashboardPage({ go }) {
     }
   };
 
-  useEffect(()=>{load(); const timer=window.setInterval(load,300000); const onFocus=()=>load(); const onVisible=()=>{if(document.visibilityState==="visible")load();}; window.addEventListener("focus",onFocus); document.addEventListener("visibilitychange",onVisible); return ()=>{window.clearInterval(timer);window.removeEventListener("focus",onFocus);document.removeEventListener("visibilitychange",onVisible);};},[]);
+  useEffect(()=>{load(); const timer=window.setInterval(load,60000); const onFocus=()=>load(); const onVisible=()=>{if(document.visibilityState==="visible")load();}; window.addEventListener("focus",onFocus); document.addEventListener("visibilitychange",onVisible); return ()=>{window.clearInterval(timer);window.removeEventListener("focus",onFocus);document.removeEventListener("visibilitychange",onVisible);};},[]);
 
   if (state.loading) return <main className="page"><div className="page-title"><div className="eyebrow">SELLER DASHBOARD</div><h1>Loading your spot…</h1></div><CardSkeletonRow detailed/></main>;
   if (state.error) return <main className="page"><ErrorState message={state.error} retry={load}/></main>;

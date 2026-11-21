@@ -710,7 +710,18 @@ export async function createEnquiry(values) {
     state.enquiries.unshift({id:uid("enquiry"),user_id:currentDemoUser()?.id||null,seller_id:values.seller_id,product_id:values.product_id||null,customer_name:text(values.customer_name,120),customer_contact:text(values.customer_contact,160),message:text(values.message,1000),status:"pending",enquiry_date:new Date().toISOString(),product:{product_name:demoState().products.find((p)=>p.id===values.product_id)?.name||""}});
     saveDemo(state); return {id:state.enquiries[0].id,status:"pending"};
   }
-  const client=needBackend(); const session=await getSession(); const {data,error}=await client.from("enquiries").insert({user_id:session?.user?.id||null,seller_id:values.seller_id,product_id:values.product_id||null,customer_name:text(values.customer_name,120),customer_contact:text(values.customer_contact,160),message:text(values.message,1000),status:"pending"}).select("id,status").single(); if(error) throw error; return data;
+  const client=needBackend();
+  const {data,error}=await client.rpc("create_public_enquiry",{
+    p_seller_id:values.seller_id,
+    p_product_id:values.product_id||null,
+    p_customer_name:text(values.customer_name,120),
+    p_customer_contact:text(values.customer_contact,160),
+    p_message:text(values.message,2000)
+  });
+  if(error) throw error;
+  const row=Array.isArray(data)?data[0]:data;
+  if(!row?.id) throw new Error("Your enquiry could not be confirmed. Please try again.");
+  return row;
 }
 
 export async function getMyEnquiries(sellerId) {

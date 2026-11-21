@@ -79,7 +79,7 @@ export default function ServiceBookingCalendar({seller,serviceItems=[]}){
 
   if(!serviceItems.length)return <div className="ns-booking-card ns-booking-not-ready"><strong>Appointment booking is not set up yet.</strong><p>This provider has not added bookable services. You can contact them directly using the WhatsApp or call options above.</p></div>;
 
-  return <section className="ns-booking-card" id="ns-service-booking">
+  return <section className="ns-booking-card">
     <div className="ns-booking-heading">
       <div><span className="ns-booking-kicker">APPOINTMENTS</span><h2>Choose a time that works for you</h2><p>See available dates, select a time and send your request. The provider will confirm your appointment.</p></div>
       <span className="ns-booking-heading-icon"><CalendarDays size={23}/></span>
@@ -121,7 +121,7 @@ export default function ServiceBookingCalendar({seller,serviceItems=[]}){
         <label>Anything the provider should know? <span>(optional)</span><textarea rows={2} maxLength={1000} value={form.customer_note} onChange={e=>setForm({...form,customer_note:e.target.value})} placeholder="Add a short note about your requirement"/></label>
         {state.error&&<p className="ns-booking-error" role="alert">{state.error}</p>}
         <button className="ns-booking-submit" type="submit" disabled={state.saving}>{state.saving?"Sending request…":<>Request appointment <ArrowRight size={17}/></>}</button>
-        <p className="ns-booking-footnote">No payment required. Your appointment is not confirmed until the provider accepts it.</p>
+        <p className="ns-booking-footnote">No payment required. Your selected time is held while the provider reviews your request; it is confirmed only after they accept.</p>
       </form>}
     </>}
   </section>;

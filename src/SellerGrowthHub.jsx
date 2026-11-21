@@ -135,7 +135,7 @@ export default function SellerGrowthHub({ seller, products = [], enquiries = [],
   );
 }
 
-export function SellerGrowthSharing({ seller }) {
+export function SellerGrowthSharing({ seller, analytics = null }) {
   const [notice, setNotice] = useState("");
   const publicUrl = typeof window !== "undefined" && seller?.slug ? window.location.origin + "/s/" + seller.slug : "";
   const qrUrl = publicUrl ? publicUrl + "?source=qr" : "";
@@ -143,6 +143,20 @@ export function SellerGrowthSharing({ seller }) {
   const instagramUrl = publicUrl ? publicUrl + "?source=instagram" : "";
   const businessName = seller?.business_name || seller?.name || "My business";
   const shareText = "Discover " + businessName + " on NammaSpot. Browse the catalogue here: " + whatsappShareUrl;
+  const totalViews = Number(analytics?.total_views || 0);
+  const uniqueVisitors = Number(analytics?.unique_visitors || 0);
+  const todayViews = Number(analytics?.today_views || 0);
+  const dailyRows = Array.isArray(analytics?.daily) ? analytics.daily : [];
+  const dailyMax = Math.max(1, ...dailyRows.map(item => Number(item.views || 0)));
+  const recentDays = Array.from({length:7},(_,index)=>{
+    const date=new Date();
+    date.setDate(date.getDate()-(6-index));
+    const key=date.toISOString().slice(0,10);
+    const row=dailyRows.find(item=>String(item.date).slice(0,10)===key);
+    return {key,label:date.toLocaleDateString("en-IN",{weekday:"short"}),views:Number(row?.views||0)};
+  });
+  const sourceLabels={direct:"Direct link",whatsapp:"WhatsApp",instagram:"Instagram",qr:"QR code",search:"Search",other:"Other"};
+  const sourceRows=Array.isArray(analytics?.sources)?analytics.sources:[];
 
   const copyLink = async () => {
     try {
@@ -185,6 +199,18 @@ export function SellerGrowthSharing({ seller }) {
 
   return (
     <section className="ns-growth-share">
+      <article className="ns-growth-panel ns-growth-analytics">
+        <div className="ns-growth-panel-head"><div><span className="eyebrow">CUSTOMER ACTIVITY</span><h3>People visiting your page</h3></div><span className="ns-growth-range">Last 30 days</span></div>
+        <div className="ns-growth-metrics" aria-label="Customer visit summary">
+          <article className="ns-growth-metric"><span><Eye size={17}/> Page visits</span><strong>{totalViews}</strong><small>{todayViews} today</small></article>
+          <article className="ns-growth-metric"><span><Users size={17}/> Unique visitors</span><strong>{uniqueVisitors}</strong><small>Estimated browsers</small></article>
+        </div>
+        <div className="ns-growth-chart" role="img" aria-label="Seller page visits over the last seven days">
+          {recentDays.map(day=><div className="ns-growth-chart-day" key={day.key}><strong>{day.views}</strong><span className="ns-growth-chart-track"><i style={{height:(day.views?Math.max(8,day.views/dailyMax*100):3)+"%"}}/></span><small>{day.label}</small></div>)}
+        </div>
+        {analytics===null ? <p className="ns-growth-empty-note">Customer analytics could not load just now. Refresh the dashboard to try again.</p> : !totalViews ? <p className="ns-growth-empty-note">No visits recorded yet. Share your QR code or catalogue link to start seeing activity.</p> : null}
+        {sourceRows.length>0&&<div className="ns-growth-sources"><strong>How customers found you</strong>{sourceRows.map(item=><span key={item.source}>{sourceLabels[item.source]||"Other"} <b>{Number(item.views||0)}</b></span>)}</div>}
+      </article>
       <div className="ns-growth-share-intro"><span className="eyebrow">GET DISCOVERED</span><h2>Take your catalogue everywhere.</h2><p>Share your NammaSpot link online or display this QR code at your shop, stall, packaging or business card.</p></div>
       <div className="ns-growth-share-card">
         <div className="ns-growth-qr" id="nammaspot-growth-qr"><QRCodeSVG value={qrUrl || "https://nammaspot.vercel.app"} size={190} level="H" includeMargin/></div>

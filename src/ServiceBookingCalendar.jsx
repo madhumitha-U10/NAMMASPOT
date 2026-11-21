@@ -77,8 +77,6 @@ export default function ServiceBookingCalendar({seller,serviceItems=[]}){
   const whatsappMessage="Hi "+(seller.business_name||"there")+", I have sent an appointment request on NammaSpot for "+service+" on "+(selectedDate?prettyDate(selectedDate):"")+" at "+(selectedSlot?timeLabel(selectedSlot):"the selected time")+". Please confirm when convenient.";
   const whatsappUrl=whatsappNumber?"https://wa.me/"+whatsappNumber+"?text="+encodeURIComponent(whatsappMessage):"";
 
-  if(!serviceItems.length)return <div className="ns-booking-card ns-booking-not-ready"><strong>Appointment booking is not set up yet.</strong><p>This provider has not added bookable services. You can contact them directly using the WhatsApp or call options above.</p></div>;
-
   return <section className="ns-booking-card">
     <div className="ns-booking-heading">
       <div><span className="ns-booking-kicker">APPOINTMENTS</span><h2>Choose a time that works for you</h2><p>See available dates, select a time and send your request. The provider will confirm your appointment.</p></div>
@@ -89,9 +87,9 @@ export default function ServiceBookingCalendar({seller,serviceItems=[]}){
       {whatsappUrl&&<a href={whatsappUrl} target="_blank" rel="noreferrer"><MessageCircle size={16}/> Message provider</a>}
       <button type="button" onClick={()=>{setState({saving:false,error:"",success:false,appointmentId:""});setSelectedDate("");setSelectedSlot("");setSlots([]);}}>Book another time</button>
     </div>:<>
-      <label className="ns-booking-service-label">What service do you need?
+      {serviceItems.length?<label className="ns-booking-service-label">What service do you need?
         <select value={service} onChange={e=>{setService(e.target.value);setSelectedSlot("");setState({saving:false,error:"",success:false,appointmentId:""});}}>{serviceItems.map(item=><option key={item} value={item}>{item}</option>)}</select>
-      </label>
+      </label>:<div className="ns-booking-setup-note"><strong>Online appointments are not open yet.</strong><span>This provider is setting up their services and availability. You can contact them directly using the WhatsApp or call options above.</span></div>}
       <div className="ns-booking-layout">
         <div className="ns-booking-calendar-panel">
           <div className="ns-booking-month-head"><button type="button" disabled={!canGoBack} onClick={()=>{setMonth(new Date(month.getFullYear(),month.getMonth()-1,1));setSelectedDate("");setSelectedSlot("");}} aria-label="Previous month"><ChevronLeft size={19}/></button><strong>{monthLabel(month)}</strong><button type="button" disabled={!canGoForward} onClick={()=>{setMonth(new Date(month.getFullYear(),month.getMonth()+1,1));setSelectedDate("");setSelectedSlot("");}} aria-label="Next month"><ChevronRight size={19}/></button></div>

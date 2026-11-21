@@ -105,7 +105,7 @@ export default function SellerGrowthHub({ seller, products = [], enquiries = [],
         <div className="ns-growth-chart" role="img" aria-label="Seller page visits over the last seven days">
           {recentDays.map((day) => <div className="ns-growth-chart-day" key={day.key}><strong>{day.views}</strong><span className="ns-growth-chart-track"><i style={{ height: (day.views ? Math.max(8, day.views / dailyMax * 100) : 3) + "%" }}/></span><small>{day.label}</small></div>)}
         </div>
-        {!totalViews && <p className="ns-growth-empty-note">No visits recorded yet. Share your catalogue link or QR code to start seeing customer activity.</p>}
+        {analytics === null ? <p className="ns-growth-empty-note">Customer analytics could not load just now. Refresh the dashboard to try again.</p> : !totalViews ? <p className="ns-growth-empty-note">No visits recorded yet. Share your catalogue link or QR code to start seeing customer activity.</p> : null}
         {sourceRows.length > 0 && <div className="ns-growth-sources"><strong>How customers found you</strong>{sourceRows.map((item) => <span key={item.source}>{sourceLabels[item.source] || "Other"} <b>{Number(item.views || 0)}</b></span>)}</div>}
       </article>
 

@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Activity, ArrowUpRight, CheckCircle2, Copy, Download, ExternalLink, MessageCircle, Package, Share2, ShoppingBag, Sparkles, Users } from "lucide-react";
+import { Activity, ArrowUpRight, CheckCircle2, Copy, Download, ExternalLink, Eye, MessageCircle, Package, Share2, ShoppingBag, Sparkles, Users } from "lucide-react";
 
 function formatStatus(value) {
   return String(value || "new").toLowerCase() === "pending" ? "new" : String(value || "new").toLowerCase();
 }
 
-export default function SellerGrowthHub({ seller, products = [], enquiries = [], onNavigate }) {
+export default function SellerGrowthHub({ seller, products = [], enquiries = [], analytics = null, onNavigate }) {
   const [notice, setNotice] = useState("");
   const publicUrl = typeof window !== "undefined" && seller?.slug
     ? window.location.origin + "/s/" + seller.slug
@@ -29,6 +29,20 @@ export default function SellerGrowthHub({ seller, products = [], enquiries = [],
   ];
   const completed = profileTasks.filter(([, done]) => done).length;
   const completion = Math.round((completed / profileTasks.length) * 100);
+  const totalViews = Number(analytics?.total_views || 0);
+  const uniqueVisitors = Number(analytics?.unique_visitors || 0);
+  const todayViews = Number(analytics?.today_views || 0);
+  const dailyRows = Array.isArray(analytics?.daily) ? analytics.daily : [];
+  const dailyMax = Math.max(1, ...dailyRows.map((item) => Number(item.views || 0)));
+  const recentDays = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (6 - index));
+    const key = date.toISOString().slice(0, 10);
+    const row = dailyRows.find((item) => String(item.date).slice(0, 10) === key);
+    return { key, label: date.toLocaleDateString("en-IN", { weekday: "short" }), views: Number(row?.views || 0) };
+  });
+  const sourceLabels = { direct: "Direct link", whatsapp: "WhatsApp", instagram: "Instagram", qr: "QR code", search: "Search", other: "Other" };
+  const sourceRows = Array.isArray(analytics?.sources) ? analytics.sources : [];
 
   const copyLink = async () => {
     if (!publicUrl) return;
@@ -78,11 +92,21 @@ export default function SellerGrowthHub({ seller, products = [], enquiries = [],
       </div>
 
       <div className="ns-growth-metrics" aria-label="Seller activity summary">
+        <article className="ns-growth-metric"><span><Eye size={17}/> Page visits · 30 days</span><strong>{totalViews}</strong><small>{todayViews} today</small></article>
+        <article className="ns-growth-metric"><span><Users size={17}/> Visitors · 30 days</span><strong>{uniqueVisitors}</strong><small>Estimated unique browsers</small></article>
         <article className="ns-growth-metric"><span><Package size={17}/> Catalogue items</span><strong>{products.length}</strong><small>{metrics.available} currently available</small></article>
-        <article className="ns-growth-metric"><span><Users size={17}/> Enquiries</span><strong>{enquiries.length}</strong><small>{metrics.newEnquiries} need your attention</small></article>
-        <article className="ns-growth-metric"><span><MessageCircle size={17}/> Replied</span><strong>{metrics.replied}</strong><small>Marked as replied</small></article>
+        <article className="ns-growth-metric"><span><MessageCircle size={17}/> Enquiries</span><strong>{enquiries.length}</strong><small>{metrics.newEnquiries} need your attention</small></article>
+        <article className="ns-growth-metric"><span><CheckCircle2 size={17}/> Replied</span><strong>{metrics.replied}</strong><small>Marked as replied</small></article>
       </div>
-      <p className="ns-growth-data-note"><Activity size={14}/> These are counts from your current catalogue and enquiry records. Catalogue visits and QR scans are not tracked yet.</p>
+      <p className="ns-growth-data-note"><Activity size={14}/> Visits start counting after this update. A browser is counted once per seller every 30 minutes; older visits are not available.</p>
+      <article className="ns-growth-panel ns-growth-analytics">
+        <div className="ns-growth-panel-head"><div><span className="eyebrow">CUSTOMER ACTIVITY</span><h3>People visiting your page</h3></div><span className="ns-growth-range">Last 7 days</span></div>
+        <div className="ns-growth-chart" role="img" aria-label="Seller page visits over the last seven days">
+          {recentDays.map((day) => <div className="ns-growth-chart-day" key={day.key}><strong>{day.views}</strong><span className="ns-growth-chart-track"><i style={{ height: (day.views ? Math.max(8, day.views / dailyMax * 100) : 3) + "%" }}/></span><small>{day.label}</small></div>)}
+        </div>
+        {!totalViews && <p className="ns-growth-empty-note">No visits recorded yet. Share your catalogue link or QR code to start seeing customer activity.</p>}
+        {sourceRows.length > 0 && <div className="ns-growth-sources"><strong>How customers found you</strong>{sourceRows.map((item) => <span key={item.source}>{sourceLabels[item.source] || "Other"} <b>{Number(item.views || 0)}</b></span>)}</div>}
+      </article>
 
       <div className="ns-growth-columns">
         <article className="ns-growth-panel">

@@ -463,3 +463,11 @@
  .ns-mobile-product-actions .ns-product-enquire-btn,.ns-mobile-product-actions .ns-product-description-btn{width:100%}
 }
 @media(max-width:360px){.ns-mobile-product-grid{grid-template-columns:1fr}}
+
+.ns-public-location-line{display:flex;align-items:center;gap:7px}
+.ns-public-hours{max-width:620px;margin:20px 0 0;padding:16px;border:1px solid #eaded5;border-radius:15px;background:#fffaf5}
+.ns-public-hours h3{margin:0 0 10px;color:#54262c;font-size:14px}
+.ns-public-hours>div{display:flex;justify-content:space-between;gap:15px;padding:8px 0;border-bottom:1px solid #f0e6df;font-size:12px}
+.ns-public-hours>div:last-child{border-bottom:0}
+.ns-public-hours span{color:#806e66}
+.ns-public-hours strong{color:#563638;text-align:right;font-weight:750}

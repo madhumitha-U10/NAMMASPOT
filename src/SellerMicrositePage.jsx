@@ -294,16 +294,16 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
         <h1 className="ns-mobile-shop-title"><span className="ns-mobile-shop-name">{esc(seller.business_name)}</span>{seller.verified&&<span className="ns-mobile-verified-dot" aria-label="Verified seller">✓</span>}</h1>
         <p className="ns-mobile-verified-line">{seller.verified ? "Verified seller" : "Local seller"} · {esc(seller.category?.name||"Local business")}</p>
         <p className="ns-mobile-location"><MapPin size={16}/>{esc(seller.location||"Chennai, Tamil Nadu")}</p>
-        <div className="ns-mobile-seller-like-row">
-          <div className="ns-shop-like-copy"><strong>Enjoy this shop?</strong><span>Leave a like for this local seller</span></div>
-          <LikeButton compact className="ns-shop-like-control" count={seller.like_count} showCount liked={seller.liked_by_me} onClick={()=>handleContentLike("seller",seller)} label="this shop"/>
-        </div>
+
       </div>
     </section>
+      <section className="ns-mobile-stats ns-profile-stats" aria-label="Seller profile statistics">
+        <div><b>{products.length}</b><span>Products</span></div>
+        <div><b>{esc(seller.category?.name||"Local")}</b><span>Category</span></div>
+        <div><LikeButton compact className="ns-shop-like-control ns-profile-stat-like" count={seller.like_count} showCount liked={seller.liked_by_me} onClick={()=>handleContentLike("seller",seller)} label="this shop"/><span>Likes</span></div>
+      </section>
     {(settings.tagline||settings.about)&&<section className="ns-mobile-update"><CalendarDays size={24}/><div><small>UPDATE FROM SELLER{settings.updated_at ? " · "+new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(settings.updated_at)) : ""}</small><p>{esc(settings.tagline||settings.about)}</p></div></section>}
-    <section className="ns-mobile-stats" aria-label="Seller details">
-      <div><b>{products.length}</b><span>Products</span></div><div><b>{esc(seller.category?.name||"Local")}</b><span>Category</span></div>
-    </section>
+
     <section className="ns-mobile-contact">
       <div className="ns-mobile-primary-contact-actions">
         {wa&&<a className="ns-mobile-whatsapp" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={19}/> WhatsApp Enquiry</a>}

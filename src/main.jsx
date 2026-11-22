@@ -592,7 +592,7 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
             ))}</div> :
           <Empty title="No matching products yet" text="Try another product name or switch to Seller websites." actionLabel="Search seller websites" onAction={() => go("/explore?type=seller" + (query.trim() ? "&search=" + encodeURIComponent(query.trim()) : ""))}/>
         ) : state.data?.length ? <div className="seller-list">{[...state.data].map(seller=>({...seller,liked_by_me:likeOverrides["s:"+seller.id]?.liked_by_me??seller.liked_by_me,like_count:likeOverrides["s:"+seller.id]?.like_count??seller.like_count})).sort((a,b)=>Number(b.like_count||0)-Number(a.like_count||0)).map((seller,index) => <SellerCard key={seller.id} seller={seller} index={index} go={go} toggleSave={toggleSave} saved={saved.includes(seller.id)} onLike={()=>updateLike("seller",seller)} detailed/>)}</div> :
-        <Empty title="No matching sellers yet" text="Try a shorter search, remove a filter, or explore another category." actionLabel="Clear search and filters" onAction={() => { setQuery(""); setResultType("all"); setSort("relevant"); go("/explore"); }}/>} 
+        <Empty title="No matching sellers yet" text="Try a shorter search, remove a filter, or explore another category." actionLabel="Clear search and filters" onAction={() => { setQuery(""); setSort("relevant"); go("/explore"); }}/>} 
     </main>
   );
 }
@@ -1100,7 +1100,7 @@ function DashboardPage({ go }) {
       if (!profile || profile.role !== "seller") { go("/login"); return; }
       const [mySeller,cats] = await Promise.all([getMySeller(),getCategories()]);
       if (!mySeller) throw new Error("Seller profile not found.");
-      const [myProducts,myEnquiries,myAnalytics,myLikeStats] = await Promise.all([listMyProducts(mySeller.id),getMyEnquiries(mySeller.id),getSellerPageAnalytics(mySeller.id,30).catch(()=>null),getSellerLikeStats(mySeller.id,[]).catch(()=>({sellerLikes:0,productLikes:{}}))]);
+      const [myProducts,myEnquiries,myAnalytics,myLikeStats] = await Promise.all([listMyProducts(mySeller.id),getMyEnquiries(mySeller.id),getSellerPageAnalytics(mySeller.id,30).catch(()=>null),getSellerLikeStats(mySeller.id,myProducts.map(product=>product.id)).catch(()=>({sellerLikes:0,productLikes:{}}))]);
       setSeller(mySeller);
       setProducts(myProducts);
       setEnquiries(myEnquiries);

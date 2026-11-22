@@ -282,7 +282,6 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
       <div className="ns-brand-lockup"><span><strong>NammaSpot</strong><small>Local Sellers · Tamil Nadu</small></span></div>
       <div className="ns-brandbar-actions">
         <button className={"ns-save-website-btn"+(savedWebsites.includes(seller.id)?" is-saved":"")} onClick={()=>toggleSave&&toggleSave(seller.id)} aria-label={savedWebsites.includes(seller.id)?"Remove saved website":"Save website"} title={savedWebsites.includes(seller.id)?"Saved website":"Save website"}><Bookmark size={20} fill={savedWebsites.includes(seller.id)?"currentColor":"none"}/></button>
-        <button onClick={share} aria-label="Share seller"><Share2 size={20}/></button>
       </div>
     </header>
     {likeNotice&&<div className="ns-like-message" role="status">{likeNotice}</div>}
@@ -295,7 +294,10 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
         <h1 className="ns-mobile-shop-title"><span className="ns-mobile-shop-name">{esc(seller.business_name)}</span>{seller.verified&&<span className="ns-mobile-verified-dot" aria-label="Verified seller">✓</span>}</h1>
         <p className="ns-mobile-verified-line">{seller.verified ? "Verified seller" : "Local seller"} · {esc(seller.category?.name||"Local business")}</p>
         <p className="ns-mobile-location"><MapPin size={16}/>{esc(seller.location||"Chennai, Tamil Nadu")}</p>
-        <div className="ns-mobile-seller-like-row"><LikeButton compact className="ns-shop-like-control" count={seller.like_count} showCount liked={seller.liked_by_me} onClick={()=>handleContentLike("seller",seller)} label="this shop"/></div>
+        <div className="ns-mobile-seller-like-row">
+          <div className="ns-shop-like-copy"><strong>Enjoy this shop?</strong><span>Leave a like for this local seller</span></div>
+          <LikeButton compact className="ns-shop-like-control" count={seller.like_count} showCount liked={seller.liked_by_me} onClick={()=>handleContentLike("seller",seller)} label="this shop"/>
+        </div>
       </div>
     </section>
     {(settings.tagline||settings.about)&&<section className="ns-mobile-update"><CalendarDays size={24}/><div><small>UPDATE FROM SELLER{settings.updated_at ? " · "+new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(settings.updated_at)) : ""}</small><p>{esc(settings.tagline||settings.about)}</p></div></section>}

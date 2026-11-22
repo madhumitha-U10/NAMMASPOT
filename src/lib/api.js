@@ -346,6 +346,10 @@ export async function getPublicSellers({ query = "", category = "All", near = ""
     }
     rows = data.map(sellerOf);
   }
+  const sellerIds = rows.map((seller) => seller.id);
+  const productIds = rows.flatMap((seller) => (seller.products || []).map((product) => product.id));
+  const likeData = await getContentLikeData(sellerIds, productIds);
+  rows = rows.map((seller) => ({ ...seller, like_count: Number(likeData.sellerCounts[seller.id] || 0), liked_by_me: likeData.likedSellers.includes(seller.id), products: (seller.products || []).map((product) => ({ ...product, like_count: Number(likeData.productCounts[product.id] || 0), liked_by_me: likeData.likedProducts.includes(product.id) })) }));
   const requestedArea = near || "";
   const budget = extractBudget(query);
   const effectiveQuery = normaliseSearch(queryWithoutBudget(query));
@@ -378,7 +382,10 @@ export async function getPublicSeller(slug) {
   }
   const { data, error } = await supabase.from("sellers").select(sellerSelect).eq("slug",slug).eq("verification_status","approved").maybeSingle();
   if (error) throw error;
-  if (!data) return null;\n  const seller = sellerOf(data);\n  const likeData = await getContentLikeData([seller.id], seller.products.map((product) => product.id));\n  return { ...seller, like_count: Number(likeData.sellerCounts[seller.id] || 0), liked_by_me: likeData.likedSellers.includes(seller.id), products: seller.products.map((product) => ({ ...product, like_count: Number(likeData.productCounts[product.id] || 0), liked_by_me: likeData.likedProducts.includes(product.id) })) };
+  if (!data) return null;
+  const seller = sellerOf(data);
+  const likeData = await getContentLikeData([seller.id], seller.products.map((product) => product.id));
+  return { ...seller, like_count: Number(likeData.sellerCounts[seller.id] || 0), liked_by_me: likeData.likedSellers.includes(seller.id), products: seller.products.map((product) => ({ ...product, like_count: Number(likeData.productCounts[product.id] || 0), liked_by_me: likeData.likedProducts.includes(product.id) })) };
 }
 
 export async function getSession() {

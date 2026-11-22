@@ -3,6 +3,8 @@ import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,CheckCircle,ExternalLink,X,C
 import {QRCodeCanvas} from "qrcode.react";
 import {createReview,getPublicReviews,createEnquiry,recordSellerPageView} from "./lib/api";
 import {getMicrosite,sellerPublicUrl} from "./lib/microsite";
+import {toggleContentLike} from "./lib/api";
+import LikeButton from "./components/LikeButton.jsx";
 
 const esc=(v)=>String(v||"").replace(/[<>]/g,"");
 const SAVED_PRODUCTS_KEY="nammaspot-saved-products";
@@ -169,6 +171,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
   const [expandedDescriptions,setExpandedDescriptions]=useState(()=>new Set());
   const [activeTab,setActiveTab]=useState("catalogue");
   const [shareOpen,setShareOpen]=useState(false);
+  const [likeNotice,setLikeNotice]=useState("");
   useEffect(()=>{
     let alive=true;
     getMicrosite(slug).then(data=>{
@@ -258,6 +261,13 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
   const wa=whatsappUrl(seller);
   const productWa=p=>whatsappUrl(seller,p);
   const filteredProducts=products.filter(p=>String(p.name||"").toLowerCase().includes(catalogueQuery.toLowerCase()));
+  const handleContentLike=async(type,item)=>{
+    try{
+      const liked=await toggleContentLike({sellerId:type==="seller"?seller.id:null,productId:type==="product"?item.id:null,liked:Boolean(item.liked_by_me)});
+      setState(current=>({...current,data:{...current.data,seller:type==="seller"?{...current.data.seller,liked_by_me:liked,like_count:Math.max(0,Number(current.data.seller.like_count||0)+(liked?1:-1))}:current.data.seller,products:current.data.products.map(p=>type==="product"&&p.id===item.id?{...p,liked_by_me:liked,like_count:Math.max(0,Number(p.like_count||0)+(liked?1:-1))}:p)}}));
+      setLikeNotice("");
+    }catch(error){setLikeNotice(error.message?.includes("sign in")?"Sign in to like this favourite.":"Could not save your like. Please try again.");}
+  };
   const toggleProductSave=(p)=>{
     const current=readSavedProducts();
     const already=current.some(item=>item.id===p.id);
@@ -274,7 +284,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
         <button onClick={share} aria-label="Share seller"><Share2 size={20}/></button>
       </div>
     </header>
-    <section className="ns-mobile-seller-head">
+    {likeNotice&&<div className="ns-like-message" role="status">{likeNotice} <button type="button" onClick={()=>go("/login")}>Sign in</button></div>}\n    <section className="ns-mobile-seller-head">
       <div className="ns-mobile-seller-avatar">
         <span className="ns-seller-avatar-fallback" aria-hidden="true">{String(seller.business_name||"N").trim().charAt(0).toUpperCase()}</span>
         {(seller.profile_image_url||settings.logo_url||settings.profile_image_url) && <img src={seller.profile_image_url||settings.logo_url||settings.profile_image_url} alt={seller.business_name+" logo"} onError={e=>{e.currentTarget.style.display="none"}}/>}
@@ -302,7 +312,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
     <nav className="ns-mobile-tabs" aria-label="Seller page sections"><a className={activeTab==="catalogue"?"active":""} href="#catalogue" onClick={()=>setActiveTab("catalogue")}>Catalogue</a><a className={activeTab==="about"?"active":""} href="#about" onClick={()=>setActiveTab("about")}>About</a><a className={activeTab==="reviews"?"active":""} href="#reviews" onClick={()=>setActiveTab("reviews")}>Reviews</a></nav>
     <section id="catalogue" className="ns-mobile-catalogue">
       <div className="ns-mobile-search"><Search size={19}/><input value={catalogueQuery} onChange={e=>setCatalogueQuery(e.target.value)} placeholder="Search products..." aria-label="Search products"/></div>
-      {filteredProducts.length?<div className="ns-mobile-product-grid">{filteredProducts.map(p=><article className="ns-mobile-product" key={p.id}><button className="ns-mobile-product-image" onClick={()=>setProduct(p)} aria-label={"View "+p.name}>{p.image_url?<img src={p.image_url} alt={p.name} loading="lazy"/>:<span>{String(p.name||"").charAt(0)}</span>}</button><button type="button" className={"ns-product-save-btn"+(savedProductIds.has(p.id)?" is-saved":"")} onClick={()=>toggleProductSave(p)} aria-label={savedProductIds.has(p.id)?"Remove "+p.name+" from saved products":"Save "+p.name} title={savedProductIds.has(p.id)?"Saved product":"Save product"}><Heart size={19} fill={savedProductIds.has(p.id)?"currentColor":"none"}/></button><div className="ns-mobile-product-copy"><h3>{esc(p.name)}</h3><strong>₹{p.price}</strong><div className="ns-mobile-product-actions"><button type="button" className="ns-product-description-btn" aria-expanded={expandedDescriptions.has(p.id)} onClick={()=>setExpandedDescriptions(current=>{const next=new Set(current);if(next.has(p.id))next.delete(p.id);else next.add(p.id);return next})}>{expandedDescriptions.has(p.id)?"Less":"Details"}</button><button type="button" className="ns-product-enquire-btn" onClick={()=>{setEnquiryProduct(p);setEnquiryOpen(true)}}>Enquire</button></div>{expandedDescriptions.has(p.id)&&<p className="ns-mobile-product-description">{esc(p.description||"The seller has not added a description for this product yet.")}</p>}</div></article>)}
+      {filteredProducts.length?<div className="ns-mobile-product-grid">{filteredProducts.map(p=><article className="ns-mobile-product" key={p.id}><button className="ns-mobile-product-image" onClick={()=>setProduct(p)} aria-label={"View "+p.name}>{p.image_url?<img src={p.image_url} alt={p.name} loading="lazy"/>:<span>{String(p.name||"").charAt(0)}</span>}</button><div className="ns-mobile-product-like-row"><LikeButton compact count={p.like_count} liked={p.liked_by_me} onClick={()=>handleContentLike("product",p)} label={p.name}/><button type="button" className={"ns-product-save-btn"+(savedProductIds.has(p.id)?" is-saved":"")} onClick={()=>toggleProductSave(p)} aria-label={savedProductIds.has(p.id)?"Remove "+p.name+" from saved products":"Save "+p.name} title={savedProductIds.has(p.id)?"Saved product":"Save product"}><Heart size={19} fill={savedProductIds.has(p.id)?"currentColor":"none"}/></button></div><div className="ns-mobile-product-copy"><h3>{esc(p.name)}</h3><strong>₹{p.price}</strong><div className="ns-mobile-product-actions"><button type="button" className="ns-product-description-btn" aria-expanded={expandedDescriptions.has(p.id)} onClick={()=>setExpandedDescriptions(current=>{const next=new Set(current);if(next.has(p.id))next.delete(p.id);else next.add(p.id);return next})}>{expandedDescriptions.has(p.id)?"Less":"Details"}</button><button type="button" className="ns-product-enquire-btn" onClick={()=>{setEnquiryProduct(p);setEnquiryOpen(true)}}>Enquire</button></div>{expandedDescriptions.has(p.id)&&<p className="ns-mobile-product-description">{esc(p.description||"The seller has not added a description for this product yet.")}</p>}</div></article>)}
       <article className="ns-mobile-coming-soon"><span>✧</span><strong>More products<br/>coming soon</strong><small>♡</small></article></div>:<div className="ns-mobile-coming-soon ns-mobile-empty"><span>✧</span><strong>{catalogueQuery?"No matching products":"More products coming soon"}</strong><small>{catalogueQuery?"Try another search":"This seller will add more soon ♡"}</small></div>}
     </section>
     <section id="about" className="ns-mobile-about" onMouseEnter={()=>setActiveTab("about")}><h2>About</h2><p>{esc(seller.description||"This seller is part of the NammaSpot community.")}</p><p><MapPin size={16}/>{esc(seller.location||"Chennai, Tamil Nadu")}</p></section>

@@ -20,7 +20,9 @@ import {
   getCategories,
   getCurrentProfile,
   subscribeToAuthChanges,
-  getSellerPageAnalytics,\n  toggleContentLike,\n  getSellerLikeStats,
+  getSellerPageAnalytics,
+  toggleContentLike,
+  getSellerLikeStats,
   getMySeller,
   getMyEnquiries,
   signInSeller,
@@ -495,7 +497,15 @@ function HomePage({ go, query, setQuery }) {
   );
 }
 
-function ExplorePage({ go, query, setQuery, saved, toggleSave }) {\n  const [likeOverrides,setLikeOverrides]=useState({});\n  const updateLike=async(type,item)=>{\n    try{\n      const liked=await toggleContentLike({sellerId:type==="seller"?item.id:null,productId:type==="product"?item.id:null,liked:Boolean(item.liked_by_me)});\n      const key=(type==="seller"?"s:":"p:")+item.id;\n      setLikeOverrides(current=>({...current,[key]:{liked_by_me:liked,like_count:Math.max(0,Number(item.like_count||0)+(liked?1:-1))}}));\n    }catch(error){if(error.message?.includes("sign in"))go("/login");}\n  };
+function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
+  const [likeOverrides,setLikeOverrides]=useState({});
+  const updateLike=async(type,item)=>{
+    try{
+      const liked=await toggleContentLike({sellerId:type==="seller"?item.id:null,productId:type==="product"?item.id:null,liked:Boolean(item.liked_by_me)});
+      const key=(type==="seller"?"s:":"p:")+item.id;
+      setLikeOverrides(current=>({...current,[key]:{liked_by_me:liked,like_count:Math.max(0,Number(item.like_count||0)+(liked?1:-1))}}));
+    }catch(error){if(error.message?.includes("sign in"))go("/login");}
+  };
   const params = new URLSearchParams(location.search);
   const category = params.get("cat") || "All";
   const near = params.get("near") || "";
@@ -690,7 +700,8 @@ function SellerCard({ seller, index=0, go, toggleSave, saved, onLike, detailed=f
             <h3>{seller.name}</h3>
             <p><MapPin size={14}/> {seller.location || "Chennai"}</p>
           </button>
-          {onLike && <LikeButton compact count={seller.like_count} liked={seller.liked_by_me} onClick={onLike} label={seller.name}/> }\n          {toggleSave && <button className={saved ? "save-button is-saved" : "save-button"} onClick={() => toggleSave(seller.id)} aria-label={saved ? "Remove saved seller" : "Save seller"}><Heart size={18} fill={saved ? "currentColor" : "none"}/></button>}
+          {onLike && <LikeButton compact count={seller.like_count} liked={seller.liked_by_me} onClick={onLike} label={seller.name}/> }
+          {toggleSave && <button className={saved ? "save-button is-saved" : "save-button"} onClick={() => toggleSave(seller.id)} aria-label={saved ? "Remove saved seller" : "Save seller"}><Heart size={18} fill={saved ? "currentColor" : "none"}/></button>}
         </div>
         {detailed && <p className="seller-description">{seller.description}</p>}
         <button className="card-link" onClick={() => go("/s/" + seller.slug)}>View seller website <ChevronRight size={16}/></button>
@@ -1080,7 +1091,8 @@ function DashboardPage({ go }) {
   const [tab,setTab] = useState("overview");
   const [state,setState] = useState({loading:true,error:""});
   const [storageUsage,setStorageUsage] = useState(null);
-  const [analytics,setAnalytics] = useState(null);\n  const [sellerLikeCount,setSellerLikeCount] = useState(0);
+  const [analytics,setAnalytics] = useState(null);
+  const [sellerLikeCount,setSellerLikeCount] = useState(0);
 
   const load = async () => {
     try {
@@ -1113,7 +1125,8 @@ function DashboardPage({ go }) {
         <span className={"status-pill status-"+seller.verification_status}>{seller.verification_status}</span>
       </div>
 
-      <section className="seller-likes-overview"><div className="seller-likes-main"><span className="seller-likes-heart"><Heart size={20} fill="currentColor"/></span><div><strong>{sellerLikeCount.toLocaleString("en-IN")}</strong><span>People who like your shop</span></div></div><div className="seller-likes-products"><strong>Most liked products</strong>{products.filter(p=>p.like_count>0).sort((a,b)=>b.like_count-a.like_count).slice(0,3).map(p=><div key={p.id}><span>{p.name}</span><b>♥ {p.like_count}</b></div>)}{!products.some(p=>p.like_count>0)&&<small>Your product likes will appear here.</small>}</div></section>\n      <div className="dashboard-tabs">
+      <section className="seller-likes-overview"><div className="seller-likes-main"><span className="seller-likes-heart"><Heart size={20} fill="currentColor"/></span><div><strong>{sellerLikeCount.toLocaleString("en-IN")}</strong><span>People who like your shop</span></div></div><div className="seller-likes-products"><strong>Most liked products</strong>{products.filter(p=>p.like_count>0).sort((a,b)=>b.like_count-a.like_count).slice(0,3).map(p=><div key={p.id}><span>{p.name}</span><b>♥ {p.like_count}</b></div>)}{!products.some(p=>p.like_count>0)&&<small>Your product likes will appear here.</small>}</div></section>
+      <div className="dashboard-tabs">
         {["overview","profile","products","enquiries","growth","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item==="public"?"Public profile":item==="growth"?"Growth & sharing":item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
       </div>
 

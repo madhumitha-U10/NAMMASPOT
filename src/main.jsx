@@ -2,7 +2,7 @@ import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 const QRCodeSVG = lazy(() => import("qrcode.react").then((module) => ({ default: module.QRCodeSVG })));
 import {
-  Search, MapPin, Heart, Share2, Phone, MessageCircle, Plus,
+  Search, MapPin, Heart, Bookmark, Share2, Phone, MessageCircle, Plus,
   ArrowLeft, Menu, X, Store, ChevronRight, Home, Compass, Grid2X2,
   Sparkles, CheckCircle, LogIn, LogOut, LayoutDashboard, ShieldCheck,
   Trash2, Pencil, ExternalLink, Clock, Send, AlertCircle, Eye, EyeOff
@@ -21,6 +21,8 @@ import {
   getCurrentProfile,
   subscribeToAuthChanges,
   getSellerPageAnalytics,
+  toggleContentLike,
+  getSellerLikeStats,
   getMySeller,
   getMyEnquiries,
   signInSeller,
@@ -66,6 +68,7 @@ import {
 } from "./lib/api";
 import { categoryNames } from "./lib/seed";
 import CategoryIcon from "./components/brand/CategoryIcon.jsx";
+import LikeButton from "./components/LikeButton.jsx";
 import { addProductGalleryImage, deleteProductGalleryImage, getMyMicrosite, saveMicrosite } from "./lib/microsite";
 import { formatBytes } from "./lib/storage";
 import SellerGrowthHub, { SellerGrowthSharing } from "./SellerGrowthHub.jsx";
@@ -495,6 +498,14 @@ function HomePage({ go, query, setQuery }) {
 }
 
 function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
+  const [likeOverrides,setLikeOverrides]=useState({});
+  const updateLike=async(type,item)=>{
+    try{
+      const liked=await toggleContentLike({sellerId:type==="seller"?item.id:null,productId:type==="product"?item.id:null,liked:Boolean(item.liked_by_me)});
+      const key=(type==="seller"?"s:":"p:")+item.id;
+      setLikeOverrides(current=>({...current,[key]:{liked_by_me:liked,like_count:Math.max(0,Number(item.like_count||0)+(liked?1:-1))}}));
+    }catch(error){if(error.message?.includes("sign in"))go("/login");}
+  };
   const params = new URLSearchParams(location.search);
   const category = params.get("cat") || "All";
   const near = params.get("near") || "";
@@ -573,15 +584,15 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
             .map((product) => ({ ...product, sellerName: seller.name, sellerSlug: seller.slug, sellerLocation: seller.location }))).length ?
           <div className="product-search-grid">{(state.data || []).flatMap((seller) => (seller.products || [])
             .filter((product) => !debouncedQuery.trim() || [product.name, product.description].some((value) => String(value || "").toLocaleLowerCase("en-IN").includes(debouncedQuery.trim().toLocaleLowerCase("en-IN"))))
-            .map((product) => ({ ...product, sellerName: seller.name, sellerSlug: seller.slug, sellerLocation: seller.location }))).map((product) => (
+            .map((product) => ({ ...product, sellerName: seller.name, sellerSlug: seller.slug, sellerLocation: seller.location, liked_by_me:likeOverrides["p:"+product.id]?.liked_by_me??product.liked_by_me, like_count:likeOverrides["p:"+product.id]?.like_count??product.like_count }))).sort((a,b)=>Number(b.like_count||0)-Number(a.like_count||0)).map((product) => (
               <article className="product-search-card" key={product.id}>
                 <div className="product-search-image">{product.image_url ? <img src={product.image_url} alt={product.name} loading="lazy"/> : <span>{String(product.name || "P").charAt(0)}</span>}</div>
-                <div className="product-search-info"><h2>{product.name}</h2><strong>{Number(product.price) > 0 ? "₹" + product.price : "Contact for price"}</strong><p>{product.sellerName}{product.sellerLocation ? " · " + product.sellerLocation : ""}</p><button className="card-link" onClick={() => go("/s/" + product.sellerSlug)}>View seller website <ChevronRight size={16}/></button></div>
+                <div className="product-search-info"><h2>{product.name}</h2><LikeButton compact count={product.like_count} liked={product.liked_by_me} onClick={()=>updateLike("product",product)} label={product.name}/><strong>{Number(product.price) > 0 ? "₹" + product.price : "Contact for price"}</strong><p>{product.sellerName}{product.sellerLocation ? " · " + product.sellerLocation : ""}</p><button className="card-link" onClick={() => go("/s/" + product.sellerSlug)}>View seller website <ChevronRight size={16}/></button></div>
               </article>
             ))}</div> :
           <Empty title="No matching products yet" text="Try another product name or switch to Seller websites." actionLabel="Search seller websites" onAction={() => go("/explore?type=seller" + (query.trim() ? "&search=" + encodeURIComponent(query.trim()) : ""))}/>
-        ) : state.data?.length ? <div className="seller-list">{state.data.map((seller,index) => <SellerCard key={seller.id} seller={seller} index={index} go={go} toggleSave={toggleSave} saved={saved.includes(seller.id)} detailed/>)}</div> :
-        <Empty title="No matching sellers yet" text="Try a shorter search, remove a filter, or explore another category." actionLabel="Clear search and filters" onAction={() => { setQuery(""); setResultType("all"); setSort("relevant"); go("/explore"); }}/>} 
+        ) : state.data?.length ? <div className="seller-list">{[...state.data].map(seller=>({...seller,liked_by_me:likeOverrides["s:"+seller.id]?.liked_by_me??seller.liked_by_me,like_count:likeOverrides["s:"+seller.id]?.like_count??seller.like_count})).sort((a,b)=>Number(b.like_count||0)-Number(a.like_count||0)).map((seller,index) => <SellerCard key={seller.id} seller={seller} index={index} go={go} toggleSave={toggleSave} saved={saved.includes(seller.id)} onLike={()=>updateLike("seller",seller)} detailed/>)}</div> :
+        <Empty title="No matching sellers yet" text="Try a shorter search, remove a filter, or explore another category." actionLabel="Clear search and filters" onAction={() => { setQuery(""); setSort("relevant"); go("/explore"); }}/>} 
     </main>
   );
 }
@@ -674,7 +685,7 @@ function SavedPage({ go, saved, toggleSave }) {
   );
 }
 
-function SellerCard({ seller, index=0, go, toggleSave, saved, detailed=false }) {
+function SellerCard({ seller, index=0, go, toggleSave, saved, onLike, detailed=false }) {
   return (
     <article className={detailed ? "seller-card detailed" : "seller-card"}>
       <button className={"seller-cover cover-" + ((index % 4)+1) + (seller.profile_image_url ? " has-cover-photo" : "")} onClick={() => go("/s/" + seller.slug)} aria-label={"Open " + seller.name}>
@@ -689,7 +700,8 @@ function SellerCard({ seller, index=0, go, toggleSave, saved, detailed=false }) 
             <h3>{seller.name}</h3>
             <p><MapPin size={14}/> {seller.location || "Chennai"}</p>
           </button>
-          {toggleSave && <button className={saved ? "save-button is-saved" : "save-button"} onClick={() => toggleSave(seller.id)} aria-label={saved ? "Remove saved seller" : "Save seller"}><Heart size={18} fill={saved ? "currentColor" : "none"}/></button>}
+          {onLike && <LikeButton compact count={seller.like_count} liked={seller.liked_by_me} onClick={onLike} label={seller.name}/> }
+          {toggleSave && <button className={saved ? "save-button is-saved" : "save-button"} onClick={() => toggleSave(seller.id)} aria-label={saved ? "Remove saved seller" : "Save seller"}><Bookmark size={18} fill={saved ? "currentColor" : "none"}/></button>}
         </div>
         {detailed && <p className="seller-description">{seller.description}</p>}
         <button className="card-link" onClick={() => go("/s/" + seller.slug)}>View seller website <ChevronRight size={16}/></button>
@@ -1080,6 +1092,7 @@ function DashboardPage({ go }) {
   const [state,setState] = useState({loading:true,error:""});
   const [storageUsage,setStorageUsage] = useState(null);
   const [analytics,setAnalytics] = useState(null);
+  const [sellerLikeCount,setSellerLikeCount] = useState(0);
 
   const load = async () => {
     try {
@@ -1088,8 +1101,10 @@ function DashboardPage({ go }) {
       const [mySeller,cats] = await Promise.all([getMySeller(),getCategories()]);
       if (!mySeller) throw new Error("Seller profile not found.");
       const [myProducts,myEnquiries,myAnalytics] = await Promise.all([listMyProducts(mySeller.id),getMyEnquiries(mySeller.id),getSellerPageAnalytics(mySeller.id,30).catch(()=>null)]);
+      const myLikeStats = await getSellerLikeStats(mySeller.id,myProducts.map(product=>product.id)).catch(()=>({sellerLikes:0,productLikes:{}}));
       setSeller(mySeller);
-      setProducts(myProducts);
+      setProducts(myProducts.map(product=>({...product,like_count:Number(myLikeStats.productLikes[product.id]||0)})));
+      setSellerLikeCount(myLikeStats.sellerLikes);
       setEnquiries(myEnquiries);
       setAnalytics(myAnalytics);
       setCategories(cats);
@@ -1112,6 +1127,7 @@ function DashboardPage({ go }) {
         <span className={"status-pill status-"+seller.verification_status}>{seller.verification_status}</span>
       </div>
 
+      <section className="seller-likes-overview"><div className="seller-likes-main"><span className="seller-likes-heart"><Heart size={20} fill="currentColor"/></span><div><strong>{sellerLikeCount.toLocaleString("en-IN")}</strong><span>People who like your shop</span></div></div><div className="seller-likes-products"><strong>Most liked products</strong>{products.filter(p=>p.like_count>0).sort((a,b)=>b.like_count-a.like_count).slice(0,3).map(p=><div key={p.id}><span>{p.name}</span><b>♥ {p.like_count}</b></div>)}{!products.some(p=>p.like_count>0)&&<small>Your product likes will appear here.</small>}</div></section>
       <div className="dashboard-tabs">
         {["overview","profile","products","enquiries","growth","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item==="public"?"Public profile":item==="growth"?"Growth & sharing":item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
       </div>
@@ -1378,7 +1394,7 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
       <div className="dashboard-list">
         {products.length ? products.map((product)=>
           <article className="dashboard-item" key={product.id}>
-            <div className="dashboard-product-row">{product.image_url?<img className="dashboard-product-thumb" src={product.image_url} alt="" />:<div className="dashboard-product-thumb placeholder-thumb"><Store size={20}/></div>}<div><strong>{product.name}</strong><p>₹{product.price} · {product.available?"Available":"Unavailable"} · {(product.images||[]).length+ (product.image_url?1:0)} image{((product.images||[]).length+ (product.image_url?1:0))===1?"":"s"}</p><small>{product.description}</small></div></div>
+            <div className="dashboard-product-row">{product.image_url?<img className="dashboard-product-thumb" src={product.image_url} alt="" />:<div className="dashboard-product-thumb placeholder-thumb"><Store size={20}/></div>}<div><strong>{product.name}</strong><p>₹{product.price} · ♥ {Number(product.like_count||0)} likes · {product.available?"Available":"Unavailable"} · {(product.images||[]).length+ (product.image_url?1:0)} image{((product.images||[]).length+ (product.image_url?1:0))===1?"":"s"}</p><small>{product.description}</small></div></div>
             <div className="button-row"><button className="secondary-button" onClick={()=>edit(product)}><Pencil size={15}/> Edit</button><button className="danger-button" onClick={()=>remove(product.id)}><Trash2 size={15}/> Delete</button></div>
           </article>
         ) : <Empty title="No products added" text="Add your first product to publish your catalogue."/>}

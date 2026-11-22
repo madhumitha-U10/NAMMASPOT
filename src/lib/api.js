@@ -156,6 +156,69 @@ function sellerOf(row) {
 
 const sellerSelect = "id,nammaspot_id,slug,business_name,owner_name,location,location_url,city,description,contact,whatsapp_phone,instagram_url,profile_image_url,cover_image_url,opening_time,closing_time,featured,verified,verification_status,category:categories(id,name),products(id,seller_id,product_name,description,price,availability,image_url,category_id,created_at)";
 
+export async function getContentLikeData(sellerIds = [], productIds = []) {
+  const sellerList = [...new Set(sellerIds.filter(Boolean))];
+  const productList = [...new Set(productIds.filter(Boolean))];
+  if (!supabase || (!sellerList.length && !productList.length)) return { sellerCounts: {}, productCounts: {}, likedSellers: [], likedProducts: [] };
+  const client = needBackend();
+  const [{ data: counts, error: countError }, sessionResult] = await Promise.all([
+    client.from("seller_content_like_counts").select("target_type,target_id,like_count").in("target_id", [...sellerList, ...productList]),
+    client.auth.getSession()
+  ]);
+  if (countError) throw countError;
+  const sellerCounts = {}, productCounts = {};
+  (counts || []).forEach((row) => {
+    if (row.target_type === "seller" && sellerList.includes(row.target_id)) sellerCounts[row.target_id] = Number(row.like_count || 0);
+    if (row.target_type === "product" && productList.includes(row.target_id)) productCounts[row.target_id] = Number(row.like_count || 0);
+  });
+  const userId = sessionResult.data?.session?.user?.id;
+  let likedSellers = [], likedProducts = [];
+  if (userId) {
+    let query = client.from("seller_content_likes").select("seller_id,product_id").eq("user_id", userId);
+    if (sellerList.length || productList.length) {
+      const clauses = [];
+      if (sellerList.length) clauses.push("seller_id.in.(" + sellerList.join(",") + ")");
+      if (productList.length) clauses.push("product_id.in.(" + productList.join(",") + ")");
+      query = query.or(clauses.join(","));
+    }
+    const { data, error } = await query;
+    if (error) throw error;
+    likedSellers = (data || []).map((row) => row.seller_id).filter(Boolean);
+    likedProducts = (data || []).map((row) => row.product_id).filter(Boolean);
+  }
+  return { sellerCounts, productCounts, likedSellers, likedProducts };
+}
+
+export async function toggleContentLike({ sellerId = null, productId = null, liked = false }) {
+  if (!sellerId && !productId) throw new Error("Choose a seller or product to like.");
+  if (sellerId && productId) throw new Error("Like one item at a time.");
+  const client = needBackend();
+  const session = await getSession();
+  if (!session?.user) throw new Error("Please sign in to like a seller or product.");
+  let query = client.from("seller_content_likes").delete().eq("user_id", session.user.id);
+  if (liked) {
+    query = sellerId ? query.eq("seller_id", sellerId) : query.eq("product_id", productId);
+    const { error } = await query;
+    if (error) throw error;
+    return false;
+  }
+  const { error } = await client.from("seller_content_likes").insert({
+    user_id: session.user.id,
+    seller_id: sellerId,
+    product_id: productId
+  });
+  if (error && error.code !== "23505") throw error;
+  return true;
+}
+
+export async function getSellerLikeStats(sellerId, productIds = []) {
+  const data = await getContentLikeData([sellerId], productIds);
+  return {
+    sellerLikes: Number(data.sellerCounts[sellerId] || 0),
+    productLikes: data.productCounts,
+  };
+}
+
 export async function getCategories() {
   if (!supabase) return demoState().categories.map((name) => ({ id: name, name }));
   const { data, error } = await supabase.from("categories").select("id,name").order("name");
@@ -283,6 +346,10 @@ export async function getPublicSellers({ query = "", category = "All", near = ""
     }
     rows = data.map(sellerOf);
   }
+  const sellerIds = rows.map((seller) => seller.id);
+  const productIds = rows.flatMap((seller) => (seller.products || []).map((product) => product.id));
+  const likeData = await getContentLikeData(sellerIds, productIds);
+  rows = rows.map((seller) => ({ ...seller, like_count: Number(likeData.sellerCounts[seller.id] || 0), liked_by_me: likeData.likedSellers.includes(seller.id), products: (seller.products || []).map((product) => ({ ...product, like_count: Number(likeData.productCounts[product.id] || 0), liked_by_me: likeData.likedProducts.includes(product.id) })) }));
   const requestedArea = near || "";
   const budget = extractBudget(query);
   const effectiveQuery = normaliseSearch(queryWithoutBudget(query));
@@ -301,7 +368,7 @@ export async function getPublicSellers({ query = "", category = "All", near = ""
   ranked.sort((a, b) => {
     if (sort === "name") return String(a.seller.name || "").localeCompare(String(b.seller.name || ""));
     if (sort === "recent") return String(b.seller.created_at || "").localeCompare(String(a.seller.created_at || ""));
-    return b.score - a.score || String(a.seller.name || "").localeCompare(String(b.seller.name || ""));
+    return Number(b.seller.like_count || 0) - Number(a.seller.like_count || 0) || b.score - a.score || String(a.seller.name || "").localeCompare(String(b.seller.name || ""));
   });
   return ranked.map(({ seller }) => seller);
 }
@@ -315,7 +382,10 @@ export async function getPublicSeller(slug) {
   }
   const { data, error } = await supabase.from("sellers").select(sellerSelect).eq("slug",slug).eq("verification_status","approved").maybeSingle();
   if (error) throw error;
-  return data ? sellerOf(data) : null;
+  if (!data) return null;
+  const seller = sellerOf(data);
+  const likeData = await getContentLikeData([seller.id], seller.products.map((product) => product.id));
+  return { ...seller, like_count: Number(likeData.sellerCounts[seller.id] || 0), liked_by_me: likeData.likedSellers.includes(seller.id), products: seller.products.map((product) => ({ ...product, like_count: Number(likeData.productCounts[product.id] || 0), liked_by_me: likeData.likedProducts.includes(product.id) })) };
 }
 
 export async function getSession() {

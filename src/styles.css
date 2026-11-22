@@ -4802,3 +4802,21 @@ input, select, textarea { max-width: 100%; }
   .ns-growth-chart-track { height: 86px; }
   .ns-enquiry-modal { padding: 22px 18px; }
 }
+
+
+/* Seller popularity and likes */
+.seller-likes-overview{display:grid;grid-template-columns:minmax(220px,.8fr) minmax(0,1.2fr);gap:18px;margin:0 0 22px;padding:18px;border:1px solid #f0e1dc;border-radius:20px;background:linear-gradient(135deg,#fffaf5,#fff1f3);box-shadow:0 8px 24px rgba(91,35,38,.05)}
+.seller-likes-main{display:flex;align-items:center;gap:13px}
+.seller-likes-heart{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;background:#ffe1e7;color:#d43b5c}
+.seller-likes-main div{display:flex;flex-direction:column;gap:2px}
+.seller-likes-main strong{font-size:30px;line-height:1;color:#6b1a22}
+.seller-likes-main span:not(.seller-likes-heart){font-size:13px;color:#806d65}
+.seller-likes-products{display:flex;flex-direction:column;gap:8px;padding-left:18px;border-left:1px solid #ead7d2}
+.seller-likes-products>strong{font-size:13px;color:#6b1a22}
+.seller-likes-products>div{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:#57433d}
+.seller-likes-products>div b{color:#c33a58;white-space:nowrap}
+.seller-likes-products small{color:#8b7770;font-size:12px}
+.seller-card-top .ns-like-button{margin-left:auto;flex-shrink:0}
+.seller-card-top .save-button{flex-shrink:0}
+.product-search-info .ns-like-button{margin:0 0 1px}
+@media(max-width:600px){.seller-likes-overview{grid-template-columns:1fr;gap:13px;padding:14px}.seller-likes-products{padding:12px 0 0;border-left:0;border-top:1px solid #ead7d2}.seller-card-top .ns-like-button{margin-left:auto}}

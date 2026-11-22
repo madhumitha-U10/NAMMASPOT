@@ -704,7 +704,7 @@
   place-items:center;
   overflow:hidden;
   border:1px solid #e7d7ca;
-  border-radius:24px;
+  border-radius:50%;
   background:linear-gradient(145deg,#fffdf8,#f4e9de);
   box-shadow:0 7px 20px rgba(72,38,29,.09);
 }
@@ -798,4 +798,100 @@
   .seller-microsite .ns-mobile-seller-head{align-items:flex-start;gap:10px;padding-inline:10px}
   .seller-microsite .ns-mobile-seller-avatar{flex-basis:64px;width:64px;height:64px}
   .seller-microsite .ns-mobile-seller-like-row{flex-wrap:wrap}
+}
+
+
+/* Instagram-inspired seller profile: circular identity and one-line profile stats. */
+.seller-microsite .ns-mobile-seller-avatar{
+  border-radius:50%;
+  border:1px solid #e7d7ca;
+  box-shadow:0 2px 8px rgba(49,31,25,.08);
+}
+.seller-microsite .ns-mobile-seller-avatar img{
+  border-radius:50%;
+  object-fit:contain;
+}
+.seller-microsite .ns-profile-stats{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  align-items:stretch;
+  gap:0;
+  width:100%;
+  margin:0;
+  padding:12px 8px;
+  border-top:1px solid #eee5dc;
+  border-bottom:1px solid #eee5dc;
+  background:#fffdfa;
+}
+.seller-microsite .ns-profile-stats>div{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  min-width:0;
+  padding:2px 8px;
+  text-align:center;
+}
+.seller-microsite .ns-profile-stats>div+div{
+  border-left:1px solid #eee5dc;
+}
+.seller-microsite .ns-profile-stats>div>b{
+  max-width:100%;
+  overflow:hidden;
+  color:#302724;
+  font-size:15px;
+  line-height:1.2;
+  font-weight:800;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.seller-microsite .ns-profile-stats>div>span{
+  color:#88766d;
+  font-size:11px;
+  line-height:1.2;
+  font-weight:650;
+}
+.seller-microsite .ns-profile-stat-like{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  min-height:20px;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:#766b64;
+  box-shadow:none;
+  font:inherit;
+}
+.seller-microsite .ns-profile-stat-like:hover{
+  background:transparent;
+  color:#6b1a22;
+}
+.seller-microsite .ns-profile-stat-like.is-liked{
+  color:#6b1a22;
+  background:transparent;
+}
+.seller-microsite .ns-profile-stat-like.is-liked svg{
+  fill:#6b1a22;
+  color:#6b1a22;
+}
+.seller-microsite .ns-profile-stat-like svg{
+  width:15px;
+  height:15px;
+}
+.seller-microsite .ns-profile-stat-like>span:not(.ns-like-sr-only):not(.ns-like-sparkle){
+  color:inherit;
+  font-size:15px;
+  line-height:1.2;
+  font-weight:800;
+  font-variant-numeric:tabular-nums;
+}
+@media(max-width:380px){
+  .seller-microsite .ns-profile-stats{padding:10px 3px}
+  .seller-microsite .ns-profile-stats>div{padding-inline:4px}
+  .seller-microsite .ns-profile-stats>div>b{font-size:13px}
+  .seller-microsite .ns-profile-stats>div>span{font-size:10px}
 }

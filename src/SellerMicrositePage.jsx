@@ -279,7 +279,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
   return <main className="seller-microsite ns-seller-profile ns-mobile-redesign">
     <header className="ns-mobile-brandbar">
       <button onClick={()=>go("/explore")} aria-label="Back to explore"><ArrowLeft size={21}/></button>
-      <div className="ns-brand-lockup"><span className="ns-brand-mark" aria-hidden="true">N</span><span><strong>NammaSpot</strong><small>Local Sellers · Tamil Nadu</small></span></div>
+      <div className="ns-brand-lockup"><span><strong>NammaSpot</strong><small>Local Sellers · Tamil Nadu</small></span></div>
       <div className="ns-brandbar-actions">
         <button className={"ns-save-website-btn"+(savedWebsites.includes(seller.id)?" is-saved":"")} onClick={()=>toggleSave&&toggleSave(seller.id)} aria-label={savedWebsites.includes(seller.id)?"Remove saved website":"Save website"} title={savedWebsites.includes(seller.id)?"Saved website":"Save website"}><Bookmark size={20} fill={savedWebsites.includes(seller.id)?"currentColor":"none"}/></button>
         <button onClick={share} aria-label="Share seller"><Share2 size={20}/></button>

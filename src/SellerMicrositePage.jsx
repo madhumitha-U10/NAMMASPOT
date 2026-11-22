@@ -267,7 +267,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
       const liked=await toggleContentLike({sellerId:type==="seller"?seller.id:null,productId:type==="product"?item.id:null,liked:Boolean(item.liked_by_me)});
       setState(current=>({...current,data:{...current.data,seller:type==="seller"?{...current.data.seller,liked_by_me:liked,like_count:Math.max(0,Number(current.data.seller.like_count||0)+(liked?1:-1))}:current.data.seller,products:current.data.products.map(p=>type==="product"&&p.id===item.id?{...p,liked_by_me:liked,like_count:Math.max(0,Number(p.like_count||0)+(liked?1:-1))}:p)}}));
       setLikeNotice("");
-    }catch(error){setLikeNotice(error.message?.includes("sign in")?"Sign in to like this favourite.":"Could not save your like. Please try again.");}
+    }catch(error){setLikeNotice(error.message||"Could not save your like. Please try again.");}
   };
   const toggleProductSave=(p)=>{
     const current=readSavedProducts();
@@ -281,12 +281,12 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
       <button onClick={()=>go("/explore")} aria-label="Back to explore"><ArrowLeft size={21}/></button>
       <div className="ns-brand-lockup"><span><strong>NammaSpot</strong><small>Local Sellers · Tamil Nadu</small></span></div>
       <div className="ns-brandbar-actions">
-        <LikeButton count={seller.like_count} showCount={false} liked={seller.liked_by_me} onClick={()=>handleContentLike("seller",seller)} label="this shop"/>
+        <LikeButton count={seller.like_count} showCount liked={seller.liked_by_me} onClick={()=>handleContentLike("seller",seller)} label="this shop"/>
         <button className={"ns-save-website-btn"+(savedWebsites.includes(seller.id)?" is-saved":"")} onClick={()=>toggleSave&&toggleSave(seller.id)} aria-label={savedWebsites.includes(seller.id)?"Remove saved website":"Save website"} title={savedWebsites.includes(seller.id)?"Saved website":"Save website"}><Bookmark size={20} fill={savedWebsites.includes(seller.id)?"currentColor":"none"}/></button>
         <button onClick={share} aria-label="Share seller"><Share2 size={20}/></button>
       </div>
     </header>
-    {likeNotice&&<div className="ns-like-message" role="status">{likeNotice} <button type="button" onClick={()=>go("/login")}>Sign in</button></div>}
+    {likeNotice&&<div className="ns-like-message" role="status">{likeNotice}</div>}
     <section className="ns-mobile-seller-head">
       <div className="ns-mobile-seller-avatar">
         <span className="ns-seller-avatar-fallback" aria-hidden="true">{String(seller.business_name||"N").trim().charAt(0).toUpperCase()}</span>
@@ -303,8 +303,10 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
       <div><b>{products.length}</b><span>Products</span></div><div><b>{esc(seller.category?.name||"Local")}</b><span>Category</span></div>
     </section>
     <section className="ns-mobile-contact">
-      {wa&&<a className="ns-mobile-whatsapp" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={22}/> Enquiry on WhatsApp</a>}
-      <button type="button" className="ns-mobile-app-enquiry" onClick={()=>{setEnquiryProduct(null);setEnquiryOpen(true)}}><Send size={19}/> Send enquiry through NammaSpot</button>
+      <div className="ns-mobile-primary-contact-actions">
+        {wa&&<a className="ns-mobile-whatsapp" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={19}/> WhatsApp Enquiry</a>}
+        <button type="button" className="ns-mobile-app-enquiry" onClick={()=>{setEnquiryProduct(null);setEnquiryOpen(true)}}><Send size={18}/> NammaSpot Enquiry</button>
+      </div>
       <div className="ns-mobile-contact-row">
         {seller.contact&&<a href={"tel:"+seller.contact}><Phone size={20}/><span>Call</span></a>}
         {instagramProfileUrl(seller.instagram_url)&&<a href={instagramProfileUrl(seller.instagram_url)} target="_blank" rel="noopener noreferrer" aria-label={"Open Instagram profile "+instagramProfileUrl(seller.instagram_url).split("/").filter(Boolean).pop()}><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg><span>Instagram</span></a>}

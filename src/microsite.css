@@ -239,3 +239,146 @@
 @keyframes ns-heart-pop{0%{transform:scale(1)}35%{transform:scale(1.55) rotate(-9deg)}70%{transform:scale(.88) rotate(6deg)}100%{transform:scale(1)}}
 @keyframes ns-heart-float{0%{opacity:0;transform:translateY(5px) scale(.6)}25%{opacity:1}100%{opacity:0;transform:translateY(-19px) scale(1.25)}}
 @media(prefers-reduced-motion:reduce){.ns-like-button,.ns-like-button.is-popping svg,.ns-like-sparkle{animation:none!important;transition:none!important}}
+
+
+/* Professional like/save placement: keep every catalogue photo completely unobstructed. */
+.seller-microsite .ns-mobile-product{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  overflow:hidden;
+  border:1px solid #e8dfd5;
+  border-radius:14px;
+  background:#fffdfa;
+  box-shadow:0 2px 9px rgba(49,31,25,.035);
+}
+.seller-microsite .ns-mobile-product-image{
+  position:relative;
+  z-index:0;
+  display:grid;
+  width:100%;
+  aspect-ratio:1 / 1;
+  height:auto;
+  min-height:0;
+  padding:0;
+  overflow:hidden;
+  border:0;
+  border-radius:0;
+  background:#f4efe8;
+}
+.seller-microsite .ns-mobile-product-image img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center;
+  padding:8px;
+  box-sizing:border-box;
+}
+.seller-microsite .ns-mobile-product-like-row{
+  position:static;
+  z-index:auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  min-height:42px;
+  padding:4px 10px 2px;
+  border-top:1px solid #f0e9e1;
+  background:#fffdfa;
+}
+.seller-microsite .ns-mobile-product-like-row .ns-like-button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:5px;
+  min-width:0;
+  min-height:34px;
+  padding:5px 3px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  box-shadow:none;
+  color:#756b65;
+  font-size:12px;
+  font-weight:700;
+  transition:color .16s ease,transform .16s ease;
+}
+.seller-microsite .ns-mobile-product-like-row .ns-like-button:hover{
+  transform:none;
+  background:transparent;
+  color:#9b3946;
+}
+.seller-microsite .ns-mobile-product-like-row .ns-like-button.is-liked{
+  color:#a52f43;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+}
+.seller-microsite .ns-mobile-product-like-row .ns-like-button svg{
+  width:16px;
+  height:16px;
+}
+.seller-microsite .ns-mobile-product-like-row .ns-product-save-btn{
+  position:static;
+  z-index:auto;
+  flex:0 0 32px;
+  width:32px;
+  height:32px;
+  min-width:32px;
+  min-height:32px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:#786c64;
+  box-shadow:none;
+}
+.seller-microsite .ns-mobile-product-like-row .ns-product-save-btn.is-saved{
+  background:#f8e9e8;
+  color:#8f2938;
+}
+.seller-microsite .ns-mobile-product-like-row .ns-product-save-btn:hover{
+  background:#f5eee7;
+}
+.seller-microsite .ns-mobile-product-copy{
+  min-width:0;
+  padding:5px 11px 12px;
+}
+.seller-microsite .ns-mobile-product-copy h3{
+  margin:0 0 5px;
+  color:#302724;
+  font-size:13px;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+.seller-microsite .ns-mobile-product-copy>strong{
+  color:#6b1a22;
+  font-size:13px;
+}
+.ns-brandbar-actions .ns-like-button{
+  min-width:42px;
+  min-height:40px;
+  padding:5px 7px;
+  border:0;
+  border-radius:9px;
+  background:transparent;
+  box-shadow:none;
+  color:#71645f;
+}
+.ns-brandbar-actions .ns-like-button.is-liked{
+  background:#f8e9e8;
+  color:#9b3042;
+  box-shadow:none;
+}
+.ns-brandbar-actions .ns-like-button:hover{
+  transform:none;
+  background:#f5eee7;
+  color:#9b3042;
+}
+.ns-brandbar-actions .ns-like-button svg{width:17px;height:17px}
+@media(max-width:760px){
+  .seller-microsite .ns-mobile-product-like-row{min-height:39px;padding:3px 8px 1px}
+  .seller-microsite .ns-mobile-product-copy{padding:5px 9px 10px}
+  .seller-microsite .ns-mobile-product-copy h3{font-size:12px}
+}

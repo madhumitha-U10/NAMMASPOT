@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 
-export default function LikeButton({ count = 0, liked = false, onClick, label = "Like", compact = false, showCount = true }) {
+export default function LikeButton({ count = 0, liked = false, onClick, label = "Like", compact = false, showCount = true, className = "" }) {
   const [pop, setPop] = useState(false);
   useEffect(() => {
     if (!pop) return undefined;
@@ -11,7 +11,7 @@ export default function LikeButton({ count = 0, liked = false, onClick, label = 
   return (
     <button
       type="button"
-      className={"ns-like-button" + (liked ? " is-liked" : "") + (pop ? " is-popping" : "") + (compact ? " is-compact" : "")}
+      className={"ns-like-button" + (className ? " " + className : "") + (liked ? " is-liked" : "") + (pop ? " is-popping" : "") + (compact ? " is-compact" : "")}
       onClick={() => { setPop(true); onClick?.(); }}
       aria-pressed={liked}
       aria-label={(liked ? "Unlike " : "Like ") + label + (showCount ? ". " + count + " likes" : "")}

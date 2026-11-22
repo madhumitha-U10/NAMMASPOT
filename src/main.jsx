@@ -2,7 +2,7 @@ import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 const QRCodeSVG = lazy(() => import("qrcode.react").then((module) => ({ default: module.QRCodeSVG })));
 import {
-  Search, MapPin, Heart, Share2, Phone, MessageCircle, Plus,
+  Search, MapPin, Heart, Bookmark, Share2, Phone, MessageCircle, Plus,
   ArrowLeft, Menu, X, Store, ChevronRight, Home, Compass, Grid2X2,
   Sparkles, CheckCircle, LogIn, LogOut, LayoutDashboard, ShieldCheck,
   Trash2, Pencil, ExternalLink, Clock, Send, AlertCircle, Eye, EyeOff
@@ -701,7 +701,7 @@ function SellerCard({ seller, index=0, go, toggleSave, saved, onLike, detailed=f
             <p><MapPin size={14}/> {seller.location || "Chennai"}</p>
           </button>
           {onLike && <LikeButton compact count={seller.like_count} liked={seller.liked_by_me} onClick={onLike} label={seller.name}/> }
-          {toggleSave && <button className={saved ? "save-button is-saved" : "save-button"} onClick={() => toggleSave(seller.id)} aria-label={saved ? "Remove saved seller" : "Save seller"}><Heart size={18} fill={saved ? "currentColor" : "none"}/></button>}
+          {toggleSave && <button className={saved ? "save-button is-saved" : "save-button"} onClick={() => toggleSave(seller.id)} aria-label={saved ? "Remove saved seller" : "Save seller"}><Bookmark size={18} fill={saved ? "currentColor" : "none"}/></button>}
         </div>
         {detailed && <p className="seller-description">{seller.description}</p>}
         <button className="card-link" onClick={() => go("/s/" + seller.slug)}>View seller website <ChevronRight size={16}/></button>

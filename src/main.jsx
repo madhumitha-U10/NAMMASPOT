@@ -278,8 +278,8 @@ function App() {
       {route === "not-found" && <main className="page"><Empty title="Page not found" text="That NammaSpot page does not exist." actionLabel="Back home" onAction={() => go("/")}/></main>}
 
       <MobileBottomNav path={path} go={go} profile={profile}/>
-      {route === "seller" && <div className="ns-catalogue-install-reminder" role="region" aria-label="Install NammaSpot app"><img src="/nammaspot-icon.svg" alt="" width="40" height="40"/><div><strong>Enjoying this catalogue?</strong><span>Add NammaSpot to your home screen for quick access to local shops.</span></div><button type="button" onClick={() => window.dispatchEvent(new CustomEvent("nammaspot-open-install-prompt"))}>Install app</button></div>}
-      <InstallNammaSpotPrompt visible={["home", "explore", "categories", "featured", "saved", "seller"].includes(route)}/>
+      
+      <InstallNammaSpotPrompt visible={["home", "explore", "categories", "featured", "saved"].includes(route)}/>
     </div>
   );
 }
@@ -2099,12 +2099,23 @@ function InstallNammaSpotPrompt({ visible }) {
   });
 
   useEffect(() => {
-    if (visible && !installed) {
-      setPopupOpen(true);
-      setHelpOpen(false);
-    } else {
+    if (!visible || installed) {
       setPopupOpen(false);
+      return undefined;
     }
+    // Do not interrupt public seller catalogue visits. On the main discovery pages,
+    // show the install invitation at most once every 30 days and only after the page settles.
+    const cooldownMs = 30 * 24 * 60 * 60 * 1000;
+    const storageKey = "nammaspot-install-prompt-last-shown";
+    let lastShown = 0;
+    try { lastShown = Number(window.localStorage.getItem(storageKey) || 0); } catch {}
+    if (Date.now() - lastShown < cooldownMs) return undefined;
+    const timer = window.setTimeout(() => {
+      try { window.localStorage.setItem(storageKey, String(Date.now())); } catch {}
+      setHelpOpen(false);
+      setPopupOpen(true);
+    }, 12000);
+    return () => window.clearTimeout(timer);
   }, [visible, installed]);
 
   useEffect(() => {

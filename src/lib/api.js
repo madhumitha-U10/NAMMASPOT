@@ -193,8 +193,22 @@ export async function toggleContentLike({ sellerId = null, productId = null, lik
   if (!sellerId && !productId) throw new Error("Choose a seller or product to like.");
   if (sellerId && productId) throw new Error("Like one item at a time.");
   const client = needBackend();
-  const session = await getSession();
-  if (!session?.user) throw new Error("Please sign in to like a seller or product.");
+  let session = await getSession();
+  if (!session?.user) {
+    // Create a private, persistent guest session so visitors can like without
+    // entering an email, phone number, or password. Supabase keeps the session
+    // in this browser; one guest can like each target only once.
+    const { data, error } = await client.auth.signInAnonymously();
+    if (error) {
+      const message = String(error.message || "").toLowerCase();
+      if (message.includes("anonymous") || message.includes("disabled")) {
+        throw new Error("Guest likes are not enabled yet. Please try again later.");
+      }
+      throw error;
+    }
+    session = data.session;
+  }
+  if (!session?.user) throw new Error("A guest session could not be started. Please try again.");
   let query = client.from("seller_content_likes").delete().eq("user_id", session.user.id);
   if (liked) {
     query = sellerId ? query.eq("seller_id", sellerId) : query.eq("product_id", productId);

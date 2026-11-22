@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { getContentLikeData } from "./api";
 
 const cleanUrl = (value) => {
   const v = String(value || "").trim();
@@ -54,7 +55,12 @@ export async function getMicrosite(slug) {
     if(!list.some(existing=>existing.image_url===url)) list.push({...image,image_url:url});
     imagesByProduct.set(image.product_id,list);
   }
-  return {seller,settings:settings||null,hours:hours||[],specialDates:specialDates||[],products:(products||[]).map(p=>({...p,images:imagesByProduct.get(p.id)||[]}))};
+  const productIds=(products||[]).map(p=>p.id);
+  const likeData=await getContentLikeData([seller.id],productIds);
+  seller.like_count=Number(likeData.sellerCounts[seller.id]||0);
+  seller.liked_by_me=likeData.likedSellers.includes(seller.id);
+  const likedProducts=likeData.likedProducts;
+  return {seller,settings:settings||null,hours:hours||[],specialDates:specialDates||[],products:(products||[]).map(p=>({...p,like_count:Number(likeData.productCounts[p.id]||0),liked_by_me:likedProducts.includes(p.id),images:imagesByProduct.get(p.id)||[]}))};
 }
 
 export async function getMyMicrosite(sellerId) {

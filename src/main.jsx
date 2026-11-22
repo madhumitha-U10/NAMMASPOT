@@ -1394,7 +1394,7 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
       <div className="dashboard-list">
         {products.length ? products.map((product)=>
           <article className="dashboard-item" key={product.id}>
-            <div className="dashboard-product-row">{product.image_url?<img className="dashboard-product-thumb" src={product.image_url} alt="" />:<div className="dashboard-product-thumb placeholder-thumb"><Store size={20}/></div>}<div><strong>{product.name}</strong><p>₹{product.price} · {product.available?"Available":"Unavailable"} · {(product.images||[]).length+ (product.image_url?1:0)} image{((product.images||[]).length+ (product.image_url?1:0))===1?"":"s"}</p><small>{product.description}</small></div></div>
+            <div className="dashboard-product-row">{product.image_url?<img className="dashboard-product-thumb" src={product.image_url} alt="" />:<div className="dashboard-product-thumb placeholder-thumb"><Store size={20}/></div>}<div><strong>{product.name}</strong><p>₹{product.price} · ♥ {Number(product.like_count||0)} likes · {product.available?"Available":"Unavailable"} · {(product.images||[]).length+ (product.image_url?1:0)} image{((product.images||[]).length+ (product.image_url?1:0))===1?"":"s"}</p><small>{product.description}</small></div></div>
             <div className="button-row"><button className="secondary-button" onClick={()=>edit(product)}><Pencil size={15}/> Edit</button><button className="danger-button" onClick={()=>remove(product.id)}><Trash2 size={15}/> Delete</button></div>
           </article>
         ) : <Empty title="No products added" text="Add your first product to publish your catalogue."/>}

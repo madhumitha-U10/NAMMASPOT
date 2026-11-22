@@ -260,7 +260,8 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
   const share=()=>setShareOpen(true);
   const wa=whatsappUrl(seller);
   const productWa=p=>whatsappUrl(seller,p);
-  const filteredProducts=products.filter(p=>String(p.name||"").toLowerCase().includes(catalogueQuery.toLowerCase())).sort((a,b)=>Number(b.like_count||0)-Number(a.like_count||0));
+  // Keep the seller's catalogue order (featured, then newest) independent of likes.
+  const filteredProducts=products.filter(p=>String(p.name||"").toLowerCase().includes(catalogueQuery.toLowerCase()));
   const handleContentLike=async(type,item)=>{
     try{
       const liked=await toggleContentLike({sellerId:type==="seller"?seller.id:null,productId:type==="product"?item.id:null,liked:Boolean(item.liked_by_me)});
@@ -280,7 +281,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
       <button onClick={()=>go("/explore")} aria-label="Back to explore"><ArrowLeft size={21}/></button>
       <div className="ns-brand-lockup"><span><strong>NammaSpot</strong><small>Local Sellers · Tamil Nadu</small></span></div>
       <div className="ns-brandbar-actions">
-        <LikeButton count={seller.like_count} liked={seller.liked_by_me} onClick={()=>handleContentLike("seller",seller)} label="this shop"/>
+        <LikeButton count={seller.like_count} showCount={false} liked={seller.liked_by_me} onClick={()=>handleContentLike("seller",seller)} label="this shop"/>
         <button className={"ns-save-website-btn"+(savedWebsites.includes(seller.id)?" is-saved":"")} onClick={()=>toggleSave&&toggleSave(seller.id)} aria-label={savedWebsites.includes(seller.id)?"Remove saved website":"Save website"} title={savedWebsites.includes(seller.id)?"Saved website":"Save website"}><Bookmark size={20} fill={savedWebsites.includes(seller.id)?"currentColor":"none"}/></button>
         <button onClick={share} aria-label="Share seller"><Share2 size={20}/></button>
       </div>

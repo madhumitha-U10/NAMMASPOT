@@ -280,7 +280,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
       <button onClick={()=>go("/explore")} aria-label="Back to explore"><ArrowLeft size={21}/></button>
       <div className="ns-brand-lockup"><span><strong>NammaSpot</strong><small>Local Sellers · Tamil Nadu</small></span></div>
       <div className="ns-brandbar-actions">
-        <button className={"ns-save-website-btn"+(savedWebsites.includes(seller.id)?" is-saved":"")} onClick={()=>toggleSave&&toggleSave(seller.id)} aria-label={savedWebsites.includes(seller.id)?"Remove saved website":"Save website"} title={savedWebsites.includes(seller.id)?"Saved website":"Save website"}><Heart size={20} fill={savedWebsites.includes(seller.id)?"currentColor":"none"}/></button>
+        <LikeButton count={seller.like_count} liked={seller.liked_by_me} onClick={()=>handleContentLike("seller",seller)} label="this shop"/>\n        <button className={"ns-save-website-btn"+(savedWebsites.includes(seller.id)?" is-saved":"")} onClick={()=>toggleSave&&toggleSave(seller.id)} aria-label={savedWebsites.includes(seller.id)?"Remove saved website":"Save website"} title={savedWebsites.includes(seller.id)?"Saved website":"Save website"}><Heart size={20} fill={savedWebsites.includes(seller.id)?"currentColor":"none"}/></button>
         <button onClick={share} aria-label="Share seller"><Share2 size={20}/></button>
       </div>
     </header>

@@ -162,14 +162,14 @@ export async function getContentLikeData(sellerIds = [], productIds = []) {
   if (!supabase || (!sellerList.length && !productList.length)) return { sellerCounts: {}, productCounts: {}, likedSellers: [], likedProducts: [] };
   const client = needBackend();
   const [{ data: counts, error: countError }, sessionResult] = await Promise.all([
-    client.rpc("get_public_like_counts", { p_seller_ids: sellerList, p_product_ids: productList }),
+    client.from("seller_content_like_counts").select("target_type,target_id,like_count").in("target_id", [...sellerList, ...productList]),
     client.auth.getSession()
   ]);
   if (countError) throw countError;
   const sellerCounts = {}, productCounts = {};
   (counts || []).forEach((row) => {
-    if (row.seller_id) sellerCounts[row.seller_id] = Number(row.like_count || 0);
-    if (row.product_id) productCounts[row.product_id] = Number(row.like_count || 0);
+    if (row.target_type === "seller" && sellerList.includes(row.target_id)) sellerCounts[row.target_id] = Number(row.like_count || 0);
+    if (row.target_type === "product" && productList.includes(row.target_id)) productCounts[row.target_id] = Number(row.like_count || 0);
   });
   const userId = sessionResult.data?.session?.user?.id;
   let likedSellers = [], likedProducts = [];

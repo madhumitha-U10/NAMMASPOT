@@ -422,3 +422,26 @@
 @media(prefers-reduced-motion:reduce){
   .ns-brandbar-actions .ns-like-button.is-popping svg{animation:none!important}
 }
+
+
+/* Shop likes: keep the live count on the same horizontal line as the heart. */
+.ns-brandbar-actions .ns-like-button{
+  width:auto;
+  min-width:62px;
+  height:40px;
+  min-height:40px;
+  padding:0 10px;
+  display:inline-flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  white-space:nowrap;
+}
+.ns-brandbar-actions .ns-like-button > span:not(.ns-like-sr-only):not(.ns-like-sparkle){
+  display:inline-block;
+  font-size:12px;
+  line-height:1;
+  font-weight:750;
+  font-variant-numeric:tabular-nums;
+}

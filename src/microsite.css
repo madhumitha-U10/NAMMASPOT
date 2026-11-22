@@ -382,3 +382,43 @@
   .seller-microsite .ns-mobile-product-copy{padding:5px 9px 10px}
   .seller-microsite .ns-mobile-product-copy h3{font-size:12px}
 }
+
+
+/* Shop like: clean icon-only control with a full heart turn on interaction. */
+.ns-brandbar-actions .ns-like-button{
+  width:42px;
+  min-width:42px;
+  height:40px;
+  min-height:40px;
+  padding:0;
+  display:inline-grid;
+  place-items:center;
+  border:1px solid #eadbd4;
+  border-radius:12px;
+  background:#fffdf9;
+  color:#75645e;
+  box-shadow:0 1px 3px rgba(53,30,24,.05);
+}
+.ns-brandbar-actions .ns-like-button:hover{
+  background:#fff5f2;
+  border-color:#dfc2b8;
+  color:#8b2638;
+  transform:translateY(-1px);
+}
+.ns-brandbar-actions .ns-like-button.is-liked{
+  color:#8b2638;
+  background:#f9e9e7;
+  border-color:#e9c7c2;
+  box-shadow:none;
+}
+.ns-brandbar-actions .ns-like-button.is-popping svg{
+  animation:ns-heart-turn .52s cubic-bezier(.2,.75,.25,1);
+}
+@keyframes ns-heart-turn{
+  0%{transform:rotate(0) scale(1)}
+  45%{transform:rotate(200deg) scale(1.18)}
+  100%{transform:rotate(360deg) scale(1)}
+}
+@media(prefers-reduced-motion:reduce){
+  .ns-brandbar-actions .ns-like-button.is-popping svg{animation:none!important}
+}

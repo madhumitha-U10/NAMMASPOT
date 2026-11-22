@@ -445,3 +445,95 @@
   font-weight:750;
   font-variant-numeric:tabular-nums;
 }
+
+
+/* Seller profile actions: place the shop like with seller identity, not in the global toolbar. */
+.seller-microsite .ns-mobile-seller-like-row{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:13px;
+}
+.seller-microsite .ns-mobile-seller-like-row > span{
+  color:#806d65;
+  font-size:12px;
+  font-weight:650;
+  letter-spacing:.01em;
+}
+.seller-microsite .ns-shop-like-control{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:row;
+  gap:7px;
+  min-width:66px;
+  min-height:36px;
+  padding:0 11px;
+  border:1px solid #e3c9c1;
+  border-radius:999px;
+  background:#fffaf5;
+  color:#6b1a22;
+  box-shadow:0 2px 7px rgba(76,35,30,.06);
+  font-size:12px;
+  font-weight:750;
+  white-space:nowrap;
+}
+.seller-microsite .ns-shop-like-control:hover{
+  background:#f8ece7;
+  border-color:#cda69a;
+  transform:translateY(-1px);
+}
+.seller-microsite .ns-shop-like-control.is-liked{
+  color:#8b2638;
+  border-color:#d9aaa8;
+  background:#f8e9e8;
+}
+.seller-microsite .ns-shop-like-control > span:not(.ns-like-sr-only):not(.ns-like-sparkle){
+  display:inline-block;
+  font-size:12px;
+  line-height:1;
+  font-weight:800;
+  font-variant-numeric:tabular-nums;
+}
+.seller-microsite .ns-shop-like-control.is-popping svg{
+  animation:ns-heart-turn .52s cubic-bezier(.2,.75,.25,1);
+}
+.seller-microsite .ns-mobile-primary-contact-actions .ns-mobile-whatsapp{
+  color:#6b1a22;
+  background:#fffaf5;
+  border:1px solid #d8b8ad;
+  box-shadow:0 2px 7px rgba(76,35,30,.05);
+}
+.seller-microsite .ns-mobile-primary-contact-actions .ns-mobile-app-enquiry{
+  color:#fffaf4;
+  background:#6b1a22;
+  border:1px solid #6b1a22;
+  box-shadow:0 3px 9px rgba(107,26,34,.16);
+}
+.seller-microsite .ns-mobile-primary-contact-actions .ns-mobile-whatsapp:hover{
+  background:#f8ece7;
+  border-color:#bd8e83;
+  transform:translateY(-1px);
+}
+.seller-microsite .ns-mobile-primary-contact-actions .ns-mobile-app-enquiry:hover{
+  background:#50131a;
+  border-color:#50131a;
+  transform:translateY(-1px);
+}
+.seller-microsite .ns-mobile-primary-contact-actions .ns-mobile-whatsapp,
+.seller-microsite .ns-mobile-primary-contact-actions .ns-mobile-app-enquiry{
+  box-shadow:0 2px 8px rgba(76,35,30,.07);
+  transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+@media(max-width:420px){
+  .seller-microsite .ns-mobile-primary-contact-actions{gap:7px}
+  .seller-microsite .ns-mobile-primary-contact-actions .ns-mobile-whatsapp,
+  .seller-microsite .ns-mobile-primary-contact-actions .ns-mobile-app-enquiry{font-size:11px;padding-inline:6px;gap:5px}
+}
+@media(prefers-reduced-motion:reduce){
+  .seller-microsite .ns-shop-like-control.is-popping svg{animation:none!important}
+  .seller-microsite .ns-mobile-primary-contact-actions .ns-mobile-whatsapp,
+  .seller-microsite .ns-mobile-primary-contact-actions .ns-mobile-app-enquiry{transition:none}
+}

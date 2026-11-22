@@ -537,3 +537,82 @@
   .seller-microsite .ns-mobile-primary-contact-actions .ns-mobile-whatsapp,
   .seller-microsite .ns-mobile-primary-contact-actions .ns-mobile-app-enquiry{transition:none}
 }
+
+
+/* Final seller identity and contact-action polish */
+.seller-microsite .ns-mobile-shop-title{
+  display:flex;
+  align-items:center;
+  flex-wrap:nowrap;
+  gap:8px;
+  min-width:0;
+  max-width:100%;
+}
+.seller-microsite .ns-mobile-shop-name{
+  display:block;
+  flex:0 1 auto;
+  min-width:0;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+.seller-microsite .ns-mobile-shop-title .ns-mobile-verified-dot{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 22px;
+  width:22px;
+  height:22px;
+  margin:0;
+}
+.seller-microsite .ns-mobile-seller-like-row{
+  margin-top:11px;
+  gap:0;
+}
+.seller-microsite .ns-shop-like-control{
+  width:auto;
+  min-width:58px;
+  min-height:36px;
+  padding:0 12px;
+  gap:7px;
+  border:1px solid #e4c9c1;
+  border-radius:999px;
+  background:#fffaf5;
+  color:#6b1a22;
+  box-shadow:0 2px 7px rgba(76,35,30,.07);
+  transition:background-color .18s ease,border-color .18s ease,color .18s ease,transform .18s ease;
+}
+.seller-microsite .ns-shop-like-control:hover{
+  background:#f8eee8;
+  border-color:#bd9186;
+  color:#50131a;
+  transform:translateY(-1px);
+}
+.seller-microsite .ns-shop-like-control.is-liked{
+  color:#fffaf4;
+  background:#6b1a22;
+  border-color:#6b1a22;
+  box-shadow:0 3px 9px rgba(107,26,34,.16);
+}
+.seller-microsite .ns-shop-like-control .ns-like-sparkle{display:none}
+.seller-microsite .ns-shop-like-control > span:not(.ns-like-sr-only):not(.ns-like-sparkle){
+  font-size:12px;
+  font-weight:800;
+  font-variant-numeric:tabular-nums;
+}
+.seller-microsite .ns-mobile-primary-contact-actions .ns-mobile-whatsapp,
+.seller-microsite .ns-mobile-primary-contact-actions .ns-mobile-app-enquiry{
+  color:#fffaf4;
+  background:#6b1a22;
+  border:1px solid #6b1a22;
+  box-shadow:0 3px 9px rgba(107,26,34,.15);
+}
+.seller-microsite .ns-mobile-primary-contact-actions .ns-mobile-whatsapp:hover,
+.seller-microsite .ns-mobile-primary-contact-actions .ns-mobile-app-enquiry:hover{
+  color:#fffaf4;
+  background:#50131a;
+  border-color:#50131a;
+  transform:translateY(-1px);
+}
+@media(prefers-reduced-motion:reduce){
+  .seller-microsite .ns-shop-like-control{transition:none}
+}

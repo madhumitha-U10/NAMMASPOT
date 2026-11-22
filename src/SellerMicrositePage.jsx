@@ -295,7 +295,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
         <h1 className="ns-mobile-shop-title"><span className="ns-mobile-shop-name">{esc(seller.business_name)}</span>{seller.verified&&<span className="ns-mobile-verified-dot" aria-label="Verified seller">✓</span>}</h1>
         <p className="ns-mobile-verified-line">{seller.verified ? "Verified seller" : "Local seller"} · {esc(seller.category?.name||"Local business")}</p>
         <p className="ns-mobile-location"><MapPin size={16}/>{esc(seller.location||"Chennai, Tamil Nadu")}</p>
-        <div className="ns-mobile-seller-like-row"><LikeButton className="ns-shop-like-control" count={seller.like_count} showCount liked={seller.liked_by_me} onClick={()=>handleContentLike("seller",seller)} label="this shop"/></div>
+        <div className="ns-mobile-seller-like-row"><LikeButton compact className="ns-shop-like-control" count={seller.like_count} showCount liked={seller.liked_by_me} onClick={()=>handleContentLike("seller",seller)} label="this shop"/></div>
       </div>
     </section>
     {(settings.tagline||settings.about)&&<section className="ns-mobile-update"><CalendarDays size={24}/><div><small>UPDATE FROM SELLER{settings.updated_at ? " · "+new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(settings.updated_at)) : ""}</small><p>{esc(settings.tagline||settings.about)}</p></div></section>}

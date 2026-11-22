@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured, isProductionConfigurationError, uploadSellerMedia, getSellerStorageUsage } from "./supabase";
+import { supabase, guestSupabase, isSupabaseConfigured, isProductionConfigurationError, uploadSellerMedia, getSellerStorageUsage } from "./supabase";
 import { seedSellers, categoryNames } from "./seed";
 
 export { isSupabaseConfigured, isProductionConfigurationError, uploadSellerMedia, getSellerStorageUsage };
@@ -161,9 +161,10 @@ export async function getContentLikeData(sellerIds = [], productIds = []) {
   const productList = [...new Set(productIds.filter(Boolean))];
   if (!supabase || (!sellerList.length && !productList.length)) return { sellerCounts: {}, productCounts: {}, likedSellers: [], likedProducts: [] };
   const client = needBackend();
-  const [{ data: counts, error: countError }, sessionResult] = await Promise.all([
+  const [{ data: counts, error: countError }, mainSessionResult, guestSessionResult] = await Promise.all([
     client.from("seller_content_like_counts").select("target_type,target_id,like_count").in("target_id", [...sellerList, ...productList]),
-    client.auth.getSession()
+    client.auth.getSession(),
+    guestSupabase?.auth.getSession() || Promise.resolve({ data: { session: null } })
   ]);
   if (countError) throw countError;
   const sellerCounts = {}, productCounts = {};
@@ -171,10 +172,14 @@ export async function getContentLikeData(sellerIds = [], productIds = []) {
     if (row.target_type === "seller" && sellerList.includes(row.target_id)) sellerCounts[row.target_id] = Number(row.like_count || 0);
     if (row.target_type === "product" && productList.includes(row.target_id)) productCounts[row.target_id] = Number(row.like_count || 0);
   });
-  const userId = sessionResult.data?.session?.user?.id;
+  const mainSession = mainSessionResult.data?.session;
+  const guestSession = guestSessionResult.data?.session;
+  const activeSession = mainSession?.user ? mainSession : guestSession;
+  const activeClient = mainSession?.user ? client : guestSupabase;
+  const userId = activeSession?.user?.id;
   let likedSellers = [], likedProducts = [];
-  if (userId) {
-    let query = client.from("seller_content_likes").select("seller_id,product_id").eq("user_id", userId);
+  if (userId && activeClient) {
+    let query = activeClient.from("seller_content_likes").select("seller_id,product_id").eq("user_id", userId);
     if (sellerList.length || productList.length) {
       const clauses = [];
       if (sellerList.length) clauses.push("seller_id.in.(" + sellerList.join(",") + ")");
@@ -193,30 +198,37 @@ export async function toggleContentLike({ sellerId = null, productId = null, lik
   if (!sellerId && !productId) throw new Error("Choose a seller or product to like.");
   if (sellerId && productId) throw new Error("Like one item at a time.");
   const client = needBackend();
-  let session = await getSession();
+  const { data: mainSessionResult } = await client.auth.getSession();
+  let likeClient = client;
+  let session = mainSessionResult.session;
   if (!session?.user) {
-    // Create a private, persistent guest session so visitors can like without
-    // entering an email, phone number, or password. Supabase keeps the session
-    // in this browser; one guest can like each target only once.
-    const { data, error } = await client.auth.signInAnonymously();
-    if (error) {
-      const message = String(error.message || "").toLowerCase();
-      if (message.includes("anonymous") || message.includes("disabled")) {
-        throw new Error("Guest likes are not enabled yet. Please try again later.");
+    // Isolate guest identity from the main auth client so browsing/liking never
+    // changes the visitor's seller or customer sign-in state.
+    if (!guestSupabase) throw new Error("Guest likes are not available right now.");
+    likeClient = guestSupabase;
+    const { data: guestSessionResult } = await likeClient.auth.getSession();
+    session = guestSessionResult.session;
+    if (!session?.user) {
+      const { data, error } = await likeClient.auth.signInAnonymously();
+      if (error) {
+        const message = String(error.message || "").toLowerCase();
+        if (message.includes("anonymous") || message.includes("disabled")) {
+          throw new Error("Guest likes are not enabled yet. Please try again later.");
+        }
+        throw error;
       }
-      throw error;
+      session = data.session;
     }
-    session = data.session;
   }
   if (!session?.user) throw new Error("A guest session could not be started. Please try again.");
-  let query = client.from("seller_content_likes").delete().eq("user_id", session.user.id);
+  let query = likeClient.from("seller_content_likes").delete().eq("user_id", session.user.id);
   if (liked) {
     query = sellerId ? query.eq("seller_id", sellerId) : query.eq("product_id", productId);
     const { error } = await query;
     if (error) throw error;
     return false;
   }
-  const { error } = await client.from("seller_content_likes").insert({
+  const { error } = await likeClient.from("seller_content_likes").insert({
     user_id: session.user.id,
     seller_id: sellerId,
     product_id: productId

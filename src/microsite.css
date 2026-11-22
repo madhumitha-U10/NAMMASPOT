@@ -223,7 +223,7 @@
 
 
 /* Cute, accessible like controls */
-.ns-like-button{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:7px 11px;border:1px solid #f1d5d8;border-radius:999px;background:#fff8f7;color:#80636a;font:700 12px/1 inherit;cursor:pointer;white-space:nowrap;transition:background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease,box-shadow .18s ease}
+.ns-like-button{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:7px 11px;border:1px solid #f1d5d8;border-radius:999px;background:#fff8f7;color:#80636a;font:inherit;font-size:12px;line-height:1;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease,box-shadow .18s ease}
 .ns-like-button:hover{background:#fff0f1;border-color:#efb8c1;color:#c33a58;transform:translateY(-1px)}
 .ns-like-button.is-liked{background:#ffe8ec;border-color:#f2aab8;color:#d52e54;box-shadow:0 3px 10px #d52e5418}
 .ns-like-button.is-popping svg{animation:ns-heart-pop .48s cubic-bezier(.2,.8,.25,1)}

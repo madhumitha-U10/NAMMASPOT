@@ -14,8 +14,11 @@ create unique index if not exists seller_content_likes_user_product_uidx on publ
 create index if not exists seller_content_likes_seller_idx on public.seller_content_likes(seller_id) where seller_id is not null;
 create index if not exists seller_content_likes_product_idx on public.seller_content_likes(product_id) where product_id is not null;
 alter table public.seller_content_likes enable row level security;
+drop policy if exists "Users can view own likes" on public.seller_content_likes;
 create policy "Users can view own likes" on public.seller_content_likes for select to authenticated using ((select auth.uid()) = user_id);
+drop policy if exists "Users can add own likes" on public.seller_content_likes;
 create policy "Users can add own likes" on public.seller_content_likes for insert to authenticated with check ((select auth.uid()) = user_id);
+drop policy if exists "Users can remove own likes" on public.seller_content_likes;
 create policy "Users can remove own likes" on public.seller_content_likes for delete to authenticated using ((select auth.uid()) = user_id);
 grant select, insert, delete on public.seller_content_likes to authenticated;
 create or replace function public.get_public_like_counts(p_seller_ids uuid[] default '{}', p_product_ids uuid[] default '{}')

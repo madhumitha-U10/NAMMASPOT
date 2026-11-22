@@ -220,3 +220,22 @@
 /* Preserve the requested two-column catalogue layout on phones. */
 @media(max-width:760px){.seller-microsite .ns-mobile-product-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}.seller-microsite .ns-mobile-product{width:auto;min-width:0}.seller-microsite .ns-mobile-product-image{display:grid;width:100%;aspect-ratio:1/1;height:auto}}
 @media(max-width:360px){.seller-microsite .ns-mobile-product-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important}}
+
+
+/* Cute, accessible like controls */
+.ns-like-button{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:7px 11px;border:1px solid #f1d5d8;border-radius:999px;background:#fff8f7;color:#80636a;font:700 12px/1 inherit;cursor:pointer;white-space:nowrap;transition:background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease,box-shadow .18s ease}
+.ns-like-button:hover{background:#fff0f1;border-color:#efb8c1;color:#c33a58;transform:translateY(-1px)}
+.ns-like-button.is-liked{background:#ffe8ec;border-color:#f2aab8;color:#d52e54;box-shadow:0 3px 10px #d52e5418}
+.ns-like-button.is-popping svg{animation:ns-heart-pop .48s cubic-bezier(.2,.8,.25,1)}
+.ns-like-sparkle{position:absolute;right:3px;top:-10px;color:#ef6682;font-size:14px;animation:ns-heart-float .5s ease-out forwards;pointer-events:none}
+.ns-like-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.ns-like-button.is-compact{min-height:29px;padding:5px 8px;gap:4px;font-size:11px}
+.ns-brandbar-actions .ns-like-button{min-width:48px;min-height:40px;padding:6px 9px;background:#fff0f2;border-color:#f4c8d0;color:#c33a58}
+.ns-mobile-product-like-row{position:absolute;z-index:3;top:9px;right:9px;display:flex;align-items:center;gap:5px}
+.ns-mobile-product-like-row .ns-product-save-btn{position:static;width:32px;height:32px}
+.ns-mobile-product-like-row .ns-like-button{min-height:32px;padding:5px 7px;background:#fffaf8eF;box-shadow:0 3px 12px #40111b1a}
+.ns-like-message{margin:8px auto;padding:9px 14px;max-width:1100px;border-radius:12px;background:#fff2f3;color:#8e2b42;font-size:13px}
+.ns-like-message button{margin-left:6px;border:0;background:transparent;color:#7c172d;font-weight:800;text-decoration:underline}
+@keyframes ns-heart-pop{0%{transform:scale(1)}35%{transform:scale(1.55) rotate(-9deg)}70%{transform:scale(.88) rotate(6deg)}100%{transform:scale(1)}}
+@keyframes ns-heart-float{0%{opacity:0;transform:translateY(5px) scale(.6)}25%{opacity:1}100%{opacity:0;transform:translateY(-19px) scale(1.25)}}
+@media(prefers-reduced-motion:reduce){.ns-like-button,.ns-like-button.is-popping svg,.ns-like-sparkle{animation:none!important;transition:none!important}}

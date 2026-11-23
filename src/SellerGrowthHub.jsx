@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Activity, ArrowUpRight, CheckCircle2, Copy, Download, ExternalLink, Eye, MessageCircle, Package, Share2, ShoppingBag, Sparkles, Users } from "lucide-react";
+import { Activity, ArrowUpRight, CheckCircle2, Copy, Download, ExternalLink, Eye, Heart, MessageCircle, Package, Share2, ShoppingBag, Sparkles, Users } from "lucide-react";
 
 function formatStatus(value) {
   return String(value || "new").toLowerCase() === "pending" ? "new" : String(value || "new").toLowerCase();
 }
 
-export default function SellerGrowthHub({ seller, products = [], enquiries = [], analytics = null, onNavigate }) {
+export default function SellerGrowthHub({ seller, products = [], enquiries = [], analytics = null, sellerLikes = 0, onNavigate }) {
   const [notice, setNotice] = useState("");
   const publicUrl = typeof window !== "undefined" && seller?.slug
     ? window.location.origin + "/s/" + seller.slug
@@ -93,7 +93,7 @@ export default function SellerGrowthHub({ seller, products = [], enquiries = [],
       </div>
 
       <div className="ns-growth-metrics" aria-label="Seller activity summary">
-        <article className="ns-growth-metric"><span><Eye size={17}/> Page visits · 30 days</span><strong>{totalViews}</strong><small>{todayViews} today</small></article>
+        <article className="ns-growth-metric"><span><Heart size={17}/> Shop likes</span><strong>{Number(sellerLikes || 0).toLocaleString("en-IN")}</strong><small>People who appreciate your shop</small></article>\n        <article className="ns-growth-metric"><span><Eye size={17}/> Page visits · 30 days</span><strong>{totalViews}</strong><small>{todayViews} today</small></article>
         <article className="ns-growth-metric"><span><Users size={17}/> Visitors · 30 days</span><strong>{uniqueVisitors}</strong><small>Estimated unique browsers</small></article>
         <article className="ns-growth-metric"><span><Package size={17}/> Catalogue items</span><strong>{products.length}</strong><small>{metrics.available} currently available</small></article>
         <article className="ns-growth-metric"><span><MessageCircle size={17}/> Enquiries</span><strong>{enquiries.length}</strong><small>{metrics.newEnquiries} need your attention</small></article>

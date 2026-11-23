@@ -801,8 +801,8 @@ export async function createEnquiry(values) {
   const customerName = text(values.customer_name, 120);
   const customerContact = text(values.customer_contact, 160);
   const message = text(values.message, 2000);
-  const emailIsValid = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(customerContact);
-  const phoneDigits = customerContact.replace(/\\D/g, "");
+  const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(customerContact);
+  const phoneDigits = customerContact.replace(/\D/g, "");
   const phoneIsValid = /^[0-9+() -]+$/.test(customerContact) && phoneDigits.length >= 10 && phoneDigits.length <= 15;
   if (customerName.length < 2) throw new Error("Enter your name (at least 2 characters).");
   if (!emailIsValid && !phoneIsValid) throw new Error("Enter a valid phone number or email address.");

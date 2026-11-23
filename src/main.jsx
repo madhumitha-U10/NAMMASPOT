@@ -25,6 +25,9 @@ import {
   getSellerLikeStats,
   getMySeller,
   getMyEnquiries,
+  getMySellerNotifications,
+  markSellerNotificationRead,
+  markAllSellerNotificationsRead,
   signInSeller,
   signInAdmin,
   startSellerRegistration,
@@ -71,7 +74,11 @@ import CategoryIcon from "./components/brand/CategoryIcon.jsx";
 import LikeButton from "./components/LikeButton.jsx";
 import { addProductGalleryImage, deleteProductGalleryImage, getMyMicrosite, saveMicrosite } from "./lib/microsite";
 import { formatBytes } from "./lib/storage";
-import SellerGrowthHub, { SellerGrowthSharing } from "./SellerGrowthHub.jsx";\nimport SellerNotifications from "./components/SellerNotifications.jsx";\nimport RecentSellerStrip from "./components/RecentSellerStrip.jsx";
+import SellerGrowthHub, { SellerGrowthSharing } from "./SellerGrowthHub.jsx";
+import SellerNotifications from "./components/SellerNotifications.jsx";
+import RecentSellerStrip from "./components/RecentSellerStrip.jsx";
+import SellerNotifications from "./components/SellerNotifications.jsx";
+import RecentSellerStrip from "./components/RecentSellerStrip.jsx";
 
 const popularCategories = ["Bakery", "Mehendi", "Crochet", "Makeup", "Art"];
 const SAVED_PRODUCTS_KEY = "nammaspot-saved-products";
@@ -593,7 +600,9 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
         <button className={near ? "active" : ""} onClick={() => go(near ? "/explore" : "/explore?near=Chennai")}>Near me</button>
       </div>
 
-      <RecentSellerStrip go={go}/>\n\n      {state.loading ? <CardSkeletonRow detailed/> :
+      <RecentSellerStrip go={go}/>
+
+      {state.loading ? <CardSkeletonRow detailed/> :
         state.error ? <ErrorState message={state.error} retry={() => location.reload()}/> :
         searchType === "product" ? (
           (state.data || []).flatMap((seller) => (seller.products || [])
@@ -1109,7 +1118,8 @@ function DashboardPage({ go }) {
   const [state,setState] = useState({loading:true,error:""});
   const [storageUsage,setStorageUsage] = useState(null);
   const [analytics,setAnalytics] = useState(null);
-  const [sellerLikeCount,setSellerLikeCount] = useState(0);\n  const [notifications,setNotifications] = useState([]);
+  const [sellerLikeCount,setSellerLikeCount] = useState(0);
+  const [notifications,setNotifications] = useState([]);
 
   const load = async () => {
     try {
@@ -1122,6 +1132,7 @@ function DashboardPage({ go }) {
       setSeller(mySeller);
       setProducts(myProducts.map(product=>({...product,like_count:Number(myLikeStats.productLikes[product.id]||0)})));
       setSellerLikeCount(myLikeStats.sellerLikes);
+      setNotifications(myNotifications);
       setEnquiries(myEnquiries);
       setAnalytics(myAnalytics);
       setCategories(cats);
@@ -1149,7 +1160,8 @@ function DashboardPage({ go }) {
         {["overview","notifications","profile","products","enquiries","growth","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item==="public"?"Public profile":item==="growth"?"Growth & sharing":item==="notifications"?"Notifications"+(notifications.filter(n=>!n.read_at).length?" · "+notifications.filter(n=>!n.read_at).length:""):item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
       </div>
 
-      {tab==="overview" && <SellerGrowthHub seller={seller} products={products} enquiries={enquiries} analytics={analytics} sellerLikes={sellerLikeCount} onNavigate={setTab}/>}\n      {tab==="notifications" && <SellerNotifications notifications={notifications} onRead={async(id)=>{try{await markSellerNotificationRead(id);setNotifications(items=>items.map(item=>item.id===id?{...item,read_at:new Date().toISOString()}:item));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onReadAll={async()=>{try{await markAllSellerNotificationsRead(seller.id);setNotifications(items=>items.map(item=>({...item,read_at:item.read_at||new Date().toISOString()})));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onNavigate={()=>setTab("enquiries")}/>} 
+      {tab==="overview" && <SellerGrowthHub seller={seller} products={products} enquiries={enquiries} analytics={analytics} sellerLikes={sellerLikeCount} onNavigate={setTab}/>}
+      {tab==="notifications" && <SellerNotifications notifications={notifications} onRead={async(id)=>{try{await markSellerNotificationRead(id);setNotifications(items=>items.map(item=>item.id===id?{...item,read_at:new Date().toISOString()}:item));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onReadAll={async()=>{try{await markAllSellerNotificationsRead(seller.id);setNotifications(items=>items.map(item=>({...item,read_at:item.read_at||new Date().toISOString()})));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onNavigate={()=>setTab("enquiries")}/>} 
       {tab==="profile" && <ProfileEditor seller={seller} categories={categories} onSaved={(next)=>setSeller((current)=>({...current,...next}))}/>}
       {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} storageUsage={storageUsage} onStorageUsageChange={setStorageUsage} onChange={setProducts}/>}
       {tab==="enquiries" && <EnquiryManager enquiries={enquiries} onChange={setEnquiries} seller={seller}/>}

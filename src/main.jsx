@@ -45,6 +45,7 @@ import {
   listMyFavourites,
   isCurrentUserAdmin,
   adminListSellers,
+  adminPlatformActivity,
   adminUpdateSellerStatus,
   adminDeleteSuspendedSeller,
   adminListCategories,
@@ -1572,6 +1573,7 @@ function AdminPage() {
   const [loading,setLoading]=useState(true);
   const [storageUsage,setStorageUsage]=useState(null);
   const [otpAlerts,setOtpAlerts]=useState([]);
+  const [platformActivity,setPlatformActivity]=useState(null);
   const [reviews,setReviews]=useState([]);
   const [categoryDraft,setCategoryDraft]=useState("");
   const [categorySearch,setCategorySearch]=useState("");
@@ -1585,13 +1587,14 @@ function AdminPage() {
     try {
       const [ok,current] = await Promise.all([isCurrentUserAdmin(), getCurrentProfile()]);
       if (!ok) { setAllowed(false); setError("This account is not an approved NammaSpot admin."); return; }
-      const [s,c,u,otp,r]=await Promise.all([adminListSellers(),adminListCategories(),adminStorageUsage(),adminOtpUsageAlerts(),adminListReviews()]);
+      const [s,c,u,otp,r,activity]=await Promise.all([adminListSellers(),adminListCategories(),adminStorageUsage(),adminOtpUsageAlerts(),adminListReviews(),adminPlatformActivity().catch(()=>null)]);
       setAllowed(true);
       setAdminProfile(current);
       setSellers(s);
       setCategories(c);
       setStorageUsage(u);
       setOtpAlerts(otp);
+      setPlatformActivity(activity);
       setReviews(r);
       if (u && u.status !== "ok") {
         const key = "nammaspot-storage-alert-" + u.status;
@@ -1735,6 +1738,9 @@ function AdminPage() {
         <article className="admin-summary-card is-suspended"><span>Suspended sellers</span><strong>{counts.suspended || 0}</strong><small>Access currently paused</small></article>
         <article className="admin-summary-card"><span>Categories</span><strong>{categories.length}</strong><small>Available category records</small></article>
         <article className="admin-summary-card"><span>Pending reviews</span><strong>{reviews.filter(item=>item.status==="pending").length}</strong><small>Customer feedback to review</small></article>
+        <article className="admin-summary-card"><span>Shop & product likes</span><strong>{Number(platformActivity?.total_likes||0).toLocaleString("en-IN")}</strong><small>Customer appreciation across NammaSpot</small></article>
+        <article className="admin-summary-card"><span>Total enquiries</span><strong>{Number(platformActivity?.total_enquiries||0).toLocaleString("en-IN")}</strong><small>{Number(platformActivity?.new_enquiries||0).toLocaleString("en-IN")} new or pending</small></article>
+        <article className="admin-summary-card"><span>Page views · 30 days</span><strong>{Number(platformActivity?.views_30d||0).toLocaleString("en-IN")}</strong><small>Seller catalogue visits</small></article>
       </div>
       <div className="dashboard-head">
         <div>

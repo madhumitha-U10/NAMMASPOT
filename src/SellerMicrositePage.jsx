@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from "react";
-import {ArrowLeft,MapPin,Phone,MessageCircle,Share2,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Heart,Bookmark,Home,Compass,Search,Navigation,Star,CalendarDays,Send} from "lucide-react";
+import {ArrowLeft,MapPin,Phone,Share2,CheckCircle,ExternalLink,X,ChevronLeft,ChevronRight,Heart,Bookmark,Home,Compass,Search,Navigation,Star,CalendarDays,Send} from "lucide-react";
 import {QRCodeCanvas} from "qrcode.react";
 import {createReview,getPublicReviews,createEnquiry,recordSellerPageView} from "./lib/api";
 import {getMicrosite,sellerPublicUrl} from "./lib/microsite";
@@ -10,18 +10,6 @@ const esc=(v)=>String(v||"").replace(/[<>]/g,"");
 const SAVED_PRODUCTS_KEY="nammaspot-saved-products";
 const readSavedProducts=()=>{try{const items=JSON.parse(localStorage.getItem(SAVED_PRODUCTS_KEY)||"[]");return Array.isArray(items)?items:[]}catch{return[]}};
 const writeSavedProducts=(items)=>{try{localStorage.setItem(SAVED_PRODUCTS_KEY,JSON.stringify(items));window.dispatchEvent(new window.CustomEvent("nammaspot-saved-products-change"))}catch{}};
-const whatsappUrl=(seller,product=null)=>{
-  const raw=String(seller?.whatsapp_phone||"").replace(/\D/g,"");
-  if(!raw)return null;
-  const phone=raw.length===10?"91"+raw:raw.startsWith("0")&&raw.length===11?"91"+raw.slice(1):raw;
-  // Keep the opening message consistent for every seller and product.
-  // Customers can freely continue in English, Tamil, or Tanglish.
-  const itemName = String(product?.name || product?.product_name || "").trim();
-  const message = itemName ? `Hi! 👋 I found “${itemName}” on NammaSpot and would like to enquire about it.` : "Hi! 👋 Contacting you via NammaSpot. I would like to know more about your products.";
-  return "https://wa.me/"+phone+"?text="+encodeURIComponent(message);
-};
-
-
 function instagramProfileUrl(value) {
   const raw = String(value || "").trim();
   if (!raw) return "";
@@ -39,7 +27,7 @@ function instagramProfileUrl(value) {
 }
 
 
-function ProductModal({product,onClose,onEnquire,onAppEnquiry}){
+function ProductModal({product,onClose,onEnquire}){
   const imgs=[...new Set([product.image_url,...(product.images||[]).map(x=>x.image_url)].map(x=>String(x||"").trim()).filter(Boolean))];
   const [i,setI]=useState(0);
   const touchStart=useRef(null);
@@ -59,35 +47,44 @@ function ProductModal({product,onClose,onEnquire,onAppEnquiry}){
       </div>
       {imgs.length>1&&<div className="microsite-gallery-count" aria-live="polite">{i+1} / {imgs.length}</div>}
       <div className="microsite-thumbs">{imgs.map((u,n)=><button key={u+n} className={n===i?"active":""} onClick={()=>setI(n)}><img src={u} alt=""/></button>)}</div>
-      <div className="microsite-product-copy"><div className="eyebrow">{product.category?.name||"CATALOGUE"}</div><h2>{esc(product.name||product.product_name)}</h2>{product.price!=null&&<strong className="microsite-price">₹{product.price}</strong>}<p>{esc(product.description)}</p><a className="primary-button full-button" href={onEnquire||undefined} target="_blank" rel="noreferrer" onClick={e=>{if(!onEnquire)e.preventDefault()}}><MessageCircle size={16}/> Enquire on WhatsApp</a>{onAppEnquiry&&<button type="button" className="secondary-button full-button" onClick={onAppEnquiry}>Send enquiry through NammaSpot</button>}</div>
+      <div className="microsite-product-copy">
+        <div className="eyebrow">{product.category?.name||"CATALOGUE"}</div>
+        <h2>{esc(product.name||product.product_name)}</h2>
+        {product.price!=null&&<strong className="microsite-price">₹{product.price}</strong>}
+        <p>{esc(product.description)}</p>
+        <button type="button" className="primary-button full-button ns-product-enquiry-action" onClick={onEnquire}><Send size={17}/> Send enquiry</button>
+        <p className="muted-note ns-product-enquiry-note">This product will be included automatically in your message.</p>
+      </div>
     </section>
   </div>;
 }
 
-
-function buildEnquiryWhatsAppUrl(seller, form, product) {
-  const raw = String(seller?.whatsapp_phone || "").replace(/\D/g, "");
-  const phone = raw.length === 10 ? "91" + raw : raw.length === 11 && raw.startsWith("0") ? "91" + raw.slice(1) : raw.length === 12 && raw.startsWith("91") ? raw : "";
-  if (!phone) return "";
-  const item = product?.name || product?.product_name || "";
-  const message = "Hi " + (seller.business_name || "there") + ", I'm " + form.customer_name +
-    ". My WhatsApp number is " + form.customer_contact + ". " +
-    (item ? "I'm enquiring about " + item + ". " : "") + form.message + " (Sent through NammaSpot)";
-  return "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
-}
-
 function EnquiryModal({seller, product, onClose}) {
-  const [form, setForm] = useState({customer_name:"", customer_contact:"", message: product ? "I would like to know more about " + (product.name || product.product_name || "this product") + "." : "I would like to know more about your products."});
-  const [state, setState] = useState({saving:false, error:"", sent:false});
-  const whatsappUrl = state.sent ? buildEnquiryWhatsAppUrl(seller, form, product) : "";
+  const [form, setForm] = useState({
+    customer_name:"",
+    customer_contact:"",
+    message:product ? "I would like to know more about " + (product.name || product.product_name || "this product") + "." : "I would like to know more about your products."
+  });
+  const [state, setState] = useState({saving:false,error:"",sent:false,enquiryId:""});
+  const contactIsEmail = form.customer_contact.includes("@");
+  const contactHint = !form.customer_contact
+    ? "The seller will reply using this contact detail."
+    : contactIsEmail ? "The seller can reply to this email address." : "The seller can reply to this phone number or WhatsApp.";
   const submit = async (event) => {
     event.preventDefault();
-    setState({saving:true,error:"",sent:false});
+    if (state.saving) return;
+    setState(current=>({...current,saving:true,error:""}));
     try {
-      await createEnquiry({seller_id:seller.id,product_id:product?.id||null,customer_name:form.customer_name,customer_contact:form.customer_contact,message:form.message});
-      setState({saving:false,error:"",sent:true});
+      const result = await createEnquiry({
+        seller_id:seller.id,
+        product_id:product?.id||null,
+        customer_name:form.customer_name,
+        customer_contact:form.customer_contact,
+        message:form.message
+      });
+      setState({saving:false,error:"",sent:true,enquiryId:result?.id||""});
     } catch (error) {
-      setState({saving:false,error:error?.message||"Your enquiry could not be sent. Please try again.",sent:false});
+      setState(current=>({...current,saving:false,error:error?.message||"Your enquiry could not be sent. Please try again."}));
     }
   };
   return <div className="modal-backdrop ns-enquiry-backdrop" onMouseDown={event=>event.target===event.currentTarget&&onClose()}>
@@ -95,21 +92,34 @@ function EnquiryModal({seller, product, onClose}) {
       <button type="button" className="modal-close" onClick={onClose} aria-label="Close enquiry form"><X/></button>
       {state.sent ? <div className="ns-enquiry-success">
         <span className="ns-enquiry-success-icon"><CheckCircle size={28}/></span>
-        <div className="eyebrow">ENQUIRY SAVED</div>
-        <h2 id="ns-enquiry-title">Your message is with the seller.</h2>
-        <p>Your enquiry has been saved in NammaSpot. You can also send it to the seller's WhatsApp for a quicker conversation.</p>
-        {whatsappUrl ? <a className="primary-button full-button" href={whatsappUrl} target="_blank" rel="noreferrer"><MessageCircle size={17}/> Continue on WhatsApp</a> : <p className="muted-note">This seller has not added a WhatsApp number. They can still view your enquiry in their NammaSpot dashboard.</p>}
-        <button type="button" className="secondary-button full-button" onClick={onClose}>Done</button>
+        <div className="eyebrow">MESSAGE DELIVERED</div>
+        <h2 id="ns-enquiry-title">Your enquiry is with the seller.</h2>
+        <p>The seller can now respond using the contact details you shared. Your contact information is not displayed on the public catalogue.</p>
+        {state.enquiryId&&<small className="ns-enquiry-reference">Enquiry reference · {String(state.enquiryId).slice(0,8).toUpperCase()}</small>}
+        <button type="button" className="primary-button full-button" onClick={onClose}>Done</button>
       </div> : <>
-        <div className="eyebrow">CONTACT THIS SELLER</div>
-        <h2 id="ns-enquiry-title">Send an enquiry</h2>
-        <p className="muted-note">{product ? "Ask about " + (product.name || product.product_name) + "." : "Tell the seller what you would like to know."} Your message will appear in their NammaSpot enquiries.</p>
+        <div className="eyebrow">CONTACT {esc(seller.business_name||"THIS SELLER").toUpperCase()}</div>
+        <h2 id="ns-enquiry-title">What would you like to know?</h2>
+        <p className="muted-note ns-enquiry-intro">Send one message. The seller will receive it in their NammaSpot dashboard.</p>
+        {product&&<div className="ns-enquiry-product-context">
+          {product.image_url&&<img src={product.image_url} alt=""/>}
+          <div><small>ENQUIRY ABOUT</small><strong>{esc(product.name||product.product_name)}</strong>{product.price!=null&&<span>₹{product.price}</span>}</div>
+        </div>}
         <form className="seller-form ns-enquiry-form" onSubmit={submit}>
-          <label>Your name<input required maxLength={120} autoComplete="name" value={form.customer_name} onChange={event=>setForm({...form,customer_name:event.target.value})} placeholder="Enter your name"/></label>
-          <label>Your WhatsApp number<input required type="tel" inputMode="tel" autoComplete="tel" maxLength={20} pattern="[0-9+() -]{8,20}" value={form.customer_contact} onChange={event=>setForm({...form,customer_contact:event.target.value})} placeholder="10-digit mobile number"/></label>
-          <label>Your message<textarea required minLength={1} maxLength={2000} rows={4} value={form.message} onChange={event=>setForm({...form,message:event.target.value})}/></label>
+          <label>Your name
+            <input required minLength={2} maxLength={120} autoComplete="name" value={form.customer_name} onChange={event=>setForm({...form,customer_name:event.target.value})} placeholder="Enter your name"/>
+          </label>
+          <label>Phone number or email
+            <input required type="text" inputMode={contactIsEmail?"email":"tel"} autoComplete={contactIsEmail?"email":"tel"} maxLength={160} value={form.customer_contact} onChange={event=>setForm({...form,customer_contact:event.target.value})} placeholder="10-digit phone or name@example.com" aria-describedby="ns-enquiry-contact-hint"/>
+            <small id="ns-enquiry-contact-hint" className="ns-enquiry-field-hint">{contactHint}</small>
+          </label>
+          <label>Your message
+            <textarea required minLength={3} maxLength={2000} rows={4} value={form.message} onChange={event=>setForm({...form,message:event.target.value})} placeholder="Write your question..."/>
+            <small className="ns-enquiry-counter">{form.message.length}/2000</small>
+          </label>
           {state.error&&<div className="inline-error" role="alert">{state.error}</div>}
-          <button type="submit" className="primary-button full-button" disabled={state.saving}>{state.saving?"Sending…":"Send enquiry"}</button>
+          <p className="ns-enquiry-privacy">Your contact detail is shared with this seller only for replying to this enquiry. No account is needed.</p>
+          <button type="submit" className="primary-button full-button" disabled={state.saving}>{state.saving?"Sending enquiry…":<><Send size={17}/> Send enquiry</>}</button>
           <button type="button" className="secondary-button full-button" onClick={onClose} disabled={state.saving}>Cancel</button>
         </form>
       </>}
@@ -258,8 +268,6 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
   if(!data)return <main className="page"><div className="empty-state"><h2>Seller not found</h2><p>This catalogue could not be loaded in this browser. Try opening it in Chrome.</p><button className="primary-button" onClick={openInChrome}>Open in Chrome</button><button className="secondary-button" onClick={()=>window.location.reload()}>Try again</button></div></main>;
   const products=data.products||[];
   const share=()=>setShareOpen(true);
-  const wa=whatsappUrl(seller);
-  const productWa=p=>whatsappUrl(seller,p);
   // Keep the seller's catalogue order (featured, then newest) independent of likes.
   const filteredProducts=products.filter(p=>String(p.name||"").toLowerCase().includes(catalogueQuery.toLowerCase()));
   const handleContentLike=async(type,item)=>{
@@ -305,10 +313,10 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
     {(settings.tagline||settings.about)&&<section className="ns-mobile-update"><CalendarDays size={24}/><div><small>UPDATE FROM SELLER{settings.updated_at ? " · "+new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(settings.updated_at)) : ""}</small><p>{esc(settings.tagline||settings.about)}</p></div></section>}
 
     <section className="ns-mobile-contact">
-      <div className="ns-mobile-primary-contact-actions">
-        {wa&&<a className="ns-mobile-whatsapp" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={19}/> WhatsApp Enquiry</a>}
-        <button type="button" className="ns-mobile-app-enquiry" onClick={()=>{setEnquiryProduct(null);setEnquiryOpen(true)}}><Send size={18}/> NammaSpot Enquiry</button>
-      </div>
+      <button type="button" className="ns-unified-enquiry-button" onClick={()=>{setEnquiryProduct(null);setEnquiryOpen(true)}}>
+        <Send size={18}/> Send Enquiry
+      </button>
+      <p className="ns-enquiry-entry-note">Ask about products, pricing or availability</p>
       <div className="ns-mobile-contact-row">
         {seller.contact&&<a href={"tel:"+seller.contact}><Phone size={20}/><span>Call</span></a>}
         {instagramProfileUrl(seller.instagram_url)&&<a href={instagramProfileUrl(seller.instagram_url)} target="_blank" rel="noopener noreferrer" aria-label={"Open Instagram profile "+instagramProfileUrl(seller.instagram_url).split("/").filter(Boolean).pop()}><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg><span>Instagram</span></a>}
@@ -326,7 +334,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
     <section id="reviews" className="ns-mobile-reviews" onMouseEnter={()=>setActiveTab("reviews")}><ReviewPanel seller={seller}/></section>
     <nav className="ns-mobile-bottom-nav" aria-label="Main navigation"><button className={location.pathname==="/"?"active":""} aria-current={location.pathname==="/"?"page":undefined} onClick={()=>go("/")}><Home size={21}/><span>Home</span></button><button className={location.pathname.startsWith("/explore")||location.pathname.startsWith("/categories")?"active":""} onClick={()=>go("/explore")}><Compass size={21}/><span>Explore</span></button><button className={location.pathname.startsWith("/saved")?"active":""} onClick={()=>go("/saved")}><Heart size={21}/><span>Saved</span></button><button className={location.search.includes("near=1")?"active":""} onClick={()=>go("/explore?near=1")}><Navigation size={21}/><span>Near me</span></button><button className={location.pathname.startsWith("/featured")?"active":""} onClick={()=>go("/featured")}><Star size={21}/><span>Featured</span></button></nav>
     {shareOpen&&<SellerShareModal seller={seller} url={sellerPublicUrl(seller.slug)} qrUrl={sellerPublicUrl(seller.slug)+"?source=qr"} onClose={()=>setShareOpen(false)}/>}
-    {product&&<ProductModal product={product} onClose={()=>setProduct(null)} onEnquire={productWa(product)} onAppEnquiry={()=>{setEnquiryProduct(product);setEnquiryOpen(true);setProduct(null)}}/>}
+    {product&&<ProductModal product={product} onClose={()=>setProduct(null)} onEnquire={()=>{setEnquiryProduct(product);setEnquiryOpen(true);setProduct(null)}}/>}
     {enquiryOpen&&<EnquiryModal seller={seller} product={enquiryProduct} onClose={()=>setEnquiryOpen(false)}/>}   </main>;
 }
 

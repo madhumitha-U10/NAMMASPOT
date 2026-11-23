@@ -798,18 +798,27 @@ export async function deleteProduct(productId) {
 }
 
 export async function createEnquiry(values) {
+  const customerName = text(values.customer_name, 120);
+  const customerContact = text(values.customer_contact, 160);
+  const message = text(values.message, 2000);
+  const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(customerContact);
+  const phoneDigits = customerContact.replace(/\D/g, "");
+  const phoneIsValid = /^[0-9+() -]+$/.test(customerContact) && phoneDigits.length >= 10 && phoneDigits.length <= 15;
+  if (customerName.length < 2) throw new Error("Enter your name (at least 2 characters).");
+  if (!emailIsValid && !phoneIsValid) throw new Error("Enter a valid phone number or email address.");
+  if (message.length < 3) throw new Error("Please add a little more detail to your message.");
   if (!supabase) {
     const state=demoState();
-    state.enquiries.unshift({id:uid("enquiry"),user_id:currentDemoUser()?.id||null,seller_id:values.seller_id,product_id:values.product_id||null,customer_name:text(values.customer_name,120),customer_contact:text(values.customer_contact,160),message:text(values.message,1000),status:"pending",enquiry_date:new Date().toISOString(),product:{product_name:demoState().products.find((p)=>p.id===values.product_id)?.name||""}});
+    state.enquiries.unshift({id:uid("enquiry"),user_id:currentDemoUser()?.id||null,seller_id:values.seller_id,product_id:values.product_id||null,customer_name:customerName,customer_contact:customerContact,message,status:"pending",enquiry_date:new Date().toISOString(),product:{product_name:demoState().products.find((p)=>p.id===values.product_id)?.name||""}});
     saveDemo(state); return {id:state.enquiries[0].id,status:"pending"};
   }
   const client=needBackend();
   const {data,error}=await client.rpc("create_public_enquiry",{
     p_seller_id:values.seller_id,
     p_product_id:values.product_id||null,
-    p_customer_name:text(values.customer_name,120),
-    p_customer_contact:text(values.customer_contact,160),
-    p_message:text(values.message,2000)
+    p_customer_name:customerName,
+    p_customer_contact:customerContact,
+    p_message:message
   });
   if(error) throw error;
   const row=Array.isArray(data)?data[0]:data;

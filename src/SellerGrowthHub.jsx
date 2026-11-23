@@ -93,7 +93,8 @@ export default function SellerGrowthHub({ seller, products = [], enquiries = [],
       </div>
 
       <div className="ns-growth-metrics" aria-label="Seller activity summary">
-        <article className="ns-growth-metric"><span><Heart size={17}/> Shop likes</span><strong>{Number(sellerLikes || 0).toLocaleString("en-IN")}</strong><small>People who appreciate your shop</small></article>\n        <article className="ns-growth-metric"><span><Eye size={17}/> Page visits · 30 days</span><strong>{totalViews}</strong><small>{todayViews} today</small></article>
+        <article className="ns-growth-metric"><span><Heart size={17}/> Shop likes</span><strong>{Number(sellerLikes || 0).toLocaleString("en-IN")}</strong><small>People who appreciate your shop</small></article>
+        <article className="ns-growth-metric"><span><Eye size={17}/> Page visits · 30 days</span><strong>{totalViews}</strong><small>{todayViews} today</small></article>
         <article className="ns-growth-metric"><span><Users size={17}/> Visitors · 30 days</span><strong>{uniqueVisitors}</strong><small>Estimated unique browsers</small></article>
         <article className="ns-growth-metric"><span><Package size={17}/> Catalogue items</span><strong>{products.length}</strong><small>{metrics.available} currently available</small></article>
         <article className="ns-growth-metric"><span><MessageCircle size={17}/> Enquiries</span><strong>{enquiries.length}</strong><small>{metrics.newEnquiries} need your attention</small></article>

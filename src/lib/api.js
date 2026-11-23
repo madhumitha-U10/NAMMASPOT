@@ -854,6 +854,27 @@ export async function createEnquiry(values) {
   return row;
 }
 
+export async function getMySellerNotifications(sellerId, limit = 30) {
+  if (!sellerId || !supabase) return [];
+  const { data, error } = await needBackend().from("seller_notifications")
+    .select("id,notification_type,title,message,related_id,read_at,created_at")
+    .eq("seller_id", sellerId).order("created_at", { ascending: false })
+    .limit(Math.max(1, Math.min(50, Number(limit) || 30)));
+  if (error) throw error;
+  return data || [];
+}
+export async function markSellerNotificationRead(notificationId) {
+  if (!supabase || !notificationId) return;
+  const { error } = await needBackend().from("seller_notifications")
+    .update({ read_at: new Date().toISOString() }).eq("id", notificationId);
+  if (error) throw error;
+}
+export async function markAllSellerNotificationsRead(sellerId) {
+  if (!supabase || !sellerId) return;
+  const { error } = await needBackend().from("seller_notifications")
+    .update({ read_at: new Date().toISOString() }).eq("seller_id", sellerId).is("read_at", null);
+  if (error) throw error;
+}
 export async function getMyEnquiries(sellerId) {
   if (!supabase) return demoState().enquiries.filter((e)=>e.seller_id===sellerId);
   const client=needBackend(); const {data,error}=await client.from("enquiries").select("id,customer_name,customer_contact,message,status,enquiry_date,product:products(product_name)").eq("seller_id",sellerId).order("enquiry_date",{ascending:false}); if(error) throw error; return data||[];

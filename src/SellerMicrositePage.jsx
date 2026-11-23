@@ -196,6 +196,17 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
   },[slug]);
   const data=state.data,seller=data?.seller,settings=data?.settings||{};
   useEffect(()=>{
+    if(!seller?.id)return;
+    try{
+      const key="nammaspot-recent-sellers";
+      const existing=JSON.parse(localStorage.getItem(key)||"[]");
+      const entry={id:seller.id,slug:seller.slug,name:seller.business_name||"Local seller",image:seller.profile_image_url||settings.logo_url||"",location:seller.location||seller.city||""};
+      const next=[entry,...(Array.isArray(existing)?existing:[]).filter(item=>item?.id!==seller.id)].slice(0,6);
+      localStorage.setItem(key,JSON.stringify(next));
+    }catch{}
+  },[seller?.id,seller?.slug,seller?.business_name,seller?.profile_image_url,seller?.location,seller?.city,settings.logo_url]);
+
+  useEffect(()=>{
     if(!seller)return;
     const url=sellerPublicUrl(seller.slug);
     const title=(seller.business_name||"Seller")+" · Catalogue · NammaSpot";

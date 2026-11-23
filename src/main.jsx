@@ -71,7 +71,7 @@ import CategoryIcon from "./components/brand/CategoryIcon.jsx";
 import LikeButton from "./components/LikeButton.jsx";
 import { addProductGalleryImage, deleteProductGalleryImage, getMyMicrosite, saveMicrosite } from "./lib/microsite";
 import { formatBytes } from "./lib/storage";
-import SellerGrowthHub, { SellerGrowthSharing } from "./SellerGrowthHub.jsx";
+import SellerGrowthHub, { SellerGrowthSharing } from "./SellerGrowthHub.jsx";\nimport SellerNotifications from "./components/SellerNotifications.jsx";\nimport RecentSellerStrip from "./components/RecentSellerStrip.jsx";
 
 const popularCategories = ["Bakery", "Mehendi", "Crochet", "Makeup", "Art"];
 const SAVED_PRODUCTS_KEY = "nammaspot-saved-products";
@@ -593,7 +593,7 @@ function ExplorePage({ go, query, setQuery, saved, toggleSave }) {
         <button className={near ? "active" : ""} onClick={() => go(near ? "/explore" : "/explore?near=Chennai")}>Near me</button>
       </div>
 
-      {state.loading ? <CardSkeletonRow detailed/> :
+      <RecentSellerStrip go={go}/>\n\n      {state.loading ? <CardSkeletonRow detailed/> :
         state.error ? <ErrorState message={state.error} retry={() => location.reload()}/> :
         searchType === "product" ? (
           (state.data || []).flatMap((seller) => (seller.products || [])
@@ -1109,7 +1109,7 @@ function DashboardPage({ go }) {
   const [state,setState] = useState({loading:true,error:""});
   const [storageUsage,setStorageUsage] = useState(null);
   const [analytics,setAnalytics] = useState(null);
-  const [sellerLikeCount,setSellerLikeCount] = useState(0);
+  const [sellerLikeCount,setSellerLikeCount] = useState(0);\n  const [notifications,setNotifications] = useState([]);
 
   const load = async () => {
     try {
@@ -1117,7 +1117,7 @@ function DashboardPage({ go }) {
       if (!profile || profile.role !== "seller") { go("/login"); return; }
       const [mySeller,cats] = await Promise.all([getMySeller(),getCategories()]);
       if (!mySeller) throw new Error("Seller profile not found.");
-      const [myProducts,myEnquiries,myAnalytics] = await Promise.all([listMyProducts(mySeller.id),getMyEnquiries(mySeller.id),getSellerPageAnalytics(mySeller.id,30).catch(()=>null)]);
+      const [myProducts,myEnquiries,myAnalytics,myNotifications] = await Promise.all([listMyProducts(mySeller.id),getMyEnquiries(mySeller.id),getSellerPageAnalytics(mySeller.id,30).catch(()=>null),getMySellerNotifications(mySeller.id).catch(()=>[])]);
       const myLikeStats = await getSellerLikeStats(mySeller.id,myProducts.map(product=>product.id)).catch(()=>({sellerLikes:0,productLikes:{}}));
       setSeller(mySeller);
       setProducts(myProducts.map(product=>({...product,like_count:Number(myLikeStats.productLikes[product.id]||0)})));
@@ -1146,10 +1146,10 @@ function DashboardPage({ go }) {
 
       <section className="seller-likes-overview"><div className="seller-likes-main"><span className="seller-likes-heart"><Heart size={20} fill="currentColor"/></span><div><strong>{sellerLikeCount.toLocaleString("en-IN")}</strong><span>People who like your shop</span></div></div><div className="seller-likes-products"><strong>Most liked products</strong>{products.filter(p=>p.like_count>0).sort((a,b)=>b.like_count-a.like_count).slice(0,3).map(p=><div key={p.id}><span>{p.name}</span><b>♥ {p.like_count}</b></div>)}{!products.some(p=>p.like_count>0)&&<small>Your product likes will appear here.</small>}</div></section>
       <div className="dashboard-tabs">
-        {["overview","profile","products","enquiries","growth","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item==="public"?"Public profile":item==="growth"?"Growth & sharing":item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
+        {["overview","notifications","profile","products","enquiries","growth","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item==="public"?"Public profile":item==="growth"?"Growth & sharing":item==="notifications"?"Notifications"+(notifications.filter(n=>!n.read_at).length?" · "+notifications.filter(n=>!n.read_at).length:""):item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
       </div>
 
-      {tab==="overview" && <SellerGrowthHub seller={seller} products={products} enquiries={enquiries} analytics={analytics} onNavigate={setTab}/>}
+      {tab==="overview" && <SellerGrowthHub seller={seller} products={products} enquiries={enquiries} analytics={analytics} sellerLikes={sellerLikeCount} onNavigate={setTab}/>}\n      {tab==="notifications" && <SellerNotifications notifications={notifications} onRead={async(id)=>{try{await markSellerNotificationRead(id);setNotifications(items=>items.map(item=>item.id===id?{...item,read_at:new Date().toISOString()}:item));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onReadAll={async()=>{try{await markAllSellerNotificationsRead(seller.id);setNotifications(items=>items.map(item=>({...item,read_at:item.read_at||new Date().toISOString()})));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onNavigate={()=>setTab("enquiries")}/>} 
       {tab==="profile" && <ProfileEditor seller={seller} categories={categories} onSaved={(next)=>setSeller((current)=>({...current,...next}))}/>}
       {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} storageUsage={storageUsage} onStorageUsageChange={setStorageUsage} onChange={setProducts}/>}
       {tab==="enquiries" && <EnquiryManager enquiries={enquiries} onChange={setEnquiries} seller={seller}/>}

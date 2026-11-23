@@ -1,0 +1,1 @@
+create index if not exists seller_content_likes_guest_created_idx on public.seller_content_likes (guest_id, created_at desc) where guest_id is not null;

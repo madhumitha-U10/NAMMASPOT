@@ -1,4 +1,4 @@
-import { supabase, guestSupabase, isSupabaseConfigured, isProductionConfigurationError, uploadSellerMedia, getSellerStorageUsage } from "./supabase";
+import { supabase, isSupabaseConfigured, isProductionConfigurationError, uploadSellerMedia, getSellerStorageUsage } from "./supabase";
 import { seedSellers, categoryNames } from "./seed";
 
 export { isSupabaseConfigured, isProductionConfigurationError, uploadSellerMedia, getSellerStorageUsage };
@@ -156,15 +156,37 @@ function sellerOf(row) {
 
 const sellerSelect = "id,nammaspot_id,slug,business_name,owner_name,location,location_url,city,description,contact,whatsapp_phone,instagram_url,profile_image_url,cover_image_url,opening_time,closing_time,featured,verified,verification_status,category:categories(id,name),products(id,seller_id,product_name,description,price,availability,image_url,category_id,created_at)";
 
+function getBrowserGuestLikeId() {
+  if (typeof window === "undefined") return null;
+  const storageKey = "nammaspot-guest-like-id";
+  try {
+    let guestId = window.localStorage.getItem(storageKey);
+    if (!guestId) {
+      guestId = window.crypto?.randomUUID?.();
+      if (!guestId && window.crypto?.getRandomValues) {
+        const bytes = new Uint8Array(16);
+        window.crypto.getRandomValues(bytes);
+        bytes[6] = (bytes[6] & 0x0f) | 0x40;
+        bytes[8] = (bytes[8] & 0x3f) | 0x80;
+        guestId = [...bytes].map((value, index) => ([4, 6, 8, 10].includes(index) ? "-" : "") + value.toString(16).padStart(2, "0")).join("");
+      }
+      if (!guestId) throw new Error("This browser cannot create a secure guest session.");
+      window.localStorage.setItem(storageKey, guestId);
+    }
+    return guestId;
+  } catch {
+    throw new Error("Guest likes need browser storage enabled. Please allow site storage and try again.");
+  }
+}
+
 export async function getContentLikeData(sellerIds = [], productIds = []) {
   const sellerList = [...new Set(sellerIds.filter(Boolean))];
   const productList = [...new Set(productIds.filter(Boolean))];
   if (!supabase || (!sellerList.length && !productList.length)) return { sellerCounts: {}, productCounts: {}, likedSellers: [], likedProducts: [] };
   const client = needBackend();
-  const [{ data: counts, error: countError }, mainSessionResult, guestSessionResult] = await Promise.all([
+  const [{ data: counts, error: countError }, sessionResult] = await Promise.all([
     client.from("seller_content_like_counts").select("target_type,target_id,like_count").in("target_id", [...sellerList, ...productList]),
-    client.auth.getSession(),
-    guestSupabase?.auth.getSession() || Promise.resolve({ data: { session: null } })
+    client.auth.getSession()
   ]);
   if (countError) throw countError;
   const sellerCounts = {}, productCounts = {};
@@ -172,24 +194,26 @@ export async function getContentLikeData(sellerIds = [], productIds = []) {
     if (row.target_type === "seller" && sellerList.includes(row.target_id)) sellerCounts[row.target_id] = Number(row.like_count || 0);
     if (row.target_type === "product" && productList.includes(row.target_id)) productCounts[row.target_id] = Number(row.like_count || 0);
   });
-  const mainSession = mainSessionResult.data?.session;
-  const guestSession = guestSessionResult.data?.session;
-  const activeSession = mainSession?.user ? mainSession : guestSession;
-  const activeClient = mainSession?.user ? client : guestSupabase;
-  const userId = activeSession?.user?.id;
+  const session = sessionResult.data?.session;
   let likedSellers = [], likedProducts = [];
-  if (userId && activeClient) {
-    let query = activeClient.from("seller_content_likes").select("seller_id,product_id").eq("user_id", userId);
-    if (sellerList.length || productList.length) {
-      const clauses = [];
-      if (sellerList.length) clauses.push("seller_id.in.(" + sellerList.join(",") + ")");
-      if (productList.length) clauses.push("product_id.in.(" + productList.join(",") + ")");
-      query = query.or(clauses.join(","));
-    }
+  if (session?.user) {
+    let query = client.from("seller_content_likes").select("seller_id,product_id").eq("user_id", session.user.id);
+    const clauses = [];
+    if (sellerList.length) clauses.push("seller_id.in.(" + sellerList.join(",") + ")");
+    if (productList.length) clauses.push("product_id.in.(" + productList.join(",") + ")");
+    if (clauses.length) query = query.or(clauses.join(","));
     const { data, error } = await query;
     if (error) throw error;
     likedSellers = (data || []).map((row) => row.seller_id).filter(Boolean);
     likedProducts = (data || []).map((row) => row.product_id).filter(Boolean);
+  } else {
+    const guestId = getBrowserGuestLikeId();
+    const { data, error } = await client.functions.invoke("guest-content-likes", {
+      body: { action: "list", guestId, sellerIds: sellerList, productIds: productList }
+    });
+    if (error) throw error;
+    likedSellers = data?.likedSellers || [];
+    likedProducts = data?.likedProducts || [];
   }
   return { sellerCounts, productCounts, likedSellers, likedProducts };
 }
@@ -198,43 +222,47 @@ export async function toggleContentLike({ sellerId = null, productId = null, lik
   if (!sellerId && !productId) throw new Error("Choose a seller or product to like.");
   if (sellerId && productId) throw new Error("Like one item at a time.");
   const client = needBackend();
-  const { data: mainSessionResult } = await client.auth.getSession();
-  let likeClient = client;
-  let session = mainSessionResult.session;
-  if (!session?.user) {
-    // Isolate guest identity from the main auth client so browsing/liking never
-    // changes the visitor's seller or customer sign-in state.
-    if (!guestSupabase) throw new Error("Guest likes are not available right now.");
-    likeClient = guestSupabase;
-    const { data: guestSessionResult } = await likeClient.auth.getSession();
-    session = guestSessionResult.session;
-    if (!session?.user) {
-      const { data, error } = await likeClient.auth.signInAnonymously();
-      if (error) {
-        const message = String(error.message || "").toLowerCase();
-        if (message.includes("anonymous") || message.includes("disabled")) {
-          throw new Error("Guest likes are not enabled yet. Please try again later.");
-        }
-        throw error;
-      }
-      session = data.session;
+  const { data: sessionResult } = await client.auth.getSession();
+  const session = sessionResult.session;
+  if (session?.user) {
+    let query = client.from("seller_content_likes").delete().eq("user_id", session.user.id);
+    if (liked) {
+      query = sellerId ? query.eq("seller_id", sellerId) : query.eq("product_id", productId);
+      const { error } = await query;
+      if (error) throw error;
+      return false;
     }
+    const { error } = await client.from("seller_content_likes").insert({
+      user_id: session.user.id,
+      seller_id: sellerId,
+      product_id: productId
+    });
+    if (error && error.code !== "23505") throw error;
+    return true;
   }
-  if (!session?.user) throw new Error("A guest session could not be started. Please try again.");
-  let query = likeClient.from("seller_content_likes").delete().eq("user_id", session.user.id);
-  if (liked) {
-    query = sellerId ? query.eq("seller_id", sellerId) : query.eq("product_id", productId);
-    const { error } = await query;
-    if (error) throw error;
-    return false;
-  }
-  const { error } = await likeClient.from("seller_content_likes").insert({
-    user_id: session.user.id,
-    seller_id: sellerId,
-    product_id: productId
+
+  const guestId = getBrowserGuestLikeId();
+  const { data, error } = await client.functions.invoke("guest-content-likes", {
+    body: {
+      action: "toggle",
+      guestId,
+      targetType: sellerId ? "seller" : "product",
+      targetId: sellerId || productId,
+      liked: Boolean(liked)
+    }
   });
-  if (error && error.code !== "23505") throw error;
-  return true;
+  if (error) {
+    if (error.context && typeof error.context.clone === "function") {
+      try {
+        const body = await error.context.clone().json();
+        throw new Error(body?.error || body?.message || error.message);
+      } catch (responseError) {
+        if (responseError instanceof Error && responseError.message) throw responseError;
+      }
+    }
+    throw error;
+  }
+  return Boolean(data?.liked);
 }
 
 export async function getSellerLikeStats(sellerId, productIds = []) {

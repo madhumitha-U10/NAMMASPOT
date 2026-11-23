@@ -274,7 +274,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
     try{
       const liked=await toggleContentLike({sellerId:type==="seller"?seller.id:null,productId:type==="product"?item.id:null,liked:Boolean(item.liked_by_me)});
       setState(current=>({...current,data:{...current.data,seller:type==="seller"?{...current.data.seller,liked_by_me:liked,like_count:Math.max(0,Number(current.data.seller.like_count||0)+(liked?1:-1))}:current.data.seller,products:current.data.products.map(p=>type==="product"&&p.id===item.id?{...p,liked_by_me:liked,like_count:Math.max(0,Number(p.like_count||0)+(liked?1:-1))}:p)}}));
-      setLikeNotice("");
+      setLikeNotice(liked ? "Your support means a lot! ❤️ You have encouraged a local seller." : "");
     }catch(error){setLikeNotice(error.message||"Could not save your like. Please try again.");}
   };
   const toggleProductSave=(p)=>{

@@ -16,18 +16,6 @@ export const supabase = isSupabaseConfigured
     })
   : null;
 
-// Keep public guest-like sessions separate from seller/customer sign-in state.
-export const guestSupabase = isSupabaseConfigured
-  ? createClient(url, key, {
-      auth: {
-        storageKey: "nammaspot-guest-auth",
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: false,
-      },
-    })
-  : null;
-
 const DEFAULT_MAX_IMAGE_BYTES = 500000;
 const MAX_IMAGE_DIMENSION = 1600;
 const MAX_SOURCE_IMAGE_BYTES = 10 * 1024 * 1024;

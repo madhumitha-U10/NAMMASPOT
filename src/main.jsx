@@ -77,8 +77,6 @@ import { formatBytes } from "./lib/storage";
 import SellerGrowthHub, { SellerGrowthSharing } from "./SellerGrowthHub.jsx";
 import SellerNotifications from "./components/SellerNotifications.jsx";
 import RecentSellerStrip from "./components/RecentSellerStrip.jsx";
-import SellerNotifications from "./components/SellerNotifications.jsx";
-import RecentSellerStrip from "./components/RecentSellerStrip.jsx";
 
 const popularCategories = ["Bakery", "Mehendi", "Crochet", "Makeup", "Art"];
 const SAVED_PRODUCTS_KEY = "nammaspot-saved-products";

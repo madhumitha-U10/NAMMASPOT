@@ -1,5 +1,3 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -13,35 +11,58 @@ function response(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: corsHeaders });
 }
 
-function getAdminClient() {
+function getRestConfig() {
   const url = Deno.env.get("SUPABASE_URL");
   const secretKeys = Deno.env.get("SUPABASE_SECRET_KEYS");
   const legacyServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!url) throw new Error("Supabase URL is not configured.");
   if (secretKeys) {
-    const parsed = JSON.parse(secretKeys);
-    const secret = parsed.default;
+    const secret = JSON.parse(secretKeys).default;
     if (!secret) throw new Error("Supabase secret key is not configured.");
-    // Secret API keys must be sent only as apikey, not as a Bearer JWT.
-    return createClient(url, secret, {
-      auth: { persistSession: false, autoRefreshToken: false },
-      global: {
-        fetch: (input, init = {}) => {
-          const headers = new Headers(init.headers);
-          headers.delete("Authorization");
-          return fetch(input, { ...init, headers });
-        },
-      },
-    });
+    return { url, apiKey: secret, authorization: null };
   }
   if (!legacyServiceKey) throw new Error("Supabase server key is not configured.");
-  return createClient(url, legacyServiceKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
+  return { url, apiKey: legacyServiceKey, authorization: "Bearer " + legacyServiceKey };
+}
+
+async function rest(path: string, method = "GET", body?: unknown, prefer?: string) {
+  const config = getRestConfig();
+  const headers = new Headers({
+    apikey: config.apiKey,
+    "Content-Type": "application/json",
   });
+  if (config.authorization) headers.set("Authorization", config.authorization);
+  if (prefer) headers.set("Prefer", prefer);
+  const result = await fetch(config.url + "/rest/v1/" + path, {
+    method,
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  const contentRange = result.headers.get("content-range");
+  const countText = contentRange?.split("/")[1];
+  const count = countText && countText !== "*" ? Number(countText) : null;
+  const text = method === "HEAD" ? "" : await result.text();
+  let data: any = null;
+  if (text) {
+    try { data = JSON.parse(text); } catch { data = text; }
+  }
+  if (!result.ok) {
+    const error = Array.isArray(data) ? data[0] : data;
+    const exception = new Error(error?.message || "Database request failed.");
+    (exception as any).code = error?.code;
+    throw exception;
+  }
+  return { data, count };
 }
 
 function validId(value: unknown) {
   return typeof value === "string" && UUID_RE.test(value);
+}
+function filterList(values: unknown) {
+  return Array.isArray(values) ? values.filter(validId).slice(0, 100) as string[] : [];
+}
+function inFilter(values: string[]) {
+  return "in.(" + values.join(",") + ")";
 }
 
 Deno.serve(async (req: Request) => {
@@ -53,24 +74,20 @@ Deno.serve(async (req: Request) => {
     const { action, guestId } = body ?? {};
     if (!validId(guestId)) return response({ error: "A valid guest browser ID is required." }, 400);
 
-    const admin = getAdminClient();
-
     if (action === "list") {
-      const sellerIds = Array.isArray(body.sellerIds) ? body.sellerIds.filter(validId).slice(0, 100) : [];
-      const productIds = Array.isArray(body.productIds) ? body.productIds.filter(validId).slice(0, 100) : [];
+      const sellerIds = filterList(body.sellerIds);
+      const productIds = filterList(body.productIds);
       const [sellerResult, productResult] = await Promise.all([
         sellerIds.length
-          ? admin.from("seller_content_likes").select("seller_id").eq("guest_id", guestId).in("seller_id", sellerIds)
-          : Promise.resolve({ data: [], error: null }),
+          ? rest("seller_content_likes?select=seller_id&guest_id=eq." + guestId + "&seller_id=" + inFilter(sellerIds))
+          : Promise.resolve({ data: [] }),
         productIds.length
-          ? admin.from("seller_content_likes").select("product_id").eq("guest_id", guestId).in("product_id", productIds)
-          : Promise.resolve({ data: [], error: null }),
+          ? rest("seller_content_likes?select=product_id&guest_id=eq." + guestId + "&product_id=" + inFilter(productIds))
+          : Promise.resolve({ data: [] }),
       ]);
-      if (sellerResult.error) throw sellerResult.error;
-      if (productResult.error) throw productResult.error;
       return response({
-        likedSellers: (sellerResult.data ?? []).map((row) => row.seller_id),
-        likedProducts: (productResult.data ?? []).map((row) => row.product_id),
+        likedSellers: (sellerResult.data ?? []).map((row: any) => row.seller_id),
+        likedProducts: (productResult.data ?? []).map((row: any) => row.product_id),
       });
     }
 
@@ -81,59 +98,48 @@ Deno.serve(async (req: Request) => {
     }
 
     const targetColumn = targetType === "seller" ? "seller_id" : "product_id";
-    const targetPayload = targetType === "seller"
-      ? { seller_id: targetId, product_id: null }
-      : { seller_id: null, product_id: targetId };
-
-    const { data: existing, error: existingError } = await admin
-      .from("seller_content_likes")
-      .select("id")
-      .eq("guest_id", guestId)
-      .eq(targetColumn, targetId)
-      .maybeSingle();
-    if (existingError) throw existingError;
+    const targetQuery = "guest_id=eq." + guestId + "&" + targetColumn + "=eq." + targetId;
+    const existingResult = await rest("seller_content_likes?select=id&" + targetQuery + "&limit=1");
+    const existing = existingResult.data?.[0];
 
     if (liked) {
-      if (existing) {
-        const { error } = await admin.from("seller_content_likes").delete().eq("id", existing.id);
-        if (error) throw error;
-      }
+      if (existing) await rest("seller_content_likes?id=eq." + existing.id, "DELETE", undefined, "return=minimal");
       return response({ liked: false });
     }
     if (existing) return response({ liked: true });
 
     if (targetType === "seller") {
-      const { data: seller, error } = await admin.from("sellers")
-        .select("id").eq("id", targetId).eq("verification_status", "approved").maybeSingle();
-      if (error) throw error;
-      if (!seller) return response({ error: "This seller is not available for likes." }, 404);
+      const seller = await rest("sellers?select=id&id=eq." + targetId + "&verification_status=eq.approved&limit=1");
+      if (!seller.data?.length) return response({ error: "This seller is not available for likes." }, 404);
     } else {
-      const { data: product, error } = await admin.from("products")
-        .select("id,seller_id").eq("id", targetId).maybeSingle();
-      if (error) throw error;
-      if (!product) return response({ error: "This product is not available for likes." }, 404);
-      const { data: seller, error: sellerError } = await admin.from("sellers")
-        .select("id").eq("id", product.seller_id).eq("verification_status", "approved").maybeSingle();
-      if (sellerError) throw sellerError;
-      if (!seller) return response({ error: "This product is not available for likes." }, 404);
+      const product = await rest("products?select=id,seller_id&id=eq." + targetId + "&limit=1");
+      if (!product.data?.length) return response({ error: "This product is not available for likes." }, 404);
+      const seller = await rest("sellers?select=id&id=eq." + product.data[0].seller_id + "&verification_status=eq.approved&limit=1");
+      if (!seller.data?.length) return response({ error: "This product is not available for likes." }, 404);
     }
 
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const { count, error: countError } = await admin.from("seller_content_likes")
-      .select("id", { count: "exact", head: true })
-      .eq("guest_id", guestId)
-      .gte("created_at", since);
-    if (countError) throw countError;
-    if ((count ?? 0) >= MAX_GUEST_LIKES_PER_DAY) {
+    const rate = await rest(
+      "seller_content_likes?select=id&guest_id=eq." + guestId + "&created_at=gte." + encodeURIComponent(since),
+      "HEAD",
+      undefined,
+      "count=exact"
+    );
+    if ((rate.count ?? 0) >= MAX_GUEST_LIKES_PER_DAY) {
       return response({ error: "You've reached today's guest-like limit. Please try again tomorrow." }, 429);
     }
 
-    const { error: insertError } = await admin.from("seller_content_likes").insert({
-      user_id: null,
-      guest_id: guestId,
-      ...targetPayload,
-    });
-    if (insertError && insertError.code !== "23505") throw insertError;
+    try {
+      await rest("seller_content_likes", "POST", {
+        user_id: null,
+        guest_id: guestId,
+        seller_id: targetType === "seller" ? targetId : null,
+        product_id: targetType === "product" ? targetId : null,
+      }, "return=minimal");
+    } catch (error) {
+      if ((error as any)?.code === "23505") return response({ liked: true });
+      throw error;
+    }
     return response({ liked: true });
   } catch (error) {
     console.error("guest-content-likes:", error);

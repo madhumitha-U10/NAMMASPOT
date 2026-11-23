@@ -1444,7 +1444,7 @@ function EnquiryManager({ enquiries,onChange,seller }) {
   });
   return (
     <section className="enquiry-manager">
-      <div className="dashboard-section-head"><div><h2>Customer enquiries</h2><p>Reply to customers using the contact details they shared, then update the status so you know what needs attention.</p></div><button className="secondary-button" onClick={()=>{setSearch("");setFilter("all");setError("");setNotice("");}}>Reset</button></div>
+      <div className="dashboard-section-head"><div><h2>Customer enquiries</h2><p>Customers send one enquiry through NammaSpot. Reply using the contact detail they provided, then track each enquiry here.</p></div><button className="secondary-button" onClick={()=>{setSearch("");setFilter("all");setError("");setNotice("");}}>Reset</button></div>
       <div className="enquiry-summary">
         {[["all","All"],["new","New"],["read","Read"],["replied","Replied"],["closed","Closed"]].map(([key,label])=><button type="button" key={key} className={filter===key?"active":""} onClick={()=>setFilter(key)}><span>{label}</span><strong>{counts[key]}</strong></button>)}
       </div>
@@ -1462,7 +1462,7 @@ function EnquiryManager({ enquiries,onChange,seller }) {
           return <article className="dashboard-item enquiry-item" key={item.id}>
             <div className="enquiry-item-main">
               <div className="enquiry-item-heading"><strong>{item.customer_name||"Customer"} · {item.product?.product_name||"General enquiry"}</strong><span className={"status-pill status-"+status}>{status==="new"?"New":status==="read"?"Read":status==="replied"?"Replied":"Closed"}</span></div>
-              <p className="enquiry-contact">{item.customer_contact||"No contact supplied"}</p>
+              <p className="enquiry-contact">{item.customer_contact||"No contact supplied"}<span className="enquiry-contact-method">{contact.includes("@")?"Email reply":"WhatsApp / phone reply"}</span></p>
               <p className="enquiry-message">{item.message}</p>
               {date&&<small className="muted-note">Received {new Intl.DateTimeFormat("en-IN",{dateStyle:"medium",timeStyle:"short"}).format(new Date(date))}</small>}
               <div className="button-row enquiry-actions">{whatsappNumber&&<a className="secondary-button" href={"https://wa.me/"+whatsappNumber+"?text="+encodeURIComponent(replyText)} target="_blank" rel="noreferrer"><MessageCircle size={15}/> Reply on WhatsApp</a>}{contact&&contact.includes("@")&&<a className="secondary-button" href={"mailto:"+contact}><Send size={15}/> Email</a>}</div>

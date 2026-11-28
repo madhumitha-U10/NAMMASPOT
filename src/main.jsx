@@ -16,6 +16,7 @@ import {
   isProductionConfigurationError,
   BackendNotConfiguredError,
   getPublicSellers,
+  getPublicSellerCards,
   getPublicSeller,
   getCategories,
   getCurrentProfile,
@@ -435,8 +436,8 @@ function useAsync(loader, deps) {
 }
 
 function HomePage({ go, query, setQuery }) {
-  const state = useAsync(() => getPublicSellers(), []);
-  const sellers = (state.data || []).slice(0, 3);
+  const state = useAsync(() => getPublicSellerCards({ limit: 3 }), []);
+  const sellers = state.data || [];
   const search = (type = "seller") => go(query.trim() ? "/explore?search=" + encodeURIComponent(query.trim()) + "&type=" + type : "/explore?type=" + type);
 
   return (
@@ -654,8 +655,8 @@ function CategoriesPage({ go }) {
   );
 }
 function FeaturedPage({ go, saved, toggleSave }) {
-  const state = useAsync(() => getPublicSellers(), []);
-  const items = (state.data || []).filter((seller) => seller.featured);
+  const state = useAsync(() => getPublicSellerCards({ limit: 60, featuredOnly: true }), []);
+  const items = state.data || [];
   return (
     <main className="page">
       <div className="page-title"><div className="eyebrow">HANDPICKED</div><h1>Featured sellers.</h1><p>A small selection worth a closer look.</p></div>
@@ -670,8 +671,8 @@ function FeaturedPage({ go, saved, toggleSave }) {
 function SavedPage({ go, saved, toggleSave }) {
   const [activeTab, setActiveTab] = useState("products");
   const [savedProducts, setSavedProducts] = useState(() => readSavedProducts());
-  const state = useAsync(() => getPublicSellers(), [saved.join(",")]);
-  const sellers = (state.data || []).filter((seller) => saved.includes(seller.id));
+  const state = useAsync(() => getPublicSellerCards({ sellerIds: saved, limit: saved.length }), [saved.join(",")]);
+  const sellers = state.data || [];
 
   useEffect(() => {
     const refresh = () => setSavedProducts(readSavedProducts());

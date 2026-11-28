@@ -17,6 +17,7 @@ export default function SellerFeatureAccess({ seller, onAccessChange, onSubcateg
   const [rows, setRows] = useState([]);
   const [offers, setOffers] = useState([]);
   const [polls, setPolls] = useState([]);
+  const [pollVoteCounts, setPollVoteCounts] = useState({});
   const [subcategories, setSubcategories] = useState([]);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
@@ -27,16 +28,18 @@ export default function SellerFeatureAccess({ seller, onAccessChange, onSubcateg
 
   const load = async () => {
     if (!supabase || !seller?.id) return;
-    const [access, offerRows, pollRows, sectionRows] = await Promise.all([
+    const [access, offerRows, pollRows, sectionRows, voteStats] = await Promise.all([
       supabase.from("seller_feature_access").select("feature_key,status,enabled,requested_at,reviewed_at,review_note").eq("seller_id", seller.id),
       supabase.from("seller_offers").select("id,title,description,status,starts_at,ends_at").eq("seller_id", seller.id).order("created_at", { ascending: false }),
       supabase.from("seller_polls").select("id,question,options,status,ends_at").eq("seller_id", seller.id).order("created_at", { ascending: false }),
       supabase.from("seller_catalogue_subcategories").select("id,name,status").eq("seller_id", seller.id).order("sort_order"),
+      supabase.rpc("get_seller_poll_vote_counts", { p_seller_id: seller.id }),
     ]);
-    for (const result of [access, offerRows, pollRows, sectionRows]) if (result.error) throw result.error;
+    for (const result of [access, offerRows, pollRows, sectionRows, voteStats]) if (result.error) throw result.error;
     setRows(access.data || []);
     setOffers(offerRows.data || []);
     setPolls(pollRows.data || []);
+    setPollVoteCounts(Object.fromEntries((voteStats.data || []).map(item => [item.poll_id, Number(item.total_votes) || 0])));
     setSubcategories(sectionRows.data || []);
     onAccessChange?.(makeAccessMap(access.data));
     onSubcategoriesChange?.(sectionRows.data || []);
@@ -192,7 +195,7 @@ export default function SellerFeatureAccess({ seller, onAccessChange, onSubcateg
         <label>Closes<input type="datetime-local" value={poll.ends_at} onChange={e => setPoll({ ...poll, ends_at: e.target.value })} required/></label>
         <button className="primary-button" disabled={busy === "poll"}>{busy === "poll" ? "Publishing…" : "Publish poll"}</button>
       </form>
-      <div className="seller-feature-submissions">{polls.map(item => <div key={item.id}><span><strong>{item.question}</strong><small>Closes {new Date(item.ends_at).toLocaleDateString("en-IN")}</small></span><button type="button" className="danger-button" disabled={Boolean(busy)} onClick={() => removeItem("seller_polls", item.id, "poll")} aria-label="Delete poll"><Trash2 size={15}/></button></div>)}</div>
+      <div className="seller-feature-submissions">{polls.map(item => <div key={item.id}><span><strong>{item.question}</strong><small>Closes {new Date(item.ends_at).toLocaleDateString("en-IN")} · {pollVoteCounts[item.id] || 0} {(pollVoteCounts[item.id] || 0) === 1 ? "vote" : "votes"}</small></span><button type="button" className="danger-button" disabled={Boolean(busy)} onClick={() => removeItem("seller_polls", item.id, "poll")} aria-label="Delete poll"><Trash2 size={15}/></button></div>)}</div>
     </section>}
 
     {access.subcategories?.status === "approved" && access.subcategories.enabled && <section className="seller-feature-editor">

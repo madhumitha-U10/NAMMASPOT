@@ -1741,7 +1741,7 @@ function AdminPage() {
             <button className={tab==="reviews"?"active":""} onClick={()=>setTab("reviews")}><CheckCircle size={17}/><span><strong>Reviews & reports</strong><small>{reviews.filter(item=>item.status==="pending").length} awaiting review</small></span></button>
             <button className={tab==="categories"?"active":""} onClick={()=>setTab("categories")}><Grid2X2 size={17}/><span><strong>Categories</strong><small>Organise seller categories</small></span></button>
             <button className={tab==="storage"?"active":""} onClick={()=>setTab("storage")}><ShieldCheck size={17}/><span><strong>Storage management</strong><small>Usage, limits and cleanup</small></span></button>
-            <button className={tab==="features"?"active":""} onClick={()=>setTab("features")}><SlidersHorizontal size={17}/><span><strong>Feature approvals</strong><small>Seller-specific access control</small></span></button>
+            <button className={tab==="features"?"active":""} onClick={()=>setTab("features")}><SlidersHorizontal size={17}/><span><strong>Growth Tools</strong><small>Review seller requests</small></span></button>
           </div>
           <div className="admin-console-sidebar-bottom">
             <button onClick={load} disabled={loading}>↻ Refresh data</button>
@@ -1768,8 +1768,8 @@ function AdminPage() {
       <div className="dashboard-head">
         <div>
           <div className="eyebrow">CURRENT SECTION</div>
-          <h1>{tab==="sellers" ? "Seller management" : tab==="storage" ? "Storage management" : tab==="reviews" ? "Reviews & reports" : tab==="features" ? "Feature approvals" : "Category management"}</h1>
-          <p>{tab==="sellers" ? "Review new sellers first, then manage approved or restricted accounts." : tab==="storage" ? "Set limits and remove failed or unused uploads safely." : tab==="reviews" ? "Review customer feedback before it appears publicly." : tab==="features" ? "Approve offers, polls and advanced catalogue tools for selected sellers only." : "Keep seller categories organised and easy to browse."}</p>
+          <h1>{tab==="sellers" ? "Seller management" : tab==="storage" ? "Storage management" : tab==="reviews" ? "Reviews & reports" : tab==="features" ? "Growth Tools" : "Category management"}</h1>
+          <p>{tab==="sellers" ? "Review new sellers first, then manage approved or restricted accounts." : tab==="storage" ? "Set limits and remove failed or unused uploads safely." : tab==="reviews" ? "Review customer feedback before it appears publicly." : tab==="features" ? "Review one Growth Tools request per seller." : "Keep seller categories organised and easy to browse."}</p>
           {adminProfile?.email && <small>Signed in as {adminProfile.email}</small>}
         </div>
         <div className="button-row">

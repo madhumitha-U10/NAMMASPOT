@@ -427,6 +427,53 @@ export async function getPublicSellers({ query = "", category = "All", near = ""
   return ranked.map(({ seller }) => seller);
 }
 
+export async function getPublicSellerCards({ limit = 24, featuredOnly = false, sellerIds = null } = {}) {
+  const maxRows = Math.max(1, Math.min(60, Number(limit) || 24));
+  if (Array.isArray(sellerIds) && sellerIds.length === 0) return [];
+
+  let rows;
+  if (!supabase) {
+    const state = demoState();
+    rows = state.sellers
+      .filter((seller) => seller.verification_status === "approved")
+      .filter((seller) => !featuredOnly || seller.featured)
+      .filter((seller) => !Array.isArray(sellerIds) || sellerIds.includes(seller.id))
+      .slice(0, maxRows);
+  } else {
+    let request = supabase.from("sellers")
+      .select("id,slug,business_name,location,city,description,profile_image_url,featured,verified,created_at,category:categories(name)")
+      .eq("verification_status", "approved")
+      .order("created_at", { ascending: false })
+      .limit(maxRows);
+    if (featuredOnly) request = request.eq("featured", true);
+    if (Array.isArray(sellerIds)) request = request.in("id", sellerIds);
+    const { data, error } = await request;
+    if (error) throw error;
+    rows = data ?? [];
+  }
+
+  const sellers = rows.map((row) => ({
+    id: row.id,
+    slug: row.slug,
+    name: row.business_name || row.name || "",
+    business_name: row.business_name || row.name || "",
+    category: row.category?.name ?? row.category ?? "Local",
+    location: row.location ?? row.city ?? "Chennai",
+    city: row.city ?? "Chennai",
+    description: row.description ?? "",
+    profile_image_url: row.profile_image_url ?? "",
+    featured: Boolean(row.featured),
+    verified: Boolean(row.verified),
+    created_at: row.created_at ?? null,
+  }));
+  const likeData = await getContentLikeData(sellers.map((seller) => seller.id), []);
+  return sellers.map((seller) => ({
+    ...seller,
+    like_count: Number(likeData.sellerCounts[seller.id] || 0),
+    liked_by_me: likeData.likedSellers.includes(seller.id),
+  }));
+}
+
 export async function getPublicSeller(slug) {
   if (!supabase) {
     const state = demoState();

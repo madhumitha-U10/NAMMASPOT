@@ -5566,3 +5566,162 @@ input, select, textarea { max-width: 100%; }
  .admin-overview-kpi{padding:12px}
  .admin-overview-kpi strong{font-size:23px}
 }
+
+
+/* Shared Orbit-inspired seller/admin dashboard layout. Preserve NammaSpot burgundy + cream brand palette. */
+.dashboard-page.seller-workspace-page,
+.admin-app-shell .admin-console-page{
+  width:min(100% - 36px,1480px);
+  max-width:1480px;
+  padding:18px 0 42px;
+  margin:0 auto;
+}
+.seller-workspace-shell,.admin-app-shell .admin-console-shell{
+  display:grid;
+  grid-template-columns:236px minmax(0,1fr);
+  gap:18px;
+  align-items:start;
+}
+.seller-workspace-sidebar,.admin-app-shell .admin-console-sidebar{
+  position:sticky;
+  top:16px;
+  display:flex;
+  flex-direction:column;
+  min-height:calc(100dvh - 32px);
+  max-height:calc(100dvh - 32px);
+  overflow:auto;
+  padding:18px 14px;
+  border:1px solid #6d1824;
+  border-radius:20px;
+  background:linear-gradient(180deg,#641b27 0%,#781e2d 58%,#541722 100%)!important;
+  color:#fffaf4!important;
+  box-shadow:0 12px 34px rgba(76,24,30,.16)!important;
+}
+.seller-workspace-brand,.admin-console-brand{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:3px 5px 19px;
+  border-bottom:1px solid rgba(255,248,239,.18)!important;
+  color:#fffaf4!important;
+}
+.seller-workspace-brand>span:last-child,.admin-console-brand>div{display:grid;gap:3px;min-width:0}
+.seller-workspace-brand strong,.admin-console-brand strong{font-size:18px;line-height:1.1;color:#fffaf4!important;letter-spacing:-.03em}
+.seller-workspace-brand small,.admin-console-brand span:not(.admin-console-brand-mark){font-size:10px;color:#f1d9d3!important;letter-spacing:.04em}
+.seller-workspace-brand-mark,.admin-console-brand-mark{
+  display:grid;place-items:center;width:38px;height:38px;flex:none;
+  border:1px solid rgba(255,248,239,.32);border-radius:12px;
+  background:#fff8ef;color:#76202c;font:800 23px/1 Georgia,serif;
+}
+.seller-workspace-nav,.admin-app-shell .admin-console-nav{
+  display:grid;gap:6px;padding:18px 0;
+}
+.seller-workspace-nav button,.admin-app-shell .admin-console-nav button{
+  display:flex;align-items:center;gap:11px;width:100%;min-width:0;min-height:43px;
+  padding:10px 11px;border:1px solid transparent;border-radius:11px;
+  background:transparent!important;color:#f7e9e5!important;
+  text-align:left;font-size:12px;font-weight:650;cursor:pointer;
+}
+.seller-workspace-nav button span,.admin-app-shell .admin-console-nav button span{flex:1;min-width:0}
+.seller-workspace-nav button svg,.admin-app-shell .admin-console-nav button svg{flex:none}
+.seller-workspace-nav button b{display:grid;place-items:center;min-width:21px;height:21px;padding:0 5px;border-radius:99px;background:#fff1e8;color:#7a1e2b;font-size:10px}
+.seller-workspace-nav button.active,.admin-app-shell .admin-console-nav button.active{
+  background:#9b293e!important;border-color:rgba(255,255,255,.12)!important;
+  color:#fff!important;box-shadow:inset 3px 0 #f5d6a4,0 4px 12px rgba(35,8,15,.12)!important;
+}
+.seller-workspace-nav button:hover:not(.active),.admin-app-shell .admin-console-nav button:hover:not(.active){background:rgba(255,248,239,.1)!important;color:#fff!important}
+.seller-workspace-sidebar-footer,.admin-app-shell .admin-console-sidebar-bottom{
+  display:grid;gap:5px;margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,248,239,.18)!important;
+}
+.seller-workspace-sidebar-footer a,.seller-workspace-sidebar-footer button,.admin-app-shell .admin-console-sidebar-bottom button{
+  display:flex;align-items:center;gap:9px;min-height:39px;padding:9px 10px;border:0;border-radius:10px;
+  background:transparent;color:#f7e9e5!important;text-decoration:none;text-align:left;font-size:11px;font-weight:650;cursor:pointer;
+}
+.seller-workspace-sidebar-footer a:hover,.seller-workspace-sidebar-footer button:hover,.admin-app-shell .admin-console-sidebar-bottom button:hover{background:rgba(255,248,239,.1)}
+.seller-workspace-content,.admin-app-shell .admin-console-content{min-width:0;display:grid;align-content:start;gap:15px}
+.seller-workspace-topbar,.admin-workspace-topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:68px;
+  padding:12px 18px;border:1px solid #eadfd5;border-radius:16px;background:#fffefa;
+  box-shadow:0 4px 16px rgba(62,35,25,.035);
+}
+.seller-workspace-topbar>div:first-child,.admin-workspace-topbar>div:first-child{display:grid;gap:4px;min-width:0}
+.seller-workspace-topbar strong,.admin-workspace-topbar strong{font-size:15px;color:#3c2523;overflow-wrap:anywhere}
+.seller-workspace-kicker,.admin-workspace-kicker{font-size:9px;font-weight:800;letter-spacing:.12em;color:#94776d}
+.seller-workspace-top-actions,.admin-workspace-top-actions{display:flex;align-items:center;gap:9px;flex:none}
+.seller-workspace-page .dashboard-head,.admin-app-shell .admin-welcome{
+  margin:0;padding:20px 23px;border:1px solid #eadfd5;border-radius:17px;
+  background:linear-gradient(115deg,#fffefa 0%,#fbf2e9 100%);
+  box-shadow:0 4px 16px rgba(62,35,25,.035);
+}
+.seller-workspace-page .dashboard-head h1,.admin-app-shell .admin-welcome h1{
+  margin:5px 0 4px;font-size:clamp(24px,2.6vw,34px);line-height:1.12;letter-spacing:-.045em;color:#421f25;
+}
+.seller-workspace-page .dashboard-head p,.admin-app-shell .admin-welcome p{margin:0;font-size:12px;color:#786961}
+.seller-workspace-page .dashboard-tabs{display:none!important}
+.admin-app-shell .admin-summary-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0}
+.admin-app-shell .admin-summary-card{padding:14px 15px;border:1px solid #eadfd5;border-radius:14px;background:#fffefa;box-shadow:0 3px 12px rgba(62,35,25,.03)}
+.admin-app-shell .admin-summary-card span{font-size:10px;color:#766a63}
+.admin-app-shell .admin-summary-card strong{font-size:25px;margin:7px 0 0;color:#76202c}
+.admin-app-shell .admin-summary-card small{display:none}
+.admin-app-shell .dashboard-head{margin:0;padding:18px 20px;border-radius:16px}
+.admin-app-shell .admin-overview-layout{gap:12px}
+.admin-app-shell .admin-overview-kpis{gap:10px}
+.admin-app-shell .admin-overview-kpi,.admin-app-shell .admin-overview-panel{border-color:#eadfd5;background:#fffefa;border-radius:15px;box-shadow:0 4px 15px rgba(62,35,25,.035)}
+.admin-app-shell .admin-overview-kpi strong{color:#76202c}
+.admin-app-shell .admin-overview-panel-head h2{color:#48242a}
+.admin-app-shell .admin-featured-card{border-color:#eadfd5;background:#fffefa}
+.admin-app-shell .admin-featured-card button.is-featured{background:#f7e9e5;color:#76202c;border-color:#e8cfc8}
+.admin-app-shell .admin-live-label{font-size:10px}
+@media(max-width:1100px){
+ .seller-workspace-shell,.admin-app-shell .admin-console-shell{grid-template-columns:205px minmax(0,1fr);gap:13px}
+ .seller-workspace-sidebar,.admin-app-shell .admin-console-sidebar{padding:15px 10px}
+ .admin-app-shell .admin-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+ .dashboard-page.seller-workspace-page,.admin-app-shell .admin-console-page{width:100%;padding:12px 12px 30px}
+ .seller-workspace-shell,.admin-app-shell .admin-console-shell{grid-template-columns:minmax(0,1fr);gap:12px}
+ .seller-workspace-sidebar,.admin-app-shell .admin-console-sidebar{
+   position:relative;top:auto;min-height:0;max-height:none;overflow:visible;
+   padding:12px;border-radius:16px;
+ }
+ .seller-workspace-brand,.admin-app-shell .admin-console-brand{padding:2px 4px 10px}
+ .seller-workspace-brand-mark,.admin-console-brand-mark{width:32px;height:32px;font-size:19px}
+ .seller-workspace-brand strong,.admin-console-brand strong{font-size:15px}
+ .seller-workspace-nav,.admin-app-shell .admin-console-nav{
+   display:flex;gap:6px;padding:10px 0 2px;overflow-x:auto;overscroll-behavior-x:contain;
+   scrollbar-width:none;
+ }
+ .seller-workspace-nav::-webkit-scrollbar,.admin-app-shell .admin-console-nav::-webkit-scrollbar{display:none}
+ .seller-workspace-nav button,.admin-app-shell .admin-console-nav button{
+   flex:0 0 auto;width:auto;min-width:92px;min-height:58px;padding:8px 10px;
+   flex-direction:column;justify-content:center;gap:4px;border-radius:10px;font-size:10px;text-align:center;
+ }
+ .seller-workspace-nav button span,.admin-app-shell .admin-console-nav button span{flex:none;white-space:nowrap}
+ .seller-workspace-nav button b{position:absolute;transform:translate(24px,-17px);min-width:17px;height:17px;font-size:9px}
+ .seller-workspace-sidebar-footer,.admin-app-shell .admin-console-sidebar-bottom{
+   display:flex;gap:6px;margin-top:8px;padding-top:8px;
+ }
+ .seller-workspace-sidebar-footer a,.seller-workspace-sidebar-footer button,.admin-app-shell .admin-console-sidebar-bottom button{
+   flex:1;justify-content:center;min-height:34px;padding:7px;font-size:10px
+ }
+ .seller-workspace-content,.admin-app-shell .admin-console-content{gap:10px}
+ .seller-workspace-topbar,.admin-workspace-topbar{min-height:54px;padding:9px 12px;border-radius:13px}
+ .seller-workspace-topbar strong,.admin-workspace-topbar strong{font-size:13px}
+ .seller-workspace-kicker,.admin-workspace-kicker{font-size:8px}
+ .seller-workspace-page .dashboard-head,.admin-app-shell .admin-welcome{padding:16px;border-radius:14px}
+ .seller-workspace-page .dashboard-head h1,.admin-app-shell .admin-welcome h1{font-size:25px}
+ .admin-app-shell .admin-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .admin-app-shell .admin-summary-card{padding:11px}
+ .admin-app-shell .admin-summary-card strong{font-size:22px}
+ .admin-app-shell .admin-overview-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .admin-app-shell .admin-overview-main-grid,.admin-app-shell .admin-overview-bottom-grid{grid-template-columns:1fr}
+}
+@media(max-width:420px){
+ .dashboard-page.seller-workspace-page,.admin-app-shell .admin-console-page{padding:9px 9px 24px}
+ .seller-workspace-top-actions .secondary-button{padding:7px 9px;font-size:10px}
+ .seller-workspace-top-actions .status-pill{font-size:9px}
+ .admin-workspace-top-actions{gap:6px}
+ .admin-workspace-top-actions .secondary-button{padding:7px 9px;font-size:10px}
+ .admin-app-shell .admin-summary-card span{font-size:9px}
+ .admin-app-shell .admin-summary-card strong{font-size:20px}
+}

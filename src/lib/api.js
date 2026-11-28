@@ -760,7 +760,7 @@ export async function listMyProducts(sellerId) {
 
 export async function createProduct(values) {
   if (!supabase) {
-    const state=demoState(); const product={id:uid("product"),seller_id:values.seller_id,product_name:text(values.product_name,160),name:text(values.product_name,160),description:text(values.description,1000),price:Number(values.price),availability:Boolean(values.availability),available:Boolean(values.availability),image_url:text(values.image_url,800),category_id:values.category_id || null,created_at:new Date().toISOString()};
+    const state=demoState(); const product={id:uid("product"),seller_id:values.seller_id,product_name:text(values.product_name,160),name:text(values.product_name,160),description:text(values.description,1000),price:Number(values.price),availability:Boolean(values.availability),available:Boolean(values.availability),image_url:text(values.image_url,800),category_id:values.category_id || null,subcategory_id:values.subcategory_id || null,created_at:new Date().toISOString()};
     state.products.unshift(product); saveDemo(state); return productsOf([product])[0];
   }
   const client = needBackend();
@@ -776,8 +776,9 @@ export async function createProduct(values) {
     available:Boolean(values.availability),
     availability:Boolean(values.availability),
     image_url:imageUrl,
-    category_id:values.category_id || null
-  }).select("id,seller_id,name,product_name,description,price,available,availability,image_url,category_id,featured,created_at").single();
+    category_id:values.category_id || null,
+    subcategory_id:values.subcategory_id || null
+  }).select("id,seller_id,name,product_name,description,price,available,availability,image_url,category_id,featured,subcategory_id,created_at").single();
   if (error) { if (imageUrl) { try { await removeMediaIfUnreferenced(imageUrl); } catch {} } throw error; }
   return productsOf([data])[0];
 }
@@ -786,7 +787,7 @@ export async function updateProduct(productId,values) {
   if (!supabase) {
     const state=demoState(); const index=state.products.findIndex((p)=>p.id===productId);
     if(index<0) throw new Error("Product not found.");
-    state.products[index]={...state.products[index],product_name:text(values.product_name,160),name:text(values.product_name,160),description:text(values.description,1000),price:Number(values.price),availability:Boolean(values.availability),available:Boolean(values.availability),image_url:text(values.image_url,800),category_id:values.category_id || null};
+    state.products[index]={...state.products[index],product_name:text(values.product_name,160),name:text(values.product_name,160),description:text(values.description,1000),price:Number(values.price),availability:Boolean(values.availability),available:Boolean(values.availability),image_url:text(values.image_url,800),category_id:values.category_id || null,subcategory_id:values.subcategory_id || null};
     saveDemo(state); return productsOf([state.products[index]])[0];
   }
   const client=needBackend();
@@ -803,8 +804,9 @@ export async function updateProduct(productId,values) {
     available:Boolean(values.availability),
     availability:Boolean(values.availability),
     image_url:nextImage,
-    category_id:values.category_id||null
-  }).eq("id",productId).select("id,seller_id,name,product_name,description,price,available,availability,image_url,category_id,created_at").single();
+    category_id:values.category_id||null,
+    subcategory_id:values.subcategory_id||null
+  }).eq("id",productId).select("id,seller_id,name,product_name,description,price,available,availability,image_url,category_id,featured,subcategory_id,created_at").single();
   if(error) {
     if (nextImage && nextImage !== before?.image_url) { try { await removeMediaIfUnreferenced(nextImage); } catch {} }
     throw error;

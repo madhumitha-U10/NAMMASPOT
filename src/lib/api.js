@@ -1158,8 +1158,8 @@ export async function adminPlatformActivity() {
 }
 
 export async function adminListSellers() {
-  if (!supabase) return demoState().sellers.map((s)=>({id:s.id,slug:s.slug,business_name:s.business_name,owner_name:s.owner_name,contact:s.contact||s.phone,whatsapp_phone:s.whatsapp_phone||s.whatsapp||s.contact||s.phone,verification_status:s.verification_status,verified:s.verified,created_at:s.created_at||"",location:s.location,category:{name:s.category}}));
-  const client=needBackend(); const {data,error}=await client.from("sellers").select("id,slug,business_name,owner_name,contact,whatsapp_phone,verification_status,verified,created_at,location,category:categories(name)").order("created_at",{ascending:false}).limit(100); if(error)throw error; return data||[];
+  if (!supabase) return demoState().sellers.map((s)=>({id:s.id,slug:s.slug,business_name:s.business_name,owner_name:s.owner_name,contact:s.contact||s.phone,whatsapp_phone:s.whatsapp_phone||s.whatsapp||s.contact||s.phone,verification_status:s.verification_status,verified:s.verified,featured:Boolean(s.featured),created_at:s.created_at||"",location:s.location,category:{name:s.category}}));
+  const client=needBackend(); const {data,error}=await client.from("sellers").select("id,slug,business_name,owner_name,contact,whatsapp_phone,verification_status,verified,featured,created_at,location,category:categories(name)").order("created_at",{ascending:false}).limit(100); if(error)throw error; return data||[];
 }
 
 export async function adminDeleteSuspendedSeller(sellerId) {
@@ -1200,6 +1200,22 @@ export async function adminDeleteSuspendedSeller(sellerId) {
 export async function adminUpdateSellerStatus(id,status) {
   if (!supabase) { const state=demoState(); const item=state.sellers.find((s)=>s.id===id); if(item){item.verification_status=status;item.verified=status==="approved";} saveDemo(state); return; }
   const client=needBackend(); const {error}=await client.from("sellers").update({verification_status:status,verified:status==="approved"}).eq("id",id); if(error)throw error;
+}
+
+export async function adminSetSellerFeatured(id,featured) {
+  if (!supabase) {
+    const state=demoState();
+    const item=state.sellers.find((seller)=>seller.id===id);
+    if(!item) throw new Error("Seller not found.");
+    if(item.verification_status!=="approved") throw new Error("Only approved sellers can be featured.");
+    item.featured=Boolean(featured);
+    saveDemo(state);
+    return Boolean(featured);
+  }
+  const client=needBackend();
+  const {error}=await client.from("sellers").update({featured:Boolean(featured)}).eq("id",id).eq("verification_status","approved");
+  if(error)throw error;
+  return Boolean(featured);
 }
 
 export async function adminListCategories() {

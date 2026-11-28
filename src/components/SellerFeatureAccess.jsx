@@ -39,7 +39,7 @@ export default function SellerFeatureAccess({ seller }) {
   };
   const createOffer=async(e)=>{
     e.preventDefault();setBusy("offer");setError("");setNotice("");
-    try{const {error:e1}=await supabase.from("seller_offers").insert({...offer,seller_id:seller.id,status:"pending"});if(e1)throw e1;setOffer({title:"",description:"",starts_at:"",ends_at:""});await load();setNotice("Offer submitted. It will appear publicly after admin approval.");}
+    try{const {error:e1}=await supabase.from("seller_offers").insert({...offer,starts_at:new Date(offer.starts_at).toISOString(),ends_at:new Date(offer.ends_at).toISOString(),seller_id:seller.id,status:"pending"});if(e1)throw e1;setOffer({title:"",description:"",starts_at:"",ends_at:""});await load();setNotice("Offer submitted. It will appear publicly after admin approval.");}
     catch(e1){setError(e1.message||"Could not submit offer.");}finally{setBusy("");}
   };
   const createPoll=async(e)=>{

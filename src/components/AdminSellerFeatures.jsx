@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Clock3, ShieldCheck, SlidersHorizontal, Store, XCircle } from "lucide-react";
+import { CheckCircle2, Clock3, ShieldCheck, Store, XCircle } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 const FEATURES = [
@@ -34,7 +34,7 @@ export default function AdminSellerFeatures({ sellers = [] }) {
     setContentQueue([...(offers.data||[]).map(x=>({...x,kind:"offer",label:x.title})),...(polls.data||[]).map(x=>({...x,kind:"poll",label:x.question})),...(subcategories.data||[]).map(x=>({...x,kind:"subcategory",label:x.name}))]);
   };
   useEffect(() => { load().catch((e) => setError(e.message || "Could not load feature requests.")); }, []);
-  const pending = rows.filter((r) => r.status === "pending").length;
+  const pending = rows.filter((r) => r.status === "pending").length;\n  const pendingContent = contentQueue.length;
   const filtered = useMemo(() => rows.filter((r) => filter === "all" || r.status === filter), [rows, filter]);
   const decide = async (row, status, enabled = status === "approved") => {
     setBusy(true); setError(""); setSuccess("");
@@ -81,7 +81,7 @@ export default function AdminSellerFeatures({ sellers = [] }) {
   return <section className="admin-feature-management">
     <div className="dashboard-section-head">
       <div><div className="eyebrow">SELLER GROWTH PROGRAMME</div><h2>Feature access & approvals</h2><p>Approve features seller by seller. No seller receives an advanced feature automatically.</p></div>
-      <span className="status-pill status-warning">{pending} pending</span>
+      <span className="status-pill status-warning">{pending + pendingContent} pending</span>
     </div>
     <div className="admin-feature-stats">
       <article><span>Requests received</span><strong>{rows.length}</strong></article>

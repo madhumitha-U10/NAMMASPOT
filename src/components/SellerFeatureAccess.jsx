@@ -32,10 +32,24 @@ export default function SellerFeatureAccess({ seller }) {
     setRows(a.data||[]);setOffers(o.data||[]);setPolls(p.data||[]);setSubcategories(c.data||[]);
   };
   useEffect(()=>{load().catch(e=>setError(e.message||"Could not load feature access."));},[seller?.id]);
-  const request=async(key)=>{
-    setBusy(key);setError("");setNotice("");
-    try{const {error:rpcError}=await supabase.rpc("seller_request_feature",{p_feature_key:key});if(rpcError)throw rpcError;await load();setNotice("Your request has been sent to NammaSpot admin for review.");}
-    catch(e){setError(e.message||"Could not submit your request.");}finally{setBusy("");}
+  const requestAll=async()=>{
+    const toRequest=FEATURES.filter(feature=>{
+      const row=rows.find(item=>item.feature_key===feature.key);
+      return row?.status!=="pending" && !(row?.status==="approved"&&row?.enabled);
+    });
+    if(!toRequest.length){setNotice("Your growth tools request is already with the admin or approved.");return;}
+    setBusy("bundle");setError("");setNotice("");
+    try{
+      for(const feature of toRequest){
+        const {error:rpcError}=await supabase.rpc("seller_request_feature",{p_feature_key:feature.key});
+        if(rpcError)throw rpcError;
+      }
+      await load();
+      setNotice("Your single Growth Tools request has been sent. NammaSpot admin will review the features for your business.");
+    }catch(e){
+      await load().catch(()=>{});
+      setError(e.message||"Some feature requests could not be submitted. Refresh to check the current status.");
+    }finally{setBusy("");}
   };
   const createOffer=async(e)=>{
     e.preventDefault();setBusy("offer");setError("");setNotice("");
@@ -54,9 +68,15 @@ export default function SellerFeatureAccess({ seller }) {
   };
   const approved=(key)=>rows.some(x=>x.feature_key===key&&x.status==="approved"&&x.enabled);
   return <section className="seller-feature-access">
-    <div className="dashboard-section-head"><div><div className="eyebrow">GROW YOUR CATALOGUE</div><h2>Seller growth features</h2><p>Request additional tools. NammaSpot admin reviews each feature separately for your business.</p></div><span className="status-pill">Admin controlled</span></div>
+    <div className="dashboard-section-head"><div><div className="eyebrow">GROW YOUR CATALOGUE</div><h2>Seller growth features</h2><p>Request the complete Growth Tools bundle once. Admin can approve the features for your business.</p></div><span className="status-pill">Admin controlled</span></div>
     {error&&<div className="inline-error" role="alert">{error}</div>}
     {notice&&<div className="form-status" role="status"><CheckCircle2 size={17}/>{notice}</div>}
+    <div className="seller-growth-request-card">
+      <div><strong>One request. All growth tools.</strong><p>Includes Offers, Catalogue Polls, Subcategories and Advanced Catalogue. You do not need to send separate requests.</p></div>
+      <button className="primary-button" disabled={Boolean(busy)||seller?.verification_status!=="approved"||FEATURES.every(f=>{const r=rows.find(x=>x.feature_key===f.key);return r?.status==="pending"||(r?.status==="approved"&&r?.enabled);})} onClick={requestAll}>
+        <Send size={16}/>{busy==="bundle"?"Sending request…":"Request all growth tools"}
+      </button>
+    </div>
     <div className="seller-feature-grid">{FEATURES.map(feature=>{
       const row=rows.find(item=>item.feature_key===feature.key);
       const enabled=row?.status==="approved"&&row?.enabled;
@@ -64,7 +84,7 @@ export default function SellerFeatureAccess({ seller }) {
       return <article className="seller-feature-card" key={feature.key}>
         <div className="seller-feature-card-head"><span>{feature.label}</span><span className={"status-pill "+(enabled?"status-ok":pending?"status-warning":"")}>{stateLabel(row)}</span></div>
         <p>{feature.description}</p>
-        {enabled?<div className="seller-feature-enabled"><CheckCircle2 size={16}/>Permission granted</div>:pending?<div className="seller-feature-pending"><Clock3 size={16}/>Waiting for admin approval</div>:<button className="secondary-button" disabled={Boolean(busy)||seller?.verification_status!=="approved"} onClick={()=>request(feature.key)}><Send size={15}/>{busy===feature.key?"Sending…":"Request access"}</button>}
+        {enabled?<div className="seller-feature-enabled"><CheckCircle2 size={16}/>Enabled for your business</div>:pending?<div className="seller-feature-pending"><Clock3 size={16}/>Included · waiting for admin</div>:<div className="seller-feature-pending"><LockKeyhole size={16}/>Included in the combined request</div>}
         {row?.review_note&&<small className="muted-note">Admin note: {row.review_note}</small>}
       </article>;
     })}</div>

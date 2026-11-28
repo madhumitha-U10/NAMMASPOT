@@ -1160,22 +1160,30 @@ function DashboardPage({ go }) {
     <main className="page dashboard-page">
       <div className="dashboard-head">
         <div><div className="eyebrow">SELLER DASHBOARD</div><h1>Your spot, your catalogue.</h1><p>{seller.verification_status === "approved" ? "Your public page is live." : "Your profile is " + seller.verification_status + "."}</p></div>
-        <span className={"status-pill status-"+seller.verification_status}>{seller.verification_status}</span>
+        <div className="dashboard-head-actions"><span className={"status-pill status-"+seller.verification_status}>{seller.verification_status}</span><a className="secondary-button dashboard-public-link" href={"/s/"+seller.slug} target="_blank" rel="noreferrer"><ExternalLink size={16}/> View public page</a></div>
       </div>
 
       <section className="seller-likes-overview"><div className="seller-likes-main"><span className="seller-likes-heart"><Heart size={20} fill="currentColor"/></span><div><strong>{sellerLikeCount.toLocaleString("en-IN")}</strong><span>People who like your shop</span></div></div><div className="seller-likes-products"><strong>Most liked products</strong>{products.filter(p=>p.like_count>0).sort((a,b)=>b.like_count-a.like_count).slice(0,3).map(p=><div key={p.id}><span>{p.name}</span><b>♥ {p.like_count}</b></div>)}{!products.some(p=>p.like_count>0)&&<small>Your product likes will appear here.</small>}</div></section>
-      <div className="dashboard-tabs">
-        {["overview","notifications","profile","products","enquiries","growth","features","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item==="public"?"Public profile":item==="growth"?"Growth & sharing":item==="notifications"?"Notifications"+(notifications.filter(n=>!n.read_at).length?" · "+notifications.filter(n=>!n.read_at).length:""):item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
-      </div>
+      <nav className="dashboard-tabs" aria-label="Seller dashboard sections">
+        {[
+          ["overview","Overview"],
+          ["products","Catalogue"],
+          ["enquiries","Enquiries"],
+          ["growth","Growth tools"],
+          ["profile","Profile"],
+          ["notifications","Notifications"+(notifications.filter(n=>!n.read_at).length?" · "+notifications.filter(n=>!n.read_at).length:"")]
+        ].map(([item,label])=><button type="button" key={item} className={tab===item?"active":""} aria-current={tab===item?"page":undefined} onClick={()=>setTab(item)}>{label}</button>)}
+      </nav>
 
       {tab==="overview" && <Suspense fallback={<p className="muted">Loading overview…</p>}><SellerGrowthHub seller={seller} products={products} enquiries={enquiries} analytics={analytics} sellerLikes={sellerLikeCount} onNavigate={setTab}/></Suspense>}
       {tab==="notifications" && <Suspense fallback={<p className="muted">Loading notifications…</p>}><SellerNotifications notifications={notifications} onRead={async(id)=>{try{await markSellerNotificationRead(id);setNotifications(items=>items.map(item=>item.id===id?{...item,read_at:new Date().toISOString()}:item));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onReadAll={async()=>{try{await markAllSellerNotificationsRead(seller.id);setNotifications(items=>items.map(item=>({...item,read_at:item.read_at||new Date().toISOString()})));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onNavigate={()=>setTab("enquiries")}/></Suspense>} 
       {tab==="profile" && <ProfileEditor seller={seller} categories={categories} onSaved={(next)=>setSeller((current)=>({...current,...next}))}/>}
       {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} storageUsage={storageUsage} onStorageUsageChange={setStorageUsage} onChange={setProducts}/>}
       {tab==="enquiries" && <EnquiryManager enquiries={enquiries} onChange={setEnquiries} seller={seller}/>}
-      {tab==="growth" && <Suspense fallback={<p className="muted">Loading growth tools…</p>}><SellerGrowthSharing seller={seller} analytics={analytics}/></Suspense>}
-      {tab==="features" && <Suspense fallback={<p className="muted">Loading feature access…</p>}><SellerFeatureAccess seller={seller}/></Suspense> }
-      {tab==="public" && <PublicTools seller={seller} go={go}/>} 
+      {tab==="growth" && <section className="dashboard-growth-stack">
+        <Suspense fallback={<p className="muted">Loading growth tools…</p>}><SellerGrowthSharing seller={seller} analytics={analytics}/></Suspense>
+        <Suspense fallback={<p className="muted">Loading feature access…</p>}><SellerFeatureAccess seller={seller}/></Suspense>
+      </section>}
     </main>
   );
 }

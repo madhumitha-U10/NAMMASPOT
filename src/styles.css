@@ -5212,3 +5212,56 @@ input, select, textarea { max-width: 100%; }
 .ns-growth-poll button:disabled{opacity:.85}
 .ns-growth-poll small{display:block;margin-top:9px;color:#23764a;font-size:12px}
 @media(max-width:600px){.ns-growth-offer-grid,.ns-growth-poll>div{grid-template-columns:1fr}.seller-feature-editor{padding:14px}}
+
+
+/* Seller dashboard UX refresh — clear hierarchy, fewer destinations, responsive navigation */
+.dashboard-page{max-width:1240px;padding-bottom:88px}
+.dashboard-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:18px 0 22px}
+.dashboard-head h1{font-size:clamp(34px,4vw,52px);letter-spacing:-.045em;margin:8px 0 6px}
+.dashboard-head p{margin:0;color:#716d66}
+.dashboard-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.dashboard-public-link{white-space:nowrap}
+.dashboard-tabs{display:flex;gap:8px;align-items:center;overflow-x:auto;padding:8px;margin:0 0 24px;border:1px solid #e9e1d9;border-radius:18px;background:#fffdf9;scrollbar-width:thin}
+.dashboard-tabs button{flex:1 0 auto;min-height:44px;border:0;border-radius:12px;background:transparent;padding:10px 16px;color:#615a55;font-size:14px;font-weight:750;white-space:nowrap;transition:background .18s ease,color .18s ease}
+.dashboard-tabs button:hover{background:#f8efea;color:#6e2631}
+.dashboard-tabs button.active{background:#742b38;color:#fff;box-shadow:0 3px 10px rgba(75,26,34,.12)}
+.dashboard-growth-stack{display:grid;gap:28px}
+.seller-growth-request-card{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px 20px;margin:18px 0 22px;border:1px solid #e7d8d1;border-radius:18px;background:linear-gradient(120deg,#fff9f5,#fffefb)}
+.seller-growth-request-card strong{display:block;color:#51232c;font-size:17px}
+.seller-growth-request-card p{max-width:660px;margin:6px 0 0;color:#706761;line-height:1.5;font-size:14px}
+.seller-growth-request-card .primary-button{flex:none;white-space:nowrap}
+.seller-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.seller-feature-card{padding:18px;border-radius:17px;background:#fffefa}
+.seller-feature-card p{line-height:1.5}
+.seller-feature-card .seller-feature-pending{display:flex;align-items:center;gap:7px;font-size:13px;color:#75645b;font-weight:700}
+.seller-feature-editor{margin-top:22px}
+@media(max-width:760px){
+ .dashboard-page{padding-left:4.5%;padding-right:4.5%}
+ .dashboard-head{align-items:flex-start;flex-direction:column}
+ .dashboard-head-actions{justify-content:flex-start}
+ .dashboard-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;padding:6px;gap:5px}
+ .dashboard-tabs button{min-width:0;padding:10px 7px;font-size:12px;white-space:normal;line-height:1.2}
+ .seller-growth-request-card{align-items:stretch;flex-direction:column}
+ .seller-growth-request-card .primary-button{width:100%}
+ .seller-feature-grid{grid-template-columns:1fr}
+}
+@media(max-width:420px){
+ .dashboard-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .dashboard-public-link{width:100%}
+}
+
+
+/* Admin view: one seller request with per-feature decisions */
+.admin-feature-groups{display:grid;gap:16px}
+.admin-feature-group{overflow:hidden;border:1px solid #e8ddd6;border-radius:18px;background:#fffefa}
+.admin-feature-group-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 18px;background:#fbf4ef}
+.admin-feature-group-head>div{display:grid;gap:4px}
+.admin-feature-group-head strong{color:#51232c;font-size:16px}
+.admin-feature-group-head small{color:#746b65;font-size:12px}
+.admin-feature-group-head .primary-button{white-space:nowrap}
+.admin-feature-group-rows .admin-feature-row{border:0;border-top:1px solid #eee7e1;border-radius:0;background:transparent}
+@media(max-width:680px){
+ .admin-feature-group-head{align-items:stretch;flex-direction:column}
+ .admin-feature-group-head .primary-button{width:100%}
+ .admin-feature-group-rows .admin-feature-row{align-items:stretch;flex-direction:column}
+}

@@ -5725,3 +5725,59 @@ input, select, textarea { max-width: 100%; }
  .admin-app-shell .admin-summary-card span{font-size:9px}
  .admin-app-shell .admin-summary-card strong{font-size:20px}
 }
+
+
+/* Mobile navigation refinement: retain the vertical left-side menu in a slide-out drawer. */
+.workspace-menu-toggle{
+  display:none;align-items:center;justify-content:center;flex:none;
+  width:38px;height:38px;border:1px solid #eadfd5;border-radius:11px;
+  background:#fffaf4;color:#76202c;cursor:pointer;
+}
+.workspace-drawer-backdrop{
+  display:none;
+}
+@media(max-width:760px){
+  .seller-workspace-shell,.admin-app-shell .admin-console-shell{
+    position:relative;display:block;
+  }
+  .seller-workspace-sidebar,.admin-app-shell .admin-console-sidebar{
+    position:fixed!important;z-index:120;left:0;top:0;bottom:0;
+    width:min(286px,84vw);height:100dvh;min-height:100dvh;max-height:100dvh;
+    margin:0;border-radius:0 20px 20px 0!important;
+    overflow-y:auto!important;overscroll-behavior:contain;
+    transform:translateX(-105%);transition:transform .24s ease;
+    box-shadow:12px 0 36px rgba(42,10,18,.24)!important;
+  }
+  .seller-workspace-sidebar.is-open,.admin-app-shell .admin-console-sidebar.is-open{
+    transform:translateX(0);
+  }
+  .seller-workspace-nav,.admin-app-shell .admin-console-nav{
+    display:grid!important;grid-template-columns:1fr!important;gap:5px;
+    padding:16px 0!important;overflow:visible!important;
+  }
+  .seller-workspace-nav button,.admin-app-shell .admin-console-nav button{
+    display:flex!important;flex-direction:row!important;justify-content:flex-start!important;
+    width:100%!important;min-width:0!important;min-height:46px!important;
+    padding:10px 12px!important;text-align:left!important;font-size:12px!important;
+  }
+  .seller-workspace-nav button span,.admin-app-shell .admin-console-nav button span{
+    flex:1!important;white-space:normal!important;
+  }
+  .seller-workspace-sidebar-footer,.admin-app-shell .admin-console-sidebar-bottom{
+    display:grid!important;grid-template-columns:1fr!important;margin-top:auto!important;
+  }
+  .seller-workspace-sidebar-footer a,.seller-workspace-sidebar-footer button,.admin-app-shell .admin-console-sidebar-bottom button{
+    justify-content:flex-start!important;min-height:42px!important;font-size:11px!important;
+  }
+  .workspace-menu-toggle{display:inline-flex}
+  .workspace-drawer-backdrop{
+    display:block;position:fixed;inset:0;z-index:110;width:100%;height:100%;
+    border:0;background:rgba(31,12,16,.46);backdrop-filter:blur(2px);
+  }
+  .seller-workspace-topbar,.admin-workspace-topbar{justify-content:flex-start}
+  .seller-workspace-topbar>div:first-of-type,.admin-workspace-topbar>div:first-of-type{flex:1}
+  .seller-workspace-top-actions,.admin-workspace-top-actions{margin-left:auto}
+}
+@media(prefers-reduced-motion:reduce){
+  .seller-workspace-sidebar,.admin-app-shell .admin-console-sidebar{transition:none}
+}

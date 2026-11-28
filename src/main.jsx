@@ -46,6 +46,7 @@ import {
   listMyFavourites,
   isCurrentUserAdmin,
   adminListSellers,
+  adminSetSellerFeatured,
   adminPlatformActivity,
   adminUpdateSellerStatus,
   adminDeleteSuspendedSeller,
@@ -1171,7 +1172,7 @@ function DashboardPage({ go }) {
   return (
     <main className="page dashboard-page">
       <div className="dashboard-head">
-        <div><div className="eyebrow">YOUR SHOP</div><h1>Welcome, {seller.owner_name || seller.business_name}.</h1><p>{seller.verification_status === "approved" ? "Manage your shop and customer messages." : "Your profile is " + seller.verification_status + "."}</p></div>
+        <div><div className="eyebrow">SELLER WORKSPACE</div><h1>Welcome, {seller.owner_name || seller.business_name}.</h1><p>{seller.verification_status === "approved" ? "Your shop at a glance." : "Your profile is " + seller.verification_status + "."}</p></div>
         <div className="dashboard-head-actions"><span className={"status-pill status-"+seller.verification_status}>{seller.verification_status}</span><a className="secondary-button dashboard-public-link" href={"/s/"+seller.slug} target="_blank" rel="noreferrer"><ExternalLink size={16}/> View public page</a></div>
       </div>
 
@@ -1594,7 +1595,7 @@ function AdminPage() {
   const [adminProfile,setAdminProfile]=useState(null);
   const [sellers,setSellers]=useState([]);
   const [categories,setCategories]=useState([]);
-  const [tab,setTab]=useState("sellers");
+  const [tab,setTab]=useState("overview");
   const [statusFilter,setStatusFilter]=useState("pending");
   const [sellerSearch,setSellerSearch]=useState("");
   const [error,setError]=useState("");
@@ -1744,11 +1745,13 @@ function AdminPage() {
         <aside className="admin-console-sidebar" aria-label="Admin console navigation">
           <div className="admin-console-brand"><ShieldCheck size={22}/><div><strong>NammaSpot</strong><span>Admin Console</span></div></div>
           <div className="admin-console-nav">
-            <button className={tab==="sellers"?"active":""} onClick={()=>setTab("sellers")}><Store size={17}/><span><strong>Seller management</strong><small>Review and manage accounts</small></span></button>
-            <button className={tab==="reviews"?"active":""} onClick={()=>setTab("reviews")}><CheckCircle size={17}/><span><strong>Reviews & reports</strong><small>{reviews.filter(item=>item.status==="pending").length} awaiting review</small></span></button>
-            <button className={tab==="categories"?"active":""} onClick={()=>setTab("categories")}><Grid2X2 size={17}/><span><strong>Categories</strong><small>Organise seller categories</small></span></button>
-            <button className={tab==="storage"?"active":""} onClick={()=>setTab("storage")}><ShieldCheck size={17}/><span><strong>Storage management</strong><small>Usage, limits and cleanup</small></span></button>
-            <button className={tab==="features"?"active":""} onClick={()=>setTab("features")}><SlidersHorizontal size={17}/><span><strong>Growth Tools</strong><small>Review seller requests</small></span></button>
+            <button className={tab==="overview"?"active":""} onClick={()=>setTab("overview")}><Home size={17}/><span><strong>Overview</strong></span></button>
+            <button className={tab==="sellers"?"active":""} onClick={()=>setTab("sellers")}><Store size={17}/><span><strong>Sellers</strong></span></button>
+            <button className={tab==="featured"?"active":""} onClick={()=>setTab("featured")}><Sparkles size={17}/><span><strong>Featured sellers</strong></span></button>
+            <button className={tab==="reviews"?"active":""} onClick={()=>setTab("reviews")}><CheckCircle size={17}/><span><strong>Reviews & reports</strong></span></button>
+            <button className={tab==="categories"?"active":""} onClick={()=>setTab("categories")}><Grid2X2 size={17}/><span><strong>Categories</strong></span></button>
+            <button className={tab==="storage"?"active":""} onClick={()=>setTab("storage")}><ShieldCheck size={17}/><span><strong>Storage</strong></span></button>
+            <button className={tab==="features"?"active":""} onClick={()=>setTab("features")}><SlidersHorizontal size={17}/><span><strong>Growth Tools</strong></span></button>
           </div>
           <div className="admin-console-sidebar-bottom">
             <button onClick={load} disabled={loading}>↻ Refresh data</button>
@@ -1757,33 +1760,27 @@ function AdminPage() {
         </aside>
         <section className="admin-console-content">
       <div className="admin-welcome">
-        <div className="eyebrow">NAMMASPOT CONTROL CENTRE</div>
-        <h1>NammaSpot Admin Console</h1>
-        <p>Manage sellers, catalogue content, approvals, and platform storage from one place.</p>
+        <div><div className="eyebrow">NAMMASPOT CONTROL CENTRE</div><h1>Platform overview</h1></div>
+        <span className="admin-live-label"><i/> Live platform data</span>
       </div>
       <div className="admin-summary-grid" aria-label="Platform summary">
-        <article className="admin-summary-card"><span>Total sellers</span><strong>{sellers.length}</strong><small>All seller accounts</small></article>
-        <article className="admin-summary-card is-pending"><span>Pending approvals</span><strong>{counts.pending || 0}</strong><small>Need your review</small></article>
-        <article className="admin-summary-card is-approved"><span>Approved sellers</span><strong>{counts.approved || 0}</strong><small>Can use NammaSpot</small></article>
-        <article className="admin-summary-card is-suspended"><span>Suspended sellers</span><strong>{counts.suspended || 0}</strong><small>Access currently paused</small></article>
-        <article className="admin-summary-card"><span>Categories</span><strong>{categories.length}</strong><small>Available category records</small></article>
-        <article className="admin-summary-card"><span>Pending reviews</span><strong>{reviews.filter(item=>item.status==="pending").length}</strong><small>Customer feedback to review</small></article>
-        <article className="admin-summary-card"><span>Shop & product likes</span><strong>{Number(platformActivity?.total_likes||0).toLocaleString("en-IN")}</strong><small>Customer appreciation across NammaSpot</small></article>
-        <article className="admin-summary-card"><span>Total enquiries</span><strong>{Number(platformActivity?.total_enquiries||0).toLocaleString("en-IN")}</strong><small>{Number(platformActivity?.new_enquiries||0).toLocaleString("en-IN")} new or pending</small></article>
-        <article className="admin-summary-card"><span>Page views · 30 days</span><strong>{Number(platformActivity?.views_30d||0).toLocaleString("en-IN")}</strong><small>Seller catalogue visits</small></article>
+        <article className="admin-summary-card"><span>Total sellers</span><strong>{sellers.length}</strong></article>
+        <article className="admin-summary-card is-pending"><span>Pending approvals</span><strong>{counts.pending || 0}</strong></article>
+        <article className="admin-summary-card is-approved"><span>Approved sellers</span><strong>{counts.approved || 0}</strong></article>
+        <article className="admin-summary-card is-suspended"><span>Suspended sellers</span><strong>{counts.suspended || 0}</strong></article>
       </div>
-      <div className="dashboard-head">
+      {tab !== "overview" && <div className="dashboard-head">
         <div>
           <div className="eyebrow">CURRENT SECTION</div>
-          <h1>{tab==="sellers" ? "Seller management" : tab==="storage" ? "Storage management" : tab==="reviews" ? "Reviews & reports" : tab==="features" ? "Growth Tools" : "Category management"}</h1>
-          <p>{tab==="sellers" ? "Review new sellers first, then manage approved or restricted accounts." : tab==="storage" ? "Set limits and remove failed or unused uploads safely." : tab==="reviews" ? "Review customer feedback before it appears publicly." : tab==="features" ? "Review one Growth Tools request per seller." : "Keep seller categories organised and easy to browse."}</p>
+          <h1>{tab==="overview" ? "Overview" : tab==="sellers" ? "Seller management" : tab==="featured" ? "Featured sellers" : tab==="storage" ? "Storage management" : tab==="reviews" ? "Reviews & reports" : tab==="features" ? "Growth Tools" : "Category management"}</h1>
+          <p>{tab==="overview" ? "A clear snapshot of NammaSpot activity and the work that needs attention." : tab==="sellers" ? "Review applications and manage approved or restricted accounts." : tab==="featured" ? "Choose approved local businesses to highlight on the public discovery pages." : tab==="storage" ? "Monitor usage and maintain safe storage limits." : tab==="reviews" ? "Moderate customer feedback." : tab==="features" ? "Review seller feature requests." : "Organise customer-facing seller categories."}</p>
           {adminProfile?.email && <small>Signed in as {adminProfile.email}</small>}
         </div>
         <div className="button-row">
           <button className="secondary-button" onClick={load} disabled={loading}>↻ {loading ? "Refreshing…" : "Refresh"}</button>
           <ShieldCheck size={34} color="#7e2424"/>
         </div>
-      </div>
+      </div>}
 
       {error && <div className="inline-error" role="alert" aria-live="assertive"><AlertCircle size={17}/>{error}</div>}
 
@@ -1814,6 +1811,8 @@ function AdminPage() {
         </div>
       )}
 
+      {tab==="overview" && <AdminOverviewPanel sellers={sellers} counts={counts} categories={categories} reviews={reviews} platformActivity={platformActivity} storageUsage={storageUsage} onNavigate={setTab}/>}
+      {tab==="featured" && <AdminFeaturedSellers sellers={sellers} onChange={async(id,featured)=>{await adminSetSellerFeatured(id,featured);setSellers(items=>items.map(item=>item.id===id?{...item,featured}:item));}}/>}
       {tab==="sellers" &&
         <section className="admin-sellers-management">
           <div className="admin-sellers-heading">
@@ -1925,6 +1924,78 @@ function AdminPage() {
       </div>
     </main>
   );
+}
+
+function AdminOverviewPanel({ sellers, counts, categories, reviews, platformActivity, storageUsage, onNavigate }) {
+  const total = Math.max(1, sellers.length);
+  const pendingReviews = reviews.filter(item => item.status === "pending").length;
+  const featured = sellers.filter(item => item.verification_status === "approved" && item.featured);
+  const statusRows = [
+    { label: "Approved", count: counts.approved || 0, className: "approved" },
+    { label: "Pending", count: counts.pending || 0, className: "pending" },
+    { label: "Suspended", count: counts.suspended || 0, className: "suspended" },
+    { label: "Rejected", count: counts.rejected || 0, className: "rejected" },
+  ];
+  const tasks = [
+    { label: "Seller applications", detail: (counts.pending || 0) + " waiting for review", count: counts.pending || 0, tab: "sellers" },
+    { label: "Customer reviews", detail: pendingReviews + " waiting for moderation", count: pendingReviews, tab: "reviews" },
+    { label: "Featured sellers", detail: "Review homepage and discovery highlights", count: null, tab: "featured" },
+    { label: "Storage health", detail: storageUsage ? storageUsage.used_percent + "% of configured allowance used" : "Check platform media usage", count: storageUsage?.status === "critical" || storageUsage?.status === "blocked" ? 1 : 0, tab: "storage" },
+  ];
+  return <section className="admin-overview-layout">
+    <div className="admin-overview-kpis">
+      <article className="admin-overview-kpi"><span>Total enquiries</span><strong>{Number(platformActivity?.total_enquiries || 0).toLocaleString("en-IN")}</strong><small>{Number(platformActivity?.new_enquiries || 0).toLocaleString("en-IN")} new or pending</small></article>
+      <article className="admin-overview-kpi"><span>Catalogue visits · 30 days</span><strong>{Number(platformActivity?.views_30d || 0).toLocaleString("en-IN")}</strong><small>Seller page views</small></article>
+      <article className="admin-overview-kpi"><span>Customer likes</span><strong>{Number(platformActivity?.total_likes || 0).toLocaleString("en-IN")}</strong><small>Shops and products</small></article>
+      <article className="admin-overview-kpi"><span>Categories</span><strong>{categories.length}</strong><small>Discovery categories</small></article>
+    </div>
+    <div className="admin-overview-main-grid">
+      <article className="admin-overview-panel admin-status-panel">
+        <div className="admin-overview-panel-head"><div><span className="eyebrow">SELLER NETWORK</span><h2>Seller account status</h2></div><button className="text-link-button" onClick={() => onNavigate("sellers")}>Manage sellers <ChevronRight size={15}/></button></div>
+        <div className="admin-status-total"><strong>{sellers.length}</strong><span>Total registered sellers</span></div>
+        <div className="admin-status-bars">{statusRows.map(row => <div className="admin-status-row" key={row.label}><div><span>{row.label}</span><b>{row.count}</b></div><div className="admin-status-track"><i className={"is-" + row.className} style={{width: (row.count / total * 100) + "%"}}/></div></div>)}</div>
+      </article>
+      <article className="admin-overview-panel admin-tasks-panel">
+        <div className="admin-overview-panel-head"><div><span className="eyebrow">ADMIN WORKSPACE</span><h2>Action required</h2></div></div>
+        {tasks.map(task => <button className="admin-task-row" key={task.tab} onClick={() => onNavigate(task.tab)}><span><strong>{task.label}</strong><small>{task.detail}</small></span>{task.count !== null && <b>{task.count}</b>}<ChevronRight size={16}/></button>)}
+      </article>
+    </div>
+    <div className="admin-overview-bottom-grid">
+      <article className="admin-overview-panel">
+        <div className="admin-overview-panel-head"><div><span className="eyebrow">HOMEPAGE CURATION</span><h2>Featured sellers</h2></div><button className="text-link-button" onClick={() => onNavigate("featured")}>Manage <ChevronRight size={15}/></button></div>
+        {featured.length ? featured.slice(0,4).map(item => <div className="admin-featured-mini-row" key={item.id}><span className="admin-featured-avatar">{(item.business_name || "S").slice(0,1).toUpperCase()}</span><span><strong>{item.business_name}</strong><small>{item.location || "Location not added"}</small></span><b>Featured</b></div>) : <p className="admin-overview-empty">No sellers are featured yet. Choose approved businesses to highlight on NammaSpot.</p>}
+      </article>
+      <article className="admin-overview-panel admin-overview-note">
+        <span className="eyebrow">PLATFORM HEALTH</span><h2>{storageUsage?.status === "blocked" ? "Storage uploads paused" : storageUsage?.status === "critical" ? "Storage needs attention" : "Platform checks"}</h2>
+        <p>{storageUsage ? storageUsage.used_percent + "% of " + formatBytes(storageUsage.quota_bytes) + " used." : "Storage status is not available right now."}</p>
+        <button className="secondary-button" onClick={() => onNavigate("storage")}>Open storage management</button>
+      </article>
+    </div>
+  </section>;
+}
+
+function AdminFeaturedSellers({ sellers, onChange }) {
+  const [search, setSearch] = useState("");
+  const [busy, setBusy] = useState("");
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const eligible = sellers.filter(item => item.verification_status === "approved");
+  const filtered = eligible.filter(item => [item.business_name, item.owner_name, item.location, item.category?.name].some(value => String(value || "").toLowerCase().includes(search.trim().toLowerCase())));
+  const featuredCount = eligible.filter(item => item.featured).length;
+  const toggle = async item => {
+    setBusy(item.id); setError(""); setNotice("");
+    try { await onChange(item.id, !item.featured); setNotice((item.featured ? "Removed " : "Featured ") + item.business_name + "."); }
+    catch (e) { setError(friendlyError(e)); }
+    finally { setBusy(""); }
+  };
+  return <section className="admin-featured-management">
+    <div className="admin-featured-summary"><div><span className="eyebrow">PUBLIC DISCOVERY</span><h2>{featuredCount} featured {featuredCount === 1 ? "seller" : "sellers"}</h2><p>Only approved sellers can be featured. Changes appear in the public Featured section.</p></div><span className="admin-featured-count">{featuredCount}</span></div>
+    <label className="admin-seller-search"><Search size={18}/><input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search approved sellers" aria-label="Search approved sellers"/></label>
+    {error && <div className="inline-error" role="alert">{error}</div>}
+    {notice && <div className="form-status" role="status">{notice}</div>}
+    <div className="admin-featured-grid">{filtered.map(item => <article className="admin-featured-card" key={item.id}><div className="admin-featured-card-copy"><span className="admin-featured-avatar">{(item.business_name || "S").slice(0,1).toUpperCase()}</span><div><strong>{item.business_name}</strong><small>{item.category?.name || "Local business"} · {item.location || "Location not added"}</small></div></div><button type="button" className={item.featured ? "secondary-button is-featured" : "primary-button"} disabled={busy === item.id} onClick={() => toggle(item)}>{busy === item.id ? "Saving…" : item.featured ? "Remove feature" : "Feature seller"}</button></article>)}</div>
+    {!filtered.length && <Empty title="No approved sellers found" text={search ? "Try another search term." : "Approved sellers will appear here when available."}/>}
+  </section>;
 }
 
 function AdminStorageManagement() {

@@ -1,171 +1,146 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Clock3, ShieldCheck, Store, XCircle } from "lucide-react";
+import { CheckCircle2, Clock3, Search, ShieldCheck, Store, XCircle } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 const FEATURES = [
-  { key: "offers", label: "Offers section", description: "Dedicated promotions on the public seller page." },
-  { key: "polls", label: "Catalogue polls", description: "Customer preference polls with expiry and voting." },
-  { key: "subcategories", label: "Catalogue subcategories", description: "Seller-specific sections inside the catalogue." },
-  { key: "advanced_catalogue", label: "Advanced catalogue", description: "Additional catalogue controls and enhanced organisation." },
+  { key: "offers", label: "Offers" },
+  { key: "polls", label: "Polls" },
+  { key: "subcategories", label: "Catalogue Sections" },
+  { key: "advanced_catalogue", label: "Featured Products" },
 ];
-const statusLabel = (value) => ({ pending: "Awaiting review", approved: "Approved", rejected: "Rejected", suspended: "Suspended", not_requested: "Not requested" }[value] || value);
-const statusClass = (value) => value === "approved" ? "status-ok" : value === "pending" ? "status-warning" : value === "suspended" ? "status-danger" : "";
+const statusLabel = row => row.status === "approved" ? (row.enabled ? "On" : "Approved · seller decides") : row.status === "pending" ? "Pending" : row.status === "suspended" ? "Paused" : row.status === "rejected" ? "Rejected" : "Not requested";
+const statusClass = row => row.status === "approved" ? "status-ok" : row.status === "pending" ? "status-warning" : row.status === "suspended" ? "status-danger" : "";
 
-export default function AdminSellerFeatures({ sellers = [] }) {
+export default function AdminSellerFeatures() {
   const [rows, setRows] = useState([]);
-  const [contentQueue, setContentQueue] = useState([]);
-  const [sellerId, setSellerId] = useState("");
-  const [featureKey, setFeatureKey] = useState("offers");
   const [note, setNote] = useState("");
+  const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   const load = async () => {
-    if (!supabase) { setError("Feature approvals need the connected production database."); return; }
-    const [access, offers, polls, subcategories] = await Promise.all([
-      supabase.rpc("admin_list_seller_feature_access"),
-      supabase.from("seller_offers").select("id,seller_id,title,description,starts_at,ends_at,status,admin_note").eq("status","pending").order("created_at",{ascending:false}),
-      supabase.from("seller_polls").select("id,seller_id,question,options,ends_at,status,admin_note").eq("status","pending").order("created_at",{ascending:false}),
-      supabase.from("seller_catalogue_subcategories").select("id,seller_id,name,status").eq("status","pending").order("created_at",{ascending:false})
-    ]);
-    for (const result of [access, offers, polls, subcategories]) if (result.error) throw result.error;
-    setRows(access.data || []);
-    setContentQueue([...(offers.data||[]).map(x=>({...x,kind:"offer",label:x.title})),...(polls.data||[]).map(x=>({...x,kind:"poll",label:x.question})),...(subcategories.data||[]).map(x=>({...x,kind:"subcategory",label:x.name}))]);
+    if (!supabase) throw new Error("Growth Tools need the connected database.");
+    const { data, error: loadError } = await supabase.rpc("admin_list_seller_feature_access");
+    if (loadError) throw loadError;
+    setRows(data || []);
   };
-  useEffect(() => { load().catch((e) => setError(e.message || "Could not load feature requests.")); }, []);
-  const pending = rows.filter((r) => r.status === "pending").length;
-  const pendingContent = contentQueue.length;
-  const filtered = useMemo(() => rows.filter((r) => filter === "all" || r.status === filter), [rows, filter]);
-  const groupedFiltered = useMemo(() => {
-    const groups = new Map();
-    for (const row of filtered) {
-      if (!groups.has(row.seller_id)) groups.set(row.seller_id, { seller_id: row.seller_id, business_name: row.business_name, owner_name: row.owner_name, rows: [] });
-      groups.get(row.seller_id).rows.push(row);
+  useEffect(() => { let alive = true; load().catch(e => alive && setError(e.message || "Could not load requests.")); return () => { alive = false; }; }, []);
+
+  const groups = useMemo(() => {
+    const map = new Map();
+    for (const row of rows) {
+      if (!map.has(row.seller_id)) map.set(row.seller_id, {
+        seller_id: row.seller_id, business_name: row.business_name, owner_name: row.owner_name, slug: row.slug, rows: [],
+      });
+      map.get(row.seller_id).rows.push(row);
     }
-    return Array.from(groups.values());
-  }, [filtered]);
-  const decideGroup = async (group) => {
-    const pendingRows = group.rows.filter((row) => row.status === "pending");
-    if (!pendingRows.length) return;
-    setBusy(true); setError(""); setSuccess("");
+    return [...map.values()].map(group => ({
+      ...group,
+      rows: FEATURES.map(feature => group.rows.find(row => row.feature_key === feature.key) || {
+        seller_id: group.seller_id, feature_key: feature.key, status: "not_requested", enabled: false,
+      }),
+    }));
+  }, [rows]);
+
+  const filtered = useMemo(() => groups.filter(group => {
+    const text = (group.business_name + " " + group.owner_name + " " + group.slug).toLowerCase();
+    const matchesSearch = !search.trim() || text.includes(search.trim().toLowerCase());
+    const matchesStatus = filter === "all" || group.rows.some(row => row.status === filter);
+    return matchesSearch && matchesStatus;
+  }), [groups, search, filter]);
+
+  const pendingGroups = groups.filter(group => group.rows.some(row => row.status === "pending")).length;
+  const activeCount = rows.filter(row => row.status === "approved" && row.enabled).length;
+
+  const approveBundle = async group => {
+    setBusy(group.seller_id); setError(""); setSuccess("");
     try {
-      for (const row of pendingRows) {
-        const { error: rpcError } = await supabase.rpc("admin_set_seller_feature_access", {
-          p_seller_id: row.seller_id, p_feature_key: row.feature_key, p_status: "approved",
-          p_enabled: true, p_note: note.trim() || "Approved as part of the seller Growth Tools request"
-        });
-        if (rpcError) throw rpcError;
-      }
+      const { data, error: rpcError } = await supabase.rpc("admin_approve_seller_growth_bundle", {
+        p_seller_id: group.seller_id, p_note: note.trim(),
+      });
+      if (rpcError) throw rpcError;
+      if (!data) throw new Error("There are no pending tools in this request.");
       await load();
-      setSuccess(group.business_name + " · " + pendingRows.length + " growth features approved.");
+      setSuccess(group.business_name + " · all pending tools approved. The seller can now switch them on.");
       setNote("");
-    } catch (e) {
-      await load().catch(() => {});
-      setError(e.message || "Could not approve the complete feature request. Check each feature status before retrying.");
-    } finally { setBusy(false); }
+    } catch (e) { setError(e.message || "Could not approve this request."); }
+    finally { setBusy(""); }
   };
-  const decide = async (row, status, enabled = status === "approved") => {
-    setBusy(true); setError(""); setSuccess("");
+
+  const decideOne = async (group, row, status) => {
+    setBusy(group.seller_id + row.feature_key); setError(""); setSuccess("");
     try {
       const { error: rpcError } = await supabase.rpc("admin_set_seller_feature_access", {
-        p_seller_id: row.seller_id, p_feature_key: row.feature_key, p_status: status,
-        p_enabled: enabled, p_note: note.trim() || row.review_note || ""
+        p_seller_id: group.seller_id,
+        p_feature_key: row.feature_key,
+        p_status: status,
+        p_enabled: false,
+        p_note: note.trim() || (status === "approved" ? "Approved individually; seller controls activation." : ""),
       });
       if (rpcError) throw rpcError;
       await load();
-      setSuccess(row.business_name + " · " + row.feature_key + " updated.");
+      setSuccess(group.business_name + " · " + FEATURES.find(f => f.key === row.feature_key)?.label + " updated.");
       setNote("");
-    } catch (e) { setError(e.message || "Could not update feature access."); }
-    finally { setBusy(false); }
-  };
-  const moderateContent = async (item, status) => {
-    setBusy(true); setError(""); setSuccess("");
-    try {
-      const table = item.kind === "offer" ? "seller_offers" : item.kind === "poll" ? "seller_polls" : "seller_catalogue_subcategories";
-      const payload = item.kind === "subcategory" ? { status } : { status, admin_note: note.trim() };
-      const { error: updateError } = await supabase.from(table).update(payload).eq("id", item.id);
-      if (updateError) throw updateError;
-      await load(); setSuccess("Content " + status + " successfully."); setNote("");
-    } catch (e) { setError(e.message || "Could not moderate content."); }
-    finally { setBusy(false); }
-  };
-  const grant = async (event) => {
-    event.preventDefault();
-    if (!sellerId) return;
-    setBusy(true); setError(""); setSuccess("");
-    try {
-      const { error: rpcError } = await supabase.rpc("admin_set_seller_feature_access", {
-        p_seller_id: sellerId, p_feature_key: featureKey, p_status: "approved",
-        p_enabled: true, p_note: note.trim() || "Granted by NammaSpot admin"
-      });
-      if (rpcError) throw rpcError;
-      await load();
-      setSuccess("Feature access approved for the selected seller.");
-      setNote("");
-    } catch (e) { setError(e.message || "Could not grant feature access."); }
-    finally { setBusy(false); }
+    } catch (e) { setError(e.message || "Could not update this tool."); }
+    finally { setBusy(""); }
   };
 
   return <section className="admin-feature-management">
     <div className="dashboard-section-head">
-      <div><div className="eyebrow">SELLER GROWTH PROGRAMME</div><h2>Feature access & approvals</h2><p>Approve features seller by seller. No seller receives an advanced feature automatically.</p></div>
-      <span className="status-pill status-warning">{pending + pendingContent} pending</span>
+      <div><div className="eyebrow">SELLER TOOLS</div><h2>Growth Tools</h2><p>Review one request per seller. Approval gives access; sellers choose what to turn on.</p></div>
+      <span className="status-pill status-warning">{pendingGroups} waiting</span>
     </div>
+
     <div className="admin-feature-stats">
-      <article><span>Requests received</span><strong>{rows.length}</strong></article>
-      <article><span>Awaiting review</span><strong>{pending}</strong></article>
-      <article><span>Active permissions</span><strong>{rows.filter(r=>r.status==="approved"&&r.enabled).length}</strong></article>
+      <article><span>Seller requests</span><strong>{groups.length}</strong></article>
+      <article><span>Waiting for review</span><strong>{pendingGroups}</strong></article>
+      <article><span>Tools switched on</span><strong>{activeCount}</strong></article>
     </div>
-    <form className="admin-feature-grant" onSubmit={grant}>
-      <div><h3>Grant a feature to a specific seller</h3><p>Use this for invited sellers or approved pilot participants.</p></div>
-      <div className="form-grid">
-        <label>Seller<select value={sellerId} onChange={e=>setSellerId(e.target.value)} required><option value="">Choose seller</option>{sellers.filter(s=>s.verification_status==="approved").map(s=><option key={s.id} value={s.id}>{s.business_name}</option>)}</select></label>
-        <label>Feature<select value={featureKey} onChange={e=>setFeatureKey(e.target.value)}>{FEATURES.map(f=><option key={f.key} value={f.key}>{f.label}</option>)}</select></label>
-      </div>
-      <label>Admin note (optional)<input value={note} onChange={e=>setNote(e.target.value)} maxLength={500} placeholder="Pilot group, reason, or conditions"/></label>
-      <button className="primary-button" disabled={busy||!sellerId}><ShieldCheck size={16}/>{busy?"Saving…":"Approve for this seller"}</button>
-    </form>
-    <div className="admin-feature-toolbar">
-      <div><h3>Feature requests</h3><p>Review each request and enable or pause permissions independently.</p></div>
-      <select aria-label="Filter feature requests" value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">All statuses</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="suspended">Suspended</option></select>
-    </div>
+
     {error && <div className="inline-error" role="alert">{error}</div>}
-    {success && <div className="form-status" role="status">{success}</div>}
-    <section className="admin-feature-editor">
-      <div className="admin-feature-toolbar"><div><h3>Content moderation queue</h3><p>Review seller offers, catalogue polls and subcategories before they appear publicly.</p></div><span className="status-pill status-warning">{contentQueue.length} pending</span></div>
-      <label className="admin-feature-note">Decision note (offers and polls)<input value={note} onChange={e=>setNote(e.target.value)} maxLength={500} placeholder="Optional reason or approval condition"/></label>
-      <div className="admin-feature-list">
-        {contentQueue.map(item=><article className="admin-feature-row" key={item.kind+item.id}>
-          <div className="admin-feature-main"><div className="admin-feature-icon"><Store size={19}/></div><div><strong>{item.label}</strong><small>{sellers.find(s=>s.id===item.seller_id)?.business_name || "Seller"} · {item.kind}</small>{item.description&&<small>{item.description}</small>}{item.options&&<small>{item.options.join(" · ")}</small>}{item.ends_at&&<small>Ends {new Date(item.ends_at).toLocaleString("en-IN")}</small>}</div></div>
-          <div className="admin-feature-actions"><span className="status-pill status-warning">Pending review</span><div className="button-row"><button className="primary-button" disabled={busy} onClick={()=>moderateContent(item,"approved")}><CheckCircle2 size={15}/>Approve</button><button className="secondary-button" disabled={busy} onClick={()=>moderateContent(item,"rejected")}><XCircle size={15}/>Reject</button></div></div>
-        </article>)}
-        {!contentQueue.length&&<div className="empty-state"><CheckCircle2 size={22}/><strong>No content waiting for review</strong><p>Seller-submitted content will appear here.</p></div>}
-      </div>
-    </section>
-    <div className="admin-feature-list admin-feature-groups">
-      {groupedFiltered.map(group=><section className="admin-feature-group" key={group.seller_id}>
-        <div className="admin-feature-group-head">
-          <div><strong>{group.business_name}</strong><small>{group.owner_name || "Seller"} · {group.rows.length} feature permissions in one seller request</small></div>
-          {group.rows.some(row=>row.status==="pending")&&<button className="primary-button" disabled={busy} onClick={()=>decideGroup(group)}><CheckCircle2 size={15}/>{busy?"Saving…":"Approve all pending"}</button>}
-        </div>
-        <div className="admin-feature-group-rows">
-          {group.rows.map(row=><article className="admin-feature-row" key={row.access_id}>
-            <div className="admin-feature-main"><div className="admin-feature-icon"><Store size={19}/></div><div><strong>{FEATURES.find(f=>f.key===row.feature_key)?.label || row.feature_key}</strong><small>{row.slug}</small>{row.review_note && <small>Admin note: {row.review_note}</small>}</div></div>
-            <div className="admin-feature-actions"><span className={"status-pill "+statusClass(row.status)}>{statusLabel(row.status)}{row.enabled&&row.status==="approved"?" · Active":""}</span>
-              <div className="button-row">
-                {row.status!=="approved"&&<button className="primary-button" disabled={busy} onClick={()=>decide(row,"approved",true)}><CheckCircle2 size={15}/>Approve</button>}
-                {row.status==="approved"&&row.enabled&&<button className="secondary-button" disabled={busy} onClick={()=>decide(row,"suspended",false)}>Pause access</button>}
-                {row.status!=="rejected"&&<button className="secondary-button" disabled={busy} onClick={()=>decide(row,"rejected",false)}><XCircle size={15}/>Reject</button>}
-                {row.status==="suspended"&&<button className="secondary-button" disabled={busy} onClick={()=>decide(row,"approved",true)}>Restore</button>}
-              </div>
-            </div>
-          </article>)}
-        </div>
-      </section>)}
-      {!groupedFiltered.length&&<div className="empty-state"><Clock3 size={22}/><strong>No feature requests in this view</strong><p>Seller requests and admin-granted permissions will appear here.</p></div>}
+    {success && <div className="form-status" role="status"><CheckCircle2 size={16}/>{success}</div>}
+
+    <div className="admin-growth-toolbar">
+      <label className="admin-growth-search"><Search size={17}/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Find a seller…"/></label>
+      <select aria-label="Filter seller requests" value={filter} onChange={e => setFilter(e.target.value)}>
+        <option value="all">All sellers</option><option value="pending">Waiting</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="suspended">Paused</option>
+      </select>
     </div>
-    <p className="muted-note">Permissions are checked by the database as well as the interface. Disabling a feature here prevents new content from being published for that seller.</p>
+    <label className="admin-feature-note">Admin note (optional)<input value={note} onChange={e => setNote(e.target.value)} maxLength={500} placeholder="Add a short note for the seller"/></label>
+
+    <div className="admin-feature-groups">
+      {filtered.map(group => {
+        const pending = group.rows.filter(row => row.status === "pending");
+        return <article className="admin-feature-group" key={group.seller_id}>
+          <div className="admin-feature-group-head">
+            <div className="admin-feature-seller">
+              <span className="admin-feature-icon"><Store size={19}/></span>
+              <span><strong>{group.business_name}</strong><small>{group.owner_name || "Seller"} · {group.slug}</small></span>
+            </div>
+            {pending.length > 0 && <button type="button" className="primary-button" disabled={Boolean(busy)} onClick={() => approveBundle(group)}>
+              <ShieldCheck size={16}/>{busy === group.seller_id ? "Approving…" : "Approve all"}
+            </button>}
+          </div>
+          <div className="admin-feature-group-rows">
+            {group.rows.map(row => <div className="admin-feature-row" key={row.feature_key}>
+              <strong>{FEATURES.find(feature => feature.key === row.feature_key)?.label}</strong>
+              <div className="admin-feature-actions">
+                <span className={"status-pill " + statusClass(row)}>{statusLabel(row)}</span>
+                <div className="button-row">
+                  {row.status === "pending" && <button type="button" className="secondary-button" disabled={Boolean(busy)} onClick={() => decideOne(group, row, "approved")}><CheckCircle2 size={14}/>Approve</button>}
+                  {row.status === "approved" && <button type="button" className="secondary-button" disabled={Boolean(busy)} onClick={() => decideOne(group, row, "suspended")}>Pause access</button>}
+                  {(row.status === "pending" || row.status === "approved") && <button type="button" className="danger-button" disabled={Boolean(busy)} onClick={() => decideOne(group, row, "rejected")}><XCircle size={14}/>Reject</button>}
+                  {row.status === "suspended" && <button type="button" className="secondary-button" disabled={Boolean(busy)} onClick={() => decideOne(group, row, "approved")}>Restore</button>}
+                </div>
+              </div>
+            </div>)}
+          </div>
+        </article>;
+      })}
+      {!filtered.length && <div className="empty-state"><Clock3 size={22}/><strong>No seller requests found</strong><p>New Growth Tools requests will appear here.</p></div>}
+    </div>
+    <p className="muted-note">Turning off or pausing a tool hides its public section. Existing seller content stays saved.</p>
   </section>;
 }

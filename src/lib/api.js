@@ -122,6 +122,7 @@ function productsOf(rows = []) {
     category_id: p.category_id ?? null,
     created_at: p.created_at ?? null,
     seller_id: p.seller_id,
+    featured: Boolean(p.featured),
   }));
 }
 
@@ -752,7 +753,7 @@ export async function updateMySeller(sellerId, values) {
 export async function listMyProducts(sellerId) {
   if (!supabase) return productsOf(demoState().products.filter((p) => p.seller_id === sellerId));
   const client = needBackend();
-  const { data,error } = await client.from("products").select("id,seller_id,product_name,description,price,availability,image_url,category_id,created_at").eq("seller_id",sellerId).order("created_at",{ascending:false});
+  const { data,error } = await client.from("products").select("id,seller_id,product_name,description,price,availability,image_url,category_id,featured,created_at").eq("seller_id",sellerId).order("created_at",{ascending:false});
   if (error) throw error; return productsOf(data ?? []);
 }
 
@@ -775,7 +776,7 @@ export async function createProduct(values) {
     availability:Boolean(values.availability),
     image_url:imageUrl,
     category_id:values.category_id || null
-  }).select("id,seller_id,name,product_name,description,price,available,availability,image_url,category_id,created_at").single();
+  }).select("id,seller_id,name,product_name,description,price,available,availability,image_url,category_id,featured,created_at").single();
   if (error) { if (imageUrl) { try { await removeMediaIfUnreferenced(imageUrl); } catch {} } throw error; }
   return productsOf([data])[0];
 }
@@ -812,6 +813,26 @@ export async function updateProduct(productId,values) {
     catch (cleanupError) { throw new Error("Product updated, but the old image could not be fully deleted from storage. Please contact NammaSpot support."); }
   }
   return productsOf([data])[0];
+}
+
+export async function getSellerGrowthFeatureAccess(sellerId) {
+  if (!supabase) return {};
+  const client = needBackend();
+  const { data, error } = await client.from("seller_feature_access")
+    .select("feature_key,status,enabled")
+    .eq("seller_id", sellerId);
+  if (error) throw error;
+  return Object.fromEntries((data || []).map(row => [row.feature_key, row]));
+}
+
+export async function setProductFeatured(productId, featured) {
+  const client = needBackend();
+  const { error } = await client.rpc("seller_set_product_featured", {
+    p_product_id: productId,
+    p_featured: Boolean(featured),
+  });
+  if (error) throw error;
+  return Boolean(featured);
 }
 
 function sellerMediaPathFromUrl(url, userId) {

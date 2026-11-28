@@ -77,6 +77,8 @@ import { addProductGalleryImage, deleteProductGalleryImage, getMyMicrosite, save
 import { formatBytes } from "./lib/storage";
 import SellerGrowthHub, { SellerGrowthSharing } from "./SellerGrowthHub.jsx";
 import SellerNotifications from "./components/SellerNotifications.jsx";
+import AdminSellerFeatures from "./components/AdminSellerFeatures.jsx";
+import SellerFeatureAccess from "./components/SellerFeatureAccess.jsx";
 import RecentSellerStrip from "./components/RecentSellerStrip.jsx";
 
 const popularCategories = ["Bakery", "Mehendi", "Crochet", "Makeup", "Art"];
@@ -1158,7 +1160,7 @@ function DashboardPage({ go }) {
 
       <section className="seller-likes-overview"><div className="seller-likes-main"><span className="seller-likes-heart"><Heart size={20} fill="currentColor"/></span><div><strong>{sellerLikeCount.toLocaleString("en-IN")}</strong><span>People who like your shop</span></div></div><div className="seller-likes-products"><strong>Most liked products</strong>{products.filter(p=>p.like_count>0).sort((a,b)=>b.like_count-a.like_count).slice(0,3).map(p=><div key={p.id}><span>{p.name}</span><b>♥ {p.like_count}</b></div>)}{!products.some(p=>p.like_count>0)&&<small>Your product likes will appear here.</small>}</div></section>
       <div className="dashboard-tabs">
-        {["overview","notifications","profile","products","enquiries","growth","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item==="public"?"Public profile":item==="growth"?"Growth & sharing":item==="notifications"?"Notifications"+(notifications.filter(n=>!n.read_at).length?" · "+notifications.filter(n=>!n.read_at).length:""):item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
+        {["overview","notifications","profile","products","enquiries","growth","features","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item==="public"?"Public profile":item==="growth"?"Growth & sharing":item==="notifications"?"Notifications"+(notifications.filter(n=>!n.read_at).length?" · "+notifications.filter(n=>!n.read_at).length:""):item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
       </div>
 
       {tab==="overview" && <SellerGrowthHub seller={seller} products={products} enquiries={enquiries} analytics={analytics} sellerLikes={sellerLikeCount} onNavigate={setTab}/>}
@@ -1167,6 +1169,7 @@ function DashboardPage({ go }) {
       {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} storageUsage={storageUsage} onStorageUsageChange={setStorageUsage} onChange={setProducts}/>}
       {tab==="enquiries" && <EnquiryManager enquiries={enquiries} onChange={setEnquiries} seller={seller}/>}
       {tab==="growth" && <SellerGrowthSharing seller={seller} analytics={analytics}/>}
+      {tab==="features" && <SellerFeatureAccess seller={seller}/> }
       {tab==="public" && <PublicTools seller={seller} go={go}/>} 
     </main>
   );
@@ -1720,6 +1723,7 @@ function AdminPage() {
             <button className={tab==="reviews"?"active":""} onClick={()=>setTab("reviews")}><CheckCircle size={17}/><span><strong>Reviews & reports</strong><small>{reviews.filter(item=>item.status==="pending").length} awaiting review</small></span></button>
             <button className={tab==="categories"?"active":""} onClick={()=>setTab("categories")}><Grid2X2 size={17}/><span><strong>Categories</strong><small>Organise seller categories</small></span></button>
             <button className={tab==="storage"?"active":""} onClick={()=>setTab("storage")}><ShieldCheck size={17}/><span><strong>Storage management</strong><small>Usage, limits and cleanup</small></span></button>
+            <button className={tab==="features"?"active":""} onClick={()=>setTab("features")}><SlidersHorizontal size={17}/><span><strong>Feature approvals</strong><small>Seller-specific access control</small></span></button>
           </div>
           <div className="admin-console-sidebar-bottom">
             <button onClick={load} disabled={loading}>↻ Refresh data</button>
@@ -1746,8 +1750,8 @@ function AdminPage() {
       <div className="dashboard-head">
         <div>
           <div className="eyebrow">CURRENT SECTION</div>
-          <h1>{tab==="sellers" ? "Seller management" : tab==="storage" ? "Storage management" : tab==="reviews" ? "Reviews & reports" : "Category management"}</h1>
-          <p>{tab==="sellers" ? "Review new sellers first, then manage approved or restricted accounts." : tab==="storage" ? "Set limits and remove failed or unused uploads safely." : tab==="reviews" ? "Review customer feedback before it appears publicly." : "Keep seller categories organised and easy to browse."}</p>
+          <h1>{tab==="sellers" ? "Seller management" : tab==="storage" ? "Storage management" : tab==="reviews" ? "Reviews & reports" : tab==="features" ? "Feature approvals" : "Category management"}</h1>
+          <p>{tab==="sellers" ? "Review new sellers first, then manage approved or restricted accounts." : tab==="storage" ? "Set limits and remove failed or unused uploads safely." : tab==="reviews" ? "Review customer feedback before it appears publicly." : tab==="features" ? "Approve offers, polls and advanced catalogue tools for selected sellers only." : "Keep seller categories organised and easy to browse."}</p>
           {adminProfile?.email && <small>Signed in as {adminProfile.email}</small>}
         </div>
         <div className="button-row">
@@ -1860,6 +1864,7 @@ function AdminPage() {
           </div>
         </section>}
       {tab==="storage" && <AdminStorageManagement />}
+      {tab==="features" && <AdminSellerFeatures sellers={sellers}/> }
       {tab==="categories" &&
         <section className="admin-category-management">
           <div className="dashboard-section-head">

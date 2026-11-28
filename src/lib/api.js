@@ -123,6 +123,7 @@ function productsOf(rows = []) {
     created_at: p.created_at ?? null,
     seller_id: p.seller_id,
     featured: Boolean(p.featured),
+    subcategory_id: p.subcategory_id ?? null,
   }));
 }
 
@@ -753,7 +754,7 @@ export async function updateMySeller(sellerId, values) {
 export async function listMyProducts(sellerId) {
   if (!supabase) return productsOf(demoState().products.filter((p) => p.seller_id === sellerId));
   const client = needBackend();
-  const { data,error } = await client.from("products").select("id,seller_id,product_name,description,price,availability,image_url,category_id,featured,created_at").eq("seller_id",sellerId).order("created_at",{ascending:false});
+  const { data,error } = await client.from("products").select("id,seller_id,product_name,description,price,availability,image_url,category_id,featured,subcategory_id,created_at").eq("seller_id",sellerId).order("created_at",{ascending:false});
   if (error) throw error; return productsOf(data ?? []);
 }
 
@@ -823,6 +824,18 @@ export async function getSellerGrowthFeatureAccess(sellerId) {
     .eq("seller_id", sellerId);
   if (error) throw error;
   return Object.fromEntries((data || []).map(row => [row.feature_key, row]));
+}
+
+export async function getSellerGrowthSubcategories(sellerId) {
+  if (!supabase) return [];
+  const client = needBackend();
+  const { data, error } = await client.from("seller_catalogue_subcategories")
+    .select("id,name")
+    .eq("seller_id", sellerId)
+    .eq("status", "approved")
+    .order("sort_order");
+  if (error) throw error;
+  return data || [];
 }
 
 export async function setProductFeatured(productId, featured) {

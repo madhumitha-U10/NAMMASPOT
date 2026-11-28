@@ -13,7 +13,7 @@ function makeAccessMap(rows) {
   return Object.fromEntries((rows || []).map(row => [row.feature_key, row]));
 }
 
-export default function SellerFeatureAccess({ seller, onAccessChange }) {
+export default function SellerFeatureAccess({ seller, onAccessChange, onSubcategoriesChange }) {
   const [rows, setRows] = useState([]);
   const [offers, setOffers] = useState([]);
   const [polls, setPolls] = useState([]);
@@ -39,6 +39,7 @@ export default function SellerFeatureAccess({ seller, onAccessChange }) {
     setPolls(pollRows.data || []);
     setSubcategories(sectionRows.data || []);
     onAccessChange?.(makeAccessMap(access.data));
+    onSubcategoriesChange?.(sectionRows.data || []);
   };
 
   useEffect(() => {

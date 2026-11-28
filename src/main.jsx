@@ -1134,6 +1134,7 @@ function DashboardPage({ go }) {
   const [enquiries,setEnquiries] = useState([]);
   const [categories,setCategories] = useState([]);
   const [tab,setTab] = useState("overview");
+  const [navOpen,setNavOpen] = useState(false);
   const [state,setState] = useState({loading:true,error:""});
   const [storageUsage,setStorageUsage] = useState(null);
   const [analytics,setAnalytics] = useState(null);
@@ -1174,20 +1175,22 @@ function DashboardPage({ go }) {
   return (
     <main className="page dashboard-page seller-workspace-page">
       <div className="seller-workspace-shell">
-        <aside className="seller-workspace-sidebar" aria-label="Seller dashboard navigation">
+        <aside className={"seller-workspace-sidebar"+(navOpen?" is-open":"")} aria-label="Seller dashboard navigation">
           <div className="seller-workspace-brand"><span className="seller-workspace-brand-mark">N</span><span><strong>NammaSpot</strong><small>Seller workspace</small></span></div>
           <nav className="seller-workspace-nav">
-            <button type="button" className={tab==="overview"?"active":""} aria-current={tab==="overview"?"page":undefined} onClick={()=>setTab("overview")}><Home size={17}/><span>Overview</span></button>
-            <button type="button" className={tab==="products"?"active":""} aria-current={tab==="products"?"page":undefined} onClick={()=>setTab("products")}><Grid2X2 size={17}/><span>My Catalogue</span></button>
-            <button type="button" className={tab==="enquiries"?"active":""} aria-current={tab==="enquiries"?"page":undefined} onClick={()=>setTab("enquiries")}><MessageCircle size={17}/><span>Enquiries</span>{enquiries.filter(item=>item.status==="new"||item.status==="pending").length>0&&<b>{enquiries.filter(item=>item.status==="new"||item.status==="pending").length}</b>}</button>
-            <button type="button" className={tab==="growth"?"active":""} aria-current={tab==="growth"?"page":undefined} onClick={()=>setTab("growth")}><Sparkles size={17}/><span>Growth Tools</span></button>
-            <button type="button" className={tab==="profile"?"active":""} aria-current={tab==="profile"?"page":undefined} onClick={()=>setTab("profile")}><Store size={17}/><span>My Profile</span></button>
-            <button type="button" className={tab==="notifications"?"active":""} aria-current={tab==="notifications"?"page":undefined} onClick={()=>setTab("notifications")}><AlertCircle size={17}/><span>Notifications</span>{notifications.filter(n=>!n.read_at).length>0&&<b>{notifications.filter(n=>!n.read_at).length}</b>}</button>
+            <button type="button" className={tab==="overview"?"active":""} aria-current={tab==="overview"?"page":undefined} onClick={()=>{setTab("overview");setNavOpen(false);}}><Home size={17}/><span>Overview</span></button>
+            <button type="button" className={tab==="products"?"active":""} aria-current={tab==="products"?"page":undefined} onClick={()=>{setTab("products");setNavOpen(false);}}><Grid2X2 size={17}/><span>My Catalogue</span></button>
+            <button type="button" className={tab==="enquiries"?"active":""} aria-current={tab==="enquiries"?"page":undefined} onClick={()=>{setTab("enquiries");setNavOpen(false);}}><MessageCircle size={17}/><span>Enquiries</span>{enquiries.filter(item=>item.status==="new"||item.status==="pending").length>0&&<b>{enquiries.filter(item=>item.status==="new"||item.status==="pending").length}</b>}</button>
+            <button type="button" className={tab==="growth"?"active":""} aria-current={tab==="growth"?"page":undefined} onClick={()=>{setTab("growth");setNavOpen(false);}}><Sparkles size={17}/><span>Growth Tools</span></button>
+            <button type="button" className={tab==="profile"?"active":""} aria-current={tab==="profile"?"page":undefined} onClick={()=>{setTab("profile");setNavOpen(false);}}><Store size={17}/><span>My Profile</span></button>
+            <button type="button" className={tab==="notifications"?"active":""} aria-current={tab==="notifications"?"page":undefined} onClick={()=>{setTab("notifications");setNavOpen(false);}}><AlertCircle size={17}/><span>Notifications</span>{notifications.filter(n=>!n.read_at).length>0&&<b>{notifications.filter(n=>!n.read_at).length}</b>}</button>
           </nav>
           <div className="seller-workspace-sidebar-footer"><a href={"/s/"+seller.slug} target="_blank" rel="noreferrer"><ExternalLink size={15}/> View public shop</a><button type="button" onClick={()=>{signOut().then(()=>location.href="/");}}><LogOut size={15}/> Sign out</button></div>
         </aside>
+        {navOpen && <button type="button" className="workspace-drawer-backdrop" aria-label="Close navigation" onClick={()=>setNavOpen(false)}/>}
         <section className="seller-workspace-content">
           <div className="seller-workspace-topbar">
+            <button type="button" className="workspace-menu-toggle" aria-label="Open seller navigation" aria-expanded={navOpen} onClick={()=>setNavOpen(value=>!value)}><Menu size={20}/></button>
             <div><span className="seller-workspace-kicker">YOUR BUSINESS</span><strong>{seller.business_name}</strong></div>
             <div className="seller-workspace-top-actions"><span className={"status-pill status-"+seller.verification_status}>{seller.verification_status}</span><a className="secondary-button dashboard-public-link" href={"/s/"+seller.slug} target="_blank" rel="noreferrer"><ExternalLink size={15}/> View shop</a></div>
           </div>
@@ -1604,6 +1607,7 @@ function AdminPage() {
   const [sellers,setSellers]=useState([]);
   const [categories,setCategories]=useState([]);
   const [tab,setTab]=useState("overview");
+  const [navOpen,setNavOpen]=useState(false);
   const [statusFilter,setStatusFilter]=useState("pending");
   const [sellerSearch,setSellerSearch]=useState("");
   const [error,setError]=useState("");
@@ -1750,24 +1754,26 @@ function AdminPage() {
   return (
     <main className="page admin-page admin-console-page">
       <div className="admin-console-shell">
-        <aside className="admin-console-sidebar" aria-label="Admin console navigation">
+        <aside className={"admin-console-sidebar"+(navOpen?" is-open":"")} aria-label="Admin console navigation">
           <div className="admin-console-brand"><span className="admin-console-brand-mark">N</span><div><strong>NammaSpot</strong><span>Admin workspace</span></div></div>
           <div className="admin-console-nav">
-            <button className={tab==="overview"?"active":""} onClick={()=>setTab("overview")}><Home size={17}/><span><strong>Overview</strong></span></button>
-            <button className={tab==="sellers"?"active":""} onClick={()=>setTab("sellers")}><Store size={17}/><span><strong>Sellers</strong></span></button>
-            <button className={tab==="featured"?"active":""} onClick={()=>setTab("featured")}><Sparkles size={17}/><span><strong>Featured sellers</strong></span></button>
-            <button className={tab==="reviews"?"active":""} onClick={()=>setTab("reviews")}><CheckCircle size={17}/><span><strong>Reviews & reports</strong></span></button>
-            <button className={tab==="categories"?"active":""} onClick={()=>setTab("categories")}><Grid2X2 size={17}/><span><strong>Categories</strong></span></button>
-            <button className={tab==="storage"?"active":""} onClick={()=>setTab("storage")}><ShieldCheck size={17}/><span><strong>Storage</strong></span></button>
-            <button className={tab==="features"?"active":""} onClick={()=>setTab("features")}><SlidersHorizontal size={17}/><span><strong>Growth Tools</strong></span></button>
+            <button className={tab==="overview"?"active":""} onClick={()=>{setTab("overview");setNavOpen(false);}}><Home size={17}/><span><strong>Overview</strong></span></button>
+            <button className={tab==="sellers"?"active":""} onClick={()=>{setTab("sellers");setNavOpen(false);}}><Store size={17}/><span><strong>Sellers</strong></span></button>
+            <button className={tab==="featured"?"active":""} onClick={()=>{setTab("featured");setNavOpen(false);}}><Sparkles size={17}/><span><strong>Featured sellers</strong></span></button>
+            <button className={tab==="reviews"?"active":""} onClick={()=>{setTab("reviews");setNavOpen(false);}}><CheckCircle size={17}/><span><strong>Reviews & reports</strong></span></button>
+            <button className={tab==="categories"?"active":""} onClick={()=>{setTab("categories");setNavOpen(false);}}><Grid2X2 size={17}/><span><strong>Categories</strong></span></button>
+            <button className={tab==="storage"?"active":""} onClick={()=>{setTab("storage");setNavOpen(false);}}><ShieldCheck size={17}/><span><strong>Storage</strong></span></button>
+            <button className={tab==="features"?"active":""} onClick={()=>{setTab("features");setNavOpen(false);}}><SlidersHorizontal size={17}/><span><strong>Growth Tools</strong></span></button>
           </div>
           <div className="admin-console-sidebar-bottom">
             <button onClick={load} disabled={loading}>↻ Refresh data</button>
             <button onClick={()=>{signOut().then(()=>location.href="/");}}><LogOut size={16}/> Sign out</button>
           </div>
         </aside>
+        {navOpen && <button type="button" className="workspace-drawer-backdrop" aria-label="Close navigation" onClick={()=>setNavOpen(false)}/>}
         <section className="admin-console-content">
       <div className="admin-workspace-topbar">
+        <button type="button" className="workspace-menu-toggle" aria-label="Open admin navigation" aria-expanded={navOpen} onClick={()=>setNavOpen(value=>!value)}><Menu size={20}/></button>
         <div><span className="admin-workspace-kicker">NAMMASPOT CONTROL CENTRE</span><strong>Platform overview</strong></div>
         <div className="admin-workspace-top-actions"><span className="admin-live-label"><i/> Live platform data</span><button className="secondary-button" onClick={load} disabled={loading}>{loading?"Refreshing…":"Refresh"}</button></div>
       </div>

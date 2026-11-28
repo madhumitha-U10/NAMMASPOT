@@ -230,12 +230,12 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
       const resultEntries=await Promise.all(visiblePolls.map(async poll=>{
         const {data,error}=await supabase.rpc("get_seller_poll_results",{p_poll_id:poll.id});
         if(error)return null;
-        const counts=Array((poll.options||[]).length).fill(0);
+        const percentages=Array((poll.options||[]).length).fill(0);
         (data||[]).forEach(row=>{
           const index=Number(row.option_index);
-          if(Number.isInteger(index)&&index>=0&&index<counts.length)counts[index]=Number(row.vote_count)||0;
+          if(Number.isInteger(index)&&index>=0&&index<percentages.length)percentages[index]=Number(row.percentage)||0;
         });
-        return [poll.id,{counts,total:counts.reduce((sum,count)=>sum+count,0)}];
+        return [poll.id,{percentages}];
       }));
       if(alive)setPollResults(Object.fromEntries(resultEntries.filter(Boolean)));
     }).catch(()=>{});
@@ -332,12 +332,12 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
       if(poll?.show_results){
         const {data,error:resultsError}=await supabase.rpc("get_seller_poll_results",{p_poll_id:pollId});
         if(!resultsError){
-          const counts=Array((poll.options||[]).length).fill(0);
+          const percentages=Array((poll.options||[]).length).fill(0);
           (data||[]).forEach(row=>{
             const index=Number(row.option_index);
-            if(Number.isInteger(index)&&index>=0&&index<counts.length)counts[index]=Number(row.vote_count)||0;
+            if(Number.isInteger(index)&&index>=0&&index<percentages.length)percentages[index]=Number(row.percentage)||0;
           });
-          setPollResults(current=>({...current,[pollId]:{counts,total:counts.reduce((sum,count)=>sum+count,0)}}));
+          setPollResults(current=>({...current,[pollId]:{percentages}}));
         }
       }
     }catch(error){
@@ -396,8 +396,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
           <h3>{esc(poll.question)}</h3>
           <div className="ns-growth-poll-options">
             {(poll.options||[]).map((option,index)=>{
-              const count=result?.counts?.[index]||0;
-              const percentage=result?.total?Math.round((count/result.total)*100):0;
+              const percentage=result?.percentages?.[index]||0;
               return <div className="ns-growth-poll-choice" key={index}>
                 <button type="button" disabled={pollVotes[poll.id]!==undefined} className={pollVotes[poll.id]===index?"selected":""} onClick={()=>voteInPoll(poll.id,index)}>
                   <span>{esc(option)}</span>
@@ -409,7 +408,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
               </div>;
             })}
           </div>
-          {showResults&&<small className="ns-growth-poll-total">{result.total} {result.total===1?"vote":"votes"} · Live results</small>}
+          {showResults&&<small className="ns-growth-poll-total">Live results</small>}
           {pollVotes[poll.id]!==undefined&&<small className="ns-growth-poll-thanks" role="status">Thanks for voting. Your preference has been recorded.</small>}
         </article>;
       })}
@@ -426,7 +425,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
         <button onClick={share}><Share2 size={20}/><span>Share</span></button>
       </div>
     </section>
-    {growthContent.offers.length>0&&<section className="ns-growth-offers" aria-label="Current offers"><div className="eyebrow">SPECIAL OFFERS</div><h2>Offers from this seller</h2><div className="ns-growth-offer-grid">{growthContent.offers.map(offer=><article key={offer.id}><span>LIMITED-TIME OFFER</span><h3>{esc(offer.title)}</h3>{offer.description&&<p>{esc(offer.description)}</p>}<small>Valid until {new Date(offer.ends_at).toLocaleDateString("en-IN")}</small></article>)}</div></section>}
+    {growthContent.offers.length>0&&<section className="ns-growth-offers" aria-label="Current offers"><div className="eyebrow">SPECIAL OFFERS</div><h2>Offers from this seller</h2><div className="ns-growth-offer-grid">{growthContent.offers.map(offer=><article key={offer.id}><span>LIMITED-TIME OFFER</span><h3>{esc(offer.title)}</h3>{offer.description&&<p>{esc(offer.description)}</p>}<small>Valid until {new Date(offer.ends_at).toLocaleDateString("en-IN")}</small><div className="ns-growth-offer-actions"><button type="button" className="ns-offer-enquire" onClick={()=>{setEnquiryProduct(null);setEnquiryOpen(true)}}>Enquire</button><button type="button" className="ns-offer-buy" onClick={()=>document.getElementById("catalogue")?.scrollIntoView({behavior:"smooth",block:"start"})}>Buy</button></div></article>)}</div></section>}
     <nav className="ns-mobile-tabs" aria-label="Seller page sections"><a className={activeTab==="catalogue"?"active":""} href="#catalogue" onClick={()=>setActiveTab("catalogue")}>Catalogue</a><a className={activeTab==="about"?"active":""} href="#about" onClick={()=>setActiveTab("about")}>About</a><a className={activeTab==="reviews"?"active":""} href="#reviews" onClick={()=>setActiveTab("reviews")}>Reviews</a></nav>
     <section id="catalogue" className="ns-mobile-catalogue">
       {growthContent.subcategories.length>0&&<div className="ns-growth-subcategories"><strong>Browse sections</strong><div><button type="button" className={activeSubcategory==="all"?"active":""} onClick={()=>setActiveSubcategory("all")}>All</button>{growthContent.subcategories.map(item=><button type="button" key={item.id} className={activeSubcategory===item.id?"active":""} onClick={()=>setActiveSubcategory(item.id)}>{esc(item.name)}</button>)}</div></div>}<div className="ns-mobile-search"><Search size={19}/><input value={catalogueQuery} onChange={e=>setCatalogueQuery(e.target.value)} placeholder="Search products..." aria-label="Search products"/></div>

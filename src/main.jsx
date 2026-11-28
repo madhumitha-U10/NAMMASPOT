@@ -5,7 +5,7 @@ import {
   Search, MapPin, Heart, Bookmark, Share2, Phone, MessageCircle, Plus,
   ArrowLeft, Menu, X, Store, ChevronRight, Home, Compass, Grid2X2,
   Sparkles, CheckCircle, LogIn, LogOut, LayoutDashboard, ShieldCheck,
-  Trash2, Pencil, ExternalLink, Clock, Send, AlertCircle, Eye, EyeOff
+  Trash2, Pencil, SlidersHorizontal, ExternalLink, Clock, Send, AlertCircle, Eye, EyeOff
 } from "lucide-react";
 import "./styles.css";
 import "./microsite.css";

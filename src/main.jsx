@@ -71,6 +71,7 @@ import {
   uploadSellerMedia,
   getSellerStorageUsage,
   getSellerGrowthFeatureAccess,
+  getSellerGrowthSubcategories,
   setProductFeatured
 } from "./lib/api";
 import { categoryNames } from "./lib/seed";
@@ -1132,6 +1133,7 @@ function DashboardPage({ go }) {
   const [sellerLikeCount,setSellerLikeCount] = useState(0);
   const [notifications,setNotifications] = useState([]);
   const [growthAccess,setGrowthAccess] = useState({});
+  const [catalogueSections,setCatalogueSections] = useState([]);
 
   const load = async () => {
     try {
@@ -1139,13 +1141,14 @@ function DashboardPage({ go }) {
       if (!profile || profile.role !== "seller") { go("/login"); return; }
       const [mySeller,cats] = await Promise.all([getMySeller(),getCategories()]);
       if (!mySeller) throw new Error("Seller profile not found.");
-      const [myProducts,myEnquiries,myAnalytics,myNotifications,myGrowthAccess] = await Promise.all([listMyProducts(mySeller.id),getMyEnquiries(mySeller.id),getSellerPageAnalytics(mySeller.id,30).catch(()=>null),getMySellerNotifications(mySeller.id).catch(()=>[]),getSellerGrowthFeatureAccess(mySeller.id).catch(()=>({}))]);
+      const [myProducts,myEnquiries,myAnalytics,myNotifications,myGrowthAccess,mySections] = await Promise.all([listMyProducts(mySeller.id),getMyEnquiries(mySeller.id),getSellerPageAnalytics(mySeller.id,30).catch(()=>null),getMySellerNotifications(mySeller.id).catch(()=>[]),getSellerGrowthFeatureAccess(mySeller.id).catch(()=>({})),getSellerGrowthSubcategories(mySeller.id).catch(()=>[])]);
       const myLikeStats = await getSellerLikeStats(mySeller.id,myProducts.map(product=>product.id)).catch(()=>({sellerLikes:0,productLikes:{}}));
       setSeller(mySeller);
       setProducts(myProducts.map(product=>({...product,like_count:Number(myLikeStats.productLikes[product.id]||0)})));
       setSellerLikeCount(myLikeStats.sellerLikes);
       setNotifications(myNotifications);
       setGrowthAccess(myGrowthAccess);
+      setCatalogueSections(mySections);
       setEnquiries(myEnquiries);
       setAnalytics(myAnalytics);
       setCategories(cats);
@@ -1183,11 +1186,11 @@ function DashboardPage({ go }) {
       {tab==="overview" && <Suspense fallback={<p className="muted">Loading overview…</p>}><SellerGrowthHub seller={seller} products={products} enquiries={enquiries} analytics={analytics} sellerLikes={sellerLikeCount} onNavigate={setTab}/></Suspense>}
       {tab==="notifications" && <Suspense fallback={<p className="muted">Loading notifications…</p>}><SellerNotifications notifications={notifications} onRead={async(id)=>{try{await markSellerNotificationRead(id);setNotifications(items=>items.map(item=>item.id===id?{...item,read_at:new Date().toISOString()}:item));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onReadAll={async()=>{try{await markAllSellerNotificationsRead(seller.id);setNotifications(items=>items.map(item=>({...item,read_at:item.read_at||new Date().toISOString()})));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onNavigate={()=>setTab("enquiries")}/></Suspense>} 
       {tab==="profile" && <ProfileEditor seller={seller} categories={categories} onSaved={(next)=>setSeller((current)=>({...current,...next}))}/>}
-      {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} storageUsage={storageUsage} onStorageUsageChange={setStorageUsage} onChange={setProducts} advancedCatalogueEnabled={growthAccess.advanced_catalogue?.status==="approved"&&growthAccess.advanced_catalogue?.enabled}/>}
+      {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} storageUsage={storageUsage} onStorageUsageChange={setStorageUsage} onChange={setProducts} advancedCatalogueEnabled={growthAccess.advanced_catalogue?.status==="approved"&&growthAccess.advanced_catalogue?.enabled} subcategories={catalogueSections} subcategoriesEnabled={growthAccess.subcategories?.status==="approved"&&growthAccess.subcategories?.enabled}/>}
       {tab==="enquiries" && <EnquiryManager enquiries={enquiries} onChange={setEnquiries} seller={seller}/>}
       {tab==="growth" && <section className="dashboard-growth-stack">
         <Suspense fallback={<p className="muted">Loading growth tools…</p>}><SellerGrowthSharing seller={seller} analytics={analytics}/></Suspense>
-        <Suspense fallback={<p className="muted">Loading feature access…</p>}><SellerFeatureAccess seller={seller} onAccessChange={setGrowthAccess}/></Suspense>
+        <Suspense fallback={<p className="muted">Loading feature access…</p>}><SellerFeatureAccess seller={seller} onAccessChange={setGrowthAccess} onSubcategoriesChange={setCatalogueSections}/></Suspense>
       </section>}
     </main>
   );
@@ -1332,8 +1335,8 @@ function ImageCropDialog({ file, onCancel, onConfirm, busy, squareOnly = false, 
   </section></div>;
 }
 
-function ProductManager({ seller, products, categories, storageUsage, onStorageUsageChange, onChange, advancedCatalogueEnabled = false }) {
-  const blank={product_name:"",description:"",price:"",availability:true,image_url:"",category_id:""};
+function ProductManager({ seller, products, categories, storageUsage, onStorageUsageChange, onChange, advancedCatalogueEnabled = false, subcategories = [], subcategoriesEnabled = false }) {
+  const blank={product_name:"",description:"",price:"",availability:true,image_url:"",category_id:"",subcategory_id:""};
   const [form,setForm]=useState(blank);
   const [editing,setEditing]=useState(null);
   const [state,setState]=useState({loading:false,error:""});
@@ -1360,7 +1363,7 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
 
   const edit=(product)=>{
     setEditing(product.id);
-    setForm({product_name:product.name,description:product.description,price:product.price,availability:product.available,image_url:product.image_url || "",category_id:product.category_id || ""});
+    setForm({product_name:product.name,description:product.description,price:product.price,availability:product.available,image_url:product.image_url || "",category_id:product.category_id || "",subcategory_id:product.subcategory_id || ""});
   };
 
   const uploadGallery = (event) => {
@@ -1426,7 +1429,7 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
         <div className="form-grid">
           <label>Product name *<input value={form.product_name} onChange={(e)=>setForm({...form,product_name:e.target.value})} maxLength={160} required/></label>
           <label>Price ₹ *<input type="number" min="0" step="0.01" value={form.price} onChange={(e)=>setForm({...form,price:e.target.value})} required/></label>
-          <label>Category<select value={form.category_id} onChange={(e)=>setForm({...form,category_id:e.target.value})}><option value="">Optional</option>{categories.map((c)=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+          <label>Category<select value={form.category_id} onChange={(e)=>setForm({...form,category_id:e.target.value})}><option value="">Optional</option>{categories.map((c)=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>{subcategoriesEnabled&&<label>Catalogue section<select value={form.subcategory_id} onChange={e=>setForm({...form,subcategory_id:e.target.value})}><option value="">No section</option>{subcategories.map(section=><option key={section.id} value={section.id}>{section.name}</option>)}</select></label>}
           <label>Image URL<input type="url" value={form.image_url} onChange={(e)=>setForm({...form,image_url:e.target.value})} placeholder="https://…"/></label>
           <label>Upload primary image<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={upload} disabled={primaryImageBusy||galleryBusy}/><small className="field-help">{primaryImageBusy ? "Uploading and optimizing your image…" : "This is the main catalogue image. JPG, PNG or WebP · selected file up to 10 MB · optimized to your assigned per-image limit."}</small></label>
         </div>

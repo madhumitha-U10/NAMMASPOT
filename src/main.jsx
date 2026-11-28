@@ -76,10 +76,11 @@ import CategoryIcon from "./components/brand/CategoryIcon.jsx";
 import LikeButton from "./components/LikeButton.jsx";
 import { addProductGalleryImage, deleteProductGalleryImage, getMyMicrosite, saveMicrosite } from "./lib/microsite";
 import { formatBytes } from "./lib/storage";
-import SellerGrowthHub, { SellerGrowthSharing } from "./SellerGrowthHub.jsx";
-import SellerNotifications from "./components/SellerNotifications.jsx";
-import AdminSellerFeatures from "./components/AdminSellerFeatures.jsx";
-import SellerFeatureAccess from "./components/SellerFeatureAccess.jsx";
+const SellerGrowthHub = lazy(() => import("./SellerGrowthHub.jsx"));
+const SellerGrowthSharing = lazy(() => import("./SellerGrowthHub.jsx").then((module) => ({ default: module.SellerGrowthSharing })));
+const SellerNotifications = lazy(() => import("./components/SellerNotifications.jsx"));
+const AdminSellerFeatures = lazy(() => import("./components/AdminSellerFeatures.jsx"));
+const SellerFeatureAccess = lazy(() => import("./components/SellerFeatureAccess.jsx"));
 import RecentSellerStrip from "./components/RecentSellerStrip.jsx";
 
 const popularCategories = ["Bakery", "Mehendi", "Crochet", "Makeup", "Art"];
@@ -1165,13 +1166,13 @@ function DashboardPage({ go }) {
         {["overview","notifications","profile","products","enquiries","growth","features","public"].map((item)=><button key={item} className={tab===item?"active":""} onClick={()=>setTab(item)}>{item==="public"?"Public profile":item==="growth"?"Growth & sharing":item==="notifications"?"Notifications"+(notifications.filter(n=>!n.read_at).length?" · "+notifications.filter(n=>!n.read_at).length:""):item.charAt(0).toUpperCase()+item.slice(1)}</button>)}
       </div>
 
-      {tab==="overview" && <SellerGrowthHub seller={seller} products={products} enquiries={enquiries} analytics={analytics} sellerLikes={sellerLikeCount} onNavigate={setTab}/>}
-      {tab==="notifications" && <SellerNotifications notifications={notifications} onRead={async(id)=>{try{await markSellerNotificationRead(id);setNotifications(items=>items.map(item=>item.id===id?{...item,read_at:new Date().toISOString()}:item));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onReadAll={async()=>{try{await markAllSellerNotificationsRead(seller.id);setNotifications(items=>items.map(item=>({...item,read_at:item.read_at||new Date().toISOString()})));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onNavigate={()=>setTab("enquiries")}/>} 
+      {tab==="overview" && <Suspense fallback={<p className="muted">Loading overview…</p>}><SellerGrowthHub seller={seller} products={products} enquiries={enquiries} analytics={analytics} sellerLikes={sellerLikeCount} onNavigate={setTab}/></Suspense>}
+      {tab==="notifications" && <Suspense fallback={<p className="muted">Loading notifications…</p>}><SellerNotifications notifications={notifications} onRead={async(id)=>{try{await markSellerNotificationRead(id);setNotifications(items=>items.map(item=>item.id===id?{...item,read_at:new Date().toISOString()}:item));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onReadAll={async()=>{try{await markAllSellerNotificationsRead(seller.id);setNotifications(items=>items.map(item=>({...item,read_at:item.read_at||new Date().toISOString()})));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onNavigate={()=>setTab("enquiries")}/></Suspense>} 
       {tab==="profile" && <ProfileEditor seller={seller} categories={categories} onSaved={(next)=>setSeller((current)=>({...current,...next}))}/>}
       {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} storageUsage={storageUsage} onStorageUsageChange={setStorageUsage} onChange={setProducts}/>}
       {tab==="enquiries" && <EnquiryManager enquiries={enquiries} onChange={setEnquiries} seller={seller}/>}
-      {tab==="growth" && <SellerGrowthSharing seller={seller} analytics={analytics}/>}
-      {tab==="features" && <SellerFeatureAccess seller={seller}/> }
+      {tab==="growth" && <Suspense fallback={<p className="muted">Loading growth tools…</p>}><SellerGrowthSharing seller={seller} analytics={analytics}/></Suspense>}
+      {tab==="features" && <Suspense fallback={<p className="muted">Loading feature access…</p>}><SellerFeatureAccess seller={seller}/></Suspense> }
       {tab==="public" && <PublicTools seller={seller} go={go}/>} 
     </main>
   );
@@ -1866,7 +1867,7 @@ function AdminPage() {
           </div>
         </section>}
       {tab==="storage" && <AdminStorageManagement />}
-      {tab==="features" && <AdminSellerFeatures sellers={sellers}/> }
+      {tab==="features" && <Suspense fallback={<p className="muted">Loading feature approvals…</p>}><AdminSellerFeatures sellers={sellers}/></Suspense> }
       {tab==="categories" &&
         <section className="admin-category-management">
           <div className="dashboard-section-head">

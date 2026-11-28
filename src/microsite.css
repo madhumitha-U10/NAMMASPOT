@@ -1131,3 +1131,22 @@
   .seller-microsite .ns-growth-poll-track>span{transition:none}
 }
 
+
+
+/* Compact public polls and offer actions; vote totals remain seller-dashboard only. */
+.seller-microsite .ns-growth-polls>.eyebrow{font-size:9px}
+.seller-microsite .ns-growth-polls>h2{font-size:15px;margin-bottom:9px}
+.seller-microsite .ns-growth-poll h3{font-size:13px;line-height:1.35;margin-bottom:8px}
+.seller-microsite .ns-growth-poll-choice>button{font-size:12px;min-height:38px;padding:8px 10px}
+.seller-microsite .ns-growth-poll-choice>button>strong{font-size:12px}
+.seller-microsite .ns-growth-poll-total,.seller-microsite .ns-growth-poll-thanks{font-size:10px}
+.seller-microsite .ns-growth-offers>h2{font-size:16px}
+.seller-microsite .ns-growth-offer-grid article>span{font-size:9px}
+.seller-microsite .ns-growth-offer-grid article h3{font-size:13px;line-height:1.35}
+.seller-microsite .ns-growth-offer-grid article p{font-size:11px;line-height:1.45}
+.seller-microsite .ns-growth-offer-grid article small{font-size:10px}
+.seller-microsite .ns-growth-offer-actions{display:flex;gap:8px;margin-top:10px}
+.seller-microsite .ns-growth-offer-actions button{min-height:34px;padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer}
+.seller-microsite .ns-growth-offer-actions .ns-offer-enquire{border:1px solid #8b2638;background:#fff;color:#762c3a}
+.seller-microsite .ns-growth-offer-actions .ns-offer-buy{border:1px solid #762c3a;background:#762c3a;color:#fff}
+.seller-microsite .ns-growth-offer-actions button:focus-visible{outline:2px solid #8b2638;outline-offset:2px}

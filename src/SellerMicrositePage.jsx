@@ -210,17 +210,24 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
   },[seller?.id,seller?.slug,seller?.business_name,seller?.profile_image_url,seller?.location,seller?.city,settings.logo_url]);
 
   useEffect(()=>{
-    if(!seller)return;
-  useEffect(()=>{
-    if(!seller?.id||!supabase)return;
+    if(!seller?.id||!supabase){
+      setGrowthContent({offers:[],polls:[],subcategories:[]});
+      return;
+    }
     let alive=true;
     Promise.all([
       supabase.from("seller_offers").select("id,title,description,starts_at,ends_at").eq("seller_id",seller.id).eq("status","approved").lte("starts_at",new Date().toISOString()).gt("ends_at",new Date().toISOString()).order("starts_at",{ascending:false}),
       supabase.from("seller_polls").select("id,question,options,ends_at,show_results").eq("seller_id",seller.id).eq("status","approved").gt("ends_at",new Date().toISOString()).order("created_at",{ascending:false}),
       supabase.from("seller_catalogue_subcategories").select("id,name,sort_order").eq("seller_id",seller.id).eq("status","approved").order("sort_order")
-    ]).then(([offers,polls,subcategories])=>{if(!alive)return;setGrowthContent({offers:offers.data||[],polls:polls.data||[],subcategories:subcategories.data||[]});}).catch(()=>{});
+    ]).then(([offers,polls,subcategories])=>{
+      if(!alive)return;
+      setGrowthContent({offers:offers.data||[],polls:polls.data||[],subcategories:subcategories.data||[]});
+    }).catch(()=>{});
     return()=>{alive=false};
   },[seller?.id]);
+
+  useEffect(()=>{
+    if(!seller)return;
     const url=sellerPublicUrl(seller.slug);
     const title=(seller.business_name||"Seller")+" · Catalogue · NammaSpot";
     const desc=(seller.description||settings.tagline||"Discover this seller and their catalogue on NammaSpot.").replace(/\s+/g," ").slice(0,155);

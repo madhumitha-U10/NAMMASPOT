@@ -12,7 +12,8 @@ const statusLabel = (value) => ({ pending: "Awaiting review", approved: "Approve
 const statusClass = (value) => value === "approved" ? "status-ok" : value === "pending" ? "status-warning" : value === "suspended" ? "status-danger" : "";
 
 export default function AdminSellerFeatures({ sellers = [] }) {
-  const [rows, setRows] = useState([]);\n  const [contentQueue, setContentQueue] = useState([]);
+  const [rows, setRows] = useState([]);
+  const [contentQueue, setContentQueue] = useState([]);
   const [sellerId, setSellerId] = useState("");
   const [featureKey, setFeatureKey] = useState("offers");
   const [note, setNote] = useState("");
@@ -34,7 +35,8 @@ export default function AdminSellerFeatures({ sellers = [] }) {
     setContentQueue([...(offers.data||[]).map(x=>({...x,kind:"offer",label:x.title})),...(polls.data||[]).map(x=>({...x,kind:"poll",label:x.question})),...(subcategories.data||[]).map(x=>({...x,kind:"subcategory",label:x.name}))]);
   };
   useEffect(() => { load().catch((e) => setError(e.message || "Could not load feature requests.")); }, []);
-  const pending = rows.filter((r) => r.status === "pending").length;\n  const pendingContent = contentQueue.length;
+  const pending = rows.filter((r) => r.status === "pending").length;
+  const pendingContent = contentQueue.length;
   const filtered = useMemo(() => rows.filter((r) => filter === "all" || r.status === filter), [rows, filter]);
   const decide = async (row, status, enabled = status === "approved") => {
     setBusy(true); setError(""); setSuccess("");

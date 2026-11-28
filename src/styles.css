@@ -5337,3 +5337,134 @@ input, select, textarea { max-width: 100%; }
  .admin-feature-group-rows .admin-feature-row{align-items:stretch;flex-direction:column}
  .admin-feature-actions{justify-content:space-between}
 }
+
+
+/* NammaSpot dashboard refresh — compact Orbit-inspired workspace */
+.dashboard-page{
+  display:grid;
+  grid-template-columns:220px minmax(0,1fr);
+  column-gap:20px;
+  row-gap:16px;
+  align-items:start;
+  max-width:1440px;
+}
+.dashboard-page>.dashboard-head{grid-column:1/-1;align-items:center;margin:2px 0 4px;padding:18px 20px;border:1px solid #eadfd5;border-radius:18px;background:linear-gradient(120deg,#fffefa,#f8f0e8)}
+.dashboard-page>.dashboard-head h1{font-size:clamp(25px,3vw,36px);line-height:1.15;letter-spacing:-.035em;margin:5px 0}
+.dashboard-page>.dashboard-head p{font-size:12px;line-height:1.4;color:#786d65}
+.dashboard-page>.dashboard-tabs{
+  grid-column:1;
+  grid-row:2;
+  position:sticky;
+  top:18px;
+  display:grid;
+  align-content:start;
+  gap:5px;
+  margin:0;
+  padding:10px;
+  border:1px solid #e9dfd6;
+  border-radius:16px;
+  background:#fffdf9;
+  box-shadow:0 5px 18px rgba(55,34,25,.045);
+}
+.dashboard-page>.dashboard-tabs button{
+  display:flex;
+  align-items:center;
+  min-height:42px;
+  padding:9px 11px;
+  border-radius:10px;
+  text-align:left;
+  white-space:normal;
+  font-size:13px;
+  font-weight:700;
+  color:#5d514b;
+}
+.dashboard-page>.dashboard-tabs button.active{background:#7e2424;color:#fff;box-shadow:0 4px 10px rgba(126,36,36,.13)}
+.dashboard-page>.dashboard-tabs button:hover:not(.active){background:#f7eee8;color:#76232b}
+.dashboard-page>:not(.dashboard-head):not(.dashboard-tabs){grid-column:2;min-width:0;width:100%}
+.ns-growth-welcome{padding:16px 18px!important;border-radius:16px!important;margin:0 0 14px!important}
+.ns-growth-welcome h2{font-size:clamp(20px,2vw,27px)!important;line-height:1.2!important;margin:5px 0!important}
+.ns-growth-welcome p,.ns-growth-tip p{display:none!important}
+.ns-growth-metrics{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important;margin-bottom:12px!important}
+.ns-growth-metric{min-width:0;padding:14px!important;border-radius:14px!important}
+.ns-growth-metric>span{font-size:12px!important;line-height:1.3!important;gap:6px!important}
+.ns-growth-metric>strong{font-size:27px!important;line-height:1.05!important;margin:9px 0 0!important}
+.ns-growth-metric>small{display:none!important}
+.ns-growth-data-note{font-size:11px!important;line-height:1.4!important;margin:8px 0 12px!important}
+.ns-growth-panel{padding:16px!important;border-radius:16px!important}
+.ns-growth-panel-head h3,.ns-growth-panel h3{font-size:16px!important;line-height:1.25!important}
+.ns-growth-chart{min-height:125px!important}
+.ns-growth-columns{gap:12px!important}
+.ns-growth-checklist li{font-size:12px!important;padding:8px 0!important}
+.ns-growth-action{padding:11px!important}
+.ns-growth-action small{font-size:11px!important;line-height:1.35!important}
+.ns-growth-tip{padding:13px 15px!important}
+.admin-app-shell .admin-console-page{max-width:1500px}
+.admin-app-shell .admin-console-shell{grid-template-columns:220px minmax(0,1fr);gap:18px}
+.admin-app-shell .admin-console-sidebar{padding:14px;border-radius:18px;min-height:calc(100vh - 40px)}
+.admin-app-shell .admin-console-brand{padding:4px 4px 14px}
+.admin-app-shell .admin-console-brand strong{font-size:16px}
+.admin-app-shell .admin-console-nav{gap:5px;padding-top:14px}
+.admin-app-shell .admin-console-nav button{min-height:42px;padding:9px 10px;border-radius:10px;align-items:center}
+.admin-app-shell .admin-console-nav button strong{font-size:12px}
+.admin-app-shell .admin-console-nav button small{display:none!important}
+.admin-app-shell .admin-console-nav button svg{width:16px;height:16px;margin:0}
+.admin-app-shell .admin-console-sidebar-bottom{padding-top:12px}
+.admin-app-shell .admin-console-sidebar-bottom button{font-size:12px;padding:9px 10px}
+.admin-app-shell .admin-welcome{padding:16px 18px;margin-bottom:12px;border-radius:16px}
+.admin-app-shell .admin-welcome h1{font-size:clamp(22px,2.5vw,30px);margin:5px 0}
+.admin-app-shell .admin-welcome p{display:none}
+.admin-app-shell .admin-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:18px}
+.admin-app-shell .admin-summary-card{padding:13px 14px;border-radius:13px;min-width:0}
+.admin-app-shell .admin-summary-card span{font-size:11px;line-height:1.3}
+.admin-app-shell .admin-summary-card strong{font-size:25px;margin:7px 0 0;line-height:1}
+.admin-app-shell .admin-summary-card small{display:none}
+.admin-app-shell .admin-console-content>.dashboard-head{padding:0 0 12px;margin:0 0 14px;border-bottom:1px solid #e9dfd6;align-items:center}
+.admin-app-shell .admin-console-content>.dashboard-head h1{font-size:22px;line-height:1.2;margin:4px 0}
+.admin-app-shell .admin-console-content>.dashboard-head p{font-size:12px;line-height:1.4;max-width:620px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.admin-app-shell .admin-console-content>.dashboard-head>div:last-child svg{width:25px;height:25px}
+.admin-app-shell .admin-console-content .dashboard-item{min-width:0}
+.admin-app-shell .admin-console-content .dashboard-item p{font-size:12px;line-height:1.45}
+.admin-app-shell .admin-console-content .dashboard-item small{font-size:11px;line-height:1.4;overflow-wrap:anywhere}
+.admin-app-shell .admin-sellers-heading h2{font-size:19px}
+.admin-app-shell .admin-sellers-heading p{font-size:12px;line-height:1.45;max-width:600px}
+.admin-app-shell .admin-seller-status-tabs button{min-height:52px;padding:8px 10px;border-radius:11px}
+.admin-app-shell .admin-seller-status-tabs button span{font-size:11px}
+.admin-app-shell .admin-seller-card{padding:14px;border-radius:14px}
+.admin-app-shell .admin-seller-details p{font-size:12px;margin:5px 0}
+.admin-app-shell .admin-seller-actions button{min-height:36px;padding:8px 10px;font-size:11px}
+.admin-app-shell .ns-storage-cleanup-copy p{font-size:12px;line-height:1.4}
+.dashboard-page h1,.dashboard-page h2,.dashboard-page h3,
+.admin-console-page h1,.admin-console-page h2,.admin-console-page h3{overflow-wrap:anywhere}
+.dashboard-page p,.admin-console-page p{overflow-wrap:anywhere}
+@media(max-width:900px){
+ .dashboard-page{grid-template-columns:1fr;row-gap:12px}
+ .dashboard-page>.dashboard-head{grid-column:1}
+ .dashboard-page>.dashboard-tabs{grid-column:1;grid-row:auto;position:sticky;top:0;z-index:12;display:flex;overflow-x:auto;white-space:nowrap;padding:6px;margin:0}
+ .dashboard-page>.dashboard-tabs button{flex:none;white-space:nowrap;min-height:36px;padding:8px 11px}
+ .dashboard-page>:not(.dashboard-head):not(.dashboard-tabs){grid-column:1}
+ .admin-app-shell .admin-console-shell{grid-template-columns:1fr}
+ .admin-app-shell .admin-console-sidebar{position:static;min-height:0}
+ .admin-app-shell .admin-console-nav{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .admin-app-shell .admin-console-sidebar-bottom{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:10px}
+}
+@media(max-width:600px){
+ .dashboard-page>.dashboard-head{padding:14px}
+ .dashboard-page>.dashboard-head h1{font-size:24px}
+ .dashboard-page>.dashboard-head-actions{display:flex;flex-wrap:wrap;gap:7px}
+ .ns-growth-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+ .ns-growth-metric{padding:12px!important}
+ .ns-growth-metric>span{font-size:11px!important}
+ .ns-growth-metric>strong{font-size:24px!important}
+ .ns-growth-columns{grid-template-columns:1fr!important}
+ .admin-app-shell .admin-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .admin-app-shell .admin-summary-card{padding:11px}
+ .admin-app-shell .admin-summary-card strong{font-size:23px}
+ .admin-app-shell .admin-console-nav{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .admin-app-shell .admin-console-nav button{min-height:40px}
+ .admin-app-shell .admin-console-content>.dashboard-head{align-items:flex-start;gap:10px}
+ .admin-app-shell .admin-console-content>.dashboard-head p{max-width:100%}
+}
+@media(max-width:380px){
+ .admin-app-shell .admin-console-nav{grid-template-columns:1fr}
+ .dashboard-page>.dashboard-tabs button{font-size:11px;padding:7px 9px}
+}

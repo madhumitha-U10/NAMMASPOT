@@ -186,6 +186,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
   const [likeNotice,setLikeNotice]=useState("");
   const [growthContent,setGrowthContent]=useState({offers:[],polls:[],subcategories:[]});
   const [pollVotes,setPollVotes]=useState({});
+  const [pollResults,setPollResults]=useState({});
   useEffect(()=>{
     let alive=true;
     getMicrosite(slug).then(data=>{
@@ -213,6 +214,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
   useEffect(()=>{
     if(!seller?.id||!supabase){
       setGrowthContent({offers:[],polls:[],subcategories:[]});
+      setPollResults({});
       return;
     }
     let alive=true;
@@ -220,9 +222,22 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
       supabase.from("seller_offers").select("id,title,description,starts_at,ends_at").eq("seller_id",seller.id).eq("status","approved").lte("starts_at",new Date().toISOString()).gt("ends_at",new Date().toISOString()).order("starts_at",{ascending:false}),
       supabase.from("seller_polls").select("id,question,options,ends_at,show_results").eq("seller_id",seller.id).eq("status","approved").gt("ends_at",new Date().toISOString()).order("created_at",{ascending:false}),
       supabase.from("seller_catalogue_subcategories").select("id,name,sort_order").eq("seller_id",seller.id).eq("status","approved").order("sort_order")
-    ]).then(([offers,polls,subcategories])=>{
+    ]).then(async ([offers,polls,subcategories])=>{
       if(!alive)return;
-      setGrowthContent({offers:offers.data||[],polls:polls.data||[],subcategories:subcategories.data||[]});
+      const activePolls=polls.data||[];
+      setGrowthContent({offers:offers.data||[],polls:activePolls,subcategories:subcategories.data||[]});
+      const visiblePolls=activePolls.filter(poll=>poll.show_results===true);
+      const resultEntries=await Promise.all(visiblePolls.map(async poll=>{
+        const {data,error}=await supabase.rpc("get_seller_poll_results",{p_poll_id:poll.id});
+        if(error)return null;
+        const counts=Array((poll.options||[]).length).fill(0);
+        (data||[]).forEach(row=>{
+          const index=Number(row.option_index);
+          if(Number.isInteger(index)&&index>=0&&index<counts.length)counts[index]=Number(row.vote_count)||0;
+        });
+        return [poll.id,{counts,total:counts.reduce((sum,count)=>sum+count,0)}];
+      }));
+      if(alive)setPollResults(Object.fromEntries(resultEntries.filter(Boolean)));
     }).catch(()=>{});
     return()=>{alive=false};
   },[seller?.id]);
@@ -303,8 +318,31 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
   // Keep the seller's catalogue order (featured, then newest) independent of likes.
   const filteredProducts=products.filter(p=>String(p.name||"").toLowerCase().includes(catalogueQuery.toLowerCase())&&(activeSubcategory==="all"||p.subcategory_id===activeSubcategory));
   const voteInPoll=async(pollId,optionIndex)=>{
-    try{const keyName="nammaspot-poll-voter";let voterKey=localStorage.getItem(keyName);if(!voterKey){voterKey=window.crypto?.randomUUID?.()||("voter-"+Date.now()+"-"+Math.random().toString(36).slice(2));localStorage.setItem(keyName,voterKey);}const {error}=await supabase.from("seller_poll_votes").insert({poll_id:pollId,voter_key:voterKey,option_index:optionIndex});if(error)throw error;setPollVotes(current=>({...current,[pollId]:optionIndex}));}
-    catch(error){setLikeNotice(error.code==="23505"?"You have already voted in this poll.":"Could not record your vote. Please try again.");}
+    try{
+      const keyName="nammaspot-poll-voter";
+      let voterKey=localStorage.getItem(keyName);
+      if(!voterKey){
+        voterKey=window.crypto?.randomUUID?.()||("voter-"+Date.now()+"-"+Math.random().toString(36).slice(2));
+        localStorage.setItem(keyName,voterKey);
+      }
+      const {error}=await supabase.from("seller_poll_votes").insert({poll_id:pollId,voter_key:voterKey,option_index:optionIndex});
+      if(error)throw error;
+      setPollVotes(current=>({...current,[pollId]:optionIndex}));
+      const poll=growthContent.polls.find(item=>item.id===pollId);
+      if(poll?.show_results){
+        const {data,error:resultsError}=await supabase.rpc("get_seller_poll_results",{p_poll_id:pollId});
+        if(!resultsError){
+          const counts=Array((poll.options||[]).length).fill(0);
+          (data||[]).forEach(row=>{
+            const index=Number(row.option_index);
+            if(Number.isInteger(index)&&index>=0&&index<counts.length)counts[index]=Number(row.vote_count)||0;
+          });
+          setPollResults(current=>({...current,[pollId]:{counts,total:counts.reduce((sum,count)=>sum+count,0)}}));
+        }
+      }
+    }catch(error){
+      setLikeNotice(error.code==="23505"?"You have already voted in this poll.":"Could not record your vote. Please try again.");
+    }
   };
   const handleContentLike=async(type,item)=>{
     try{
@@ -348,6 +386,34 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
       </section>
     {(settings.tagline||settings.about)&&<section className="ns-mobile-update"><CalendarDays size={24}/><div><small>UPDATE FROM SELLER{settings.updated_at ? " · "+new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(settings.updated_at)) : ""}</small><p>{esc(settings.tagline||settings.about)}</p></div></section>}
 
+    {growthContent.polls.length>0&&<section className="ns-growth-polls" aria-label="Customer polls">
+      <div className="eyebrow">YOUR OPINION MATTERS</div>
+      <h2>Customer Poll</h2>
+      {growthContent.polls.map(poll=>{
+        const result=pollResults[poll.id];
+        const showResults=poll.show_results===true&&Boolean(result);
+        return <article className="ns-growth-poll" key={poll.id}>
+          <h3>{esc(poll.question)}</h3>
+          <div className="ns-growth-poll-options">
+            {(poll.options||[]).map((option,index)=>{
+              const count=result?.counts?.[index]||0;
+              const percentage=result?.total?Math.round((count/result.total)*100):0;
+              return <div className="ns-growth-poll-choice" key={index}>
+                <button type="button" disabled={pollVotes[poll.id]!==undefined} className={pollVotes[poll.id]===index?"selected":""} onClick={()=>voteInPoll(poll.id,index)}>
+                  <span>{esc(option)}</span>
+                  {showResults&&<strong>{percentage}%</strong>}
+                </button>
+                {showResults&&<div className="ns-growth-poll-track" role="progressbar" aria-label={String(option)+" votes"} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percentage}>
+                  <span style={{width:percentage+"%"}}/>
+                </div>}
+              </div>;
+            })}
+          </div>
+          {showResults&&<small className="ns-growth-poll-total">{result.total} {result.total===1?"vote":"votes"} · Live results</small>}
+          {pollVotes[poll.id]!==undefined&&<small className="ns-growth-poll-thanks" role="status">Thanks for voting. Your preference has been recorded.</small>}
+        </article>;
+      })}
+    </section>}
     <section className="ns-mobile-contact">
       <button type="button" className="ns-unified-enquiry-button" onClick={()=>{setEnquiryProduct(null);setEnquiryOpen(true)}}>
         <Send size={18}/> Send Enquiry
@@ -367,7 +433,7 @@ export default function SellerMicrositePage({go,slug,savedWebsites=[],toggleSave
       {filteredProducts.length?<div className="ns-mobile-product-grid">{filteredProducts.map(p=><article className="ns-mobile-product" key={p.id}><button className="ns-mobile-product-image" onClick={()=>setProduct(p)} aria-label={"View "+p.name}>{p.image_url?<img src={p.image_url} alt={p.name} loading="lazy"/>:<span>{String(p.name||"").charAt(0)}</span>}</button><div className="ns-mobile-product-like-row"><LikeButton compact count={p.like_count} liked={p.liked_by_me} onClick={()=>handleContentLike("product",p)} label={p.name}/><button type="button" className={"ns-product-save-btn"+(savedProductIds.has(p.id)?" is-saved":"")} onClick={()=>toggleProductSave(p)} aria-label={savedProductIds.has(p.id)?"Remove "+p.name+" from saved products":"Save "+p.name} title={savedProductIds.has(p.id)?"Saved product":"Save product"}><Bookmark size={19} fill={savedProductIds.has(p.id)?"currentColor":"none"}/></button></div><div className="ns-mobile-product-copy"><h3>{esc(p.name)}</h3><strong>₹{p.price}</strong><div className="ns-mobile-product-actions"><button type="button" className="ns-product-description-btn" aria-expanded={expandedDescriptions.has(p.id)} onClick={()=>setExpandedDescriptions(current=>{const next=new Set(current);if(next.has(p.id))next.delete(p.id);else next.add(p.id);return next})}>{expandedDescriptions.has(p.id)?"Less":"Details"}</button><button type="button" className="ns-product-enquire-btn" onClick={()=>{setEnquiryProduct(p);setEnquiryOpen(true)}}>Enquire</button></div>{expandedDescriptions.has(p.id)&&<p className="ns-mobile-product-description">{esc(p.description||"The seller has not added a description for this product yet.")}</p>}</div></article>)}
       <article className="ns-mobile-coming-soon"><span>✧</span><strong>More products<br/>coming soon</strong><small>♡</small></article></div>:<div className="ns-mobile-coming-soon ns-mobile-empty"><span>✧</span><strong>{catalogueQuery?"No matching products":"More products coming soon"}</strong><small>{catalogueQuery?"Try another search":"This seller will add more soon ♡"}</small></div>}
     </section>
-         {growthContent.polls.length>0&&<section className="ns-growth-polls"><div className="eyebrow">YOUR OPINION MATTERS</div><h2>Quick customer polls</h2>{growthContent.polls.map(poll=><article className="ns-growth-poll" key={poll.id}><h3>{esc(poll.question)}</h3><div>{(poll.options||[]).map((option,index)=><button key={index} type="button" disabled={pollVotes[poll.id]!==undefined} className={pollVotes[poll.id]===index?"selected":""} onClick={()=>voteInPoll(poll.id,index)}>{esc(option)}</button>)}</div>{pollVotes[poll.id]!==undefined&&<small role="status">Thanks for voting. Your preference has been recorded.</small>}</article>)}</section>}
+         
 <section id="about" className="ns-mobile-about" onMouseEnter={()=>setActiveTab("about")}><h2>About</h2><p>{esc(seller.description||"This seller is part of the NammaSpot community.")}</p><p><MapPin size={16}/>{esc(seller.location||"Chennai, Tamil Nadu")}</p></section>
     <section id="reviews" className="ns-mobile-reviews" onMouseEnter={()=>setActiveTab("reviews")}><ReviewPanel seller={seller}/></section>
     <nav className="ns-mobile-bottom-nav" aria-label="Main navigation"><button className={location.pathname==="/"?"active":""} aria-current={location.pathname==="/"?"page":undefined} onClick={()=>go("/")}><Home size={21}/><span>Home</span></button><button className={location.pathname.startsWith("/explore")||location.pathname.startsWith("/categories")?"active":""} onClick={()=>go("/explore")}><Compass size={21}/><span>Explore</span></button><button className={location.pathname.startsWith("/saved")?"active":""} onClick={()=>go("/saved")}><Heart size={21}/><span>Saved</span></button><button className={location.search.includes("near=1")?"active":""} onClick={()=>go("/explore?near=1")}><Navigation size={21}/><span>Near me</span></button><button className={location.pathname.startsWith("/featured")?"active":""} onClick={()=>go("/featured")}><Star size={21}/><span>Featured</span></button></nav>

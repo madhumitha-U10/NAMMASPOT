@@ -5249,3 +5249,19 @@ input, select, textarea { max-width: 100%; }
  .dashboard-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
  .dashboard-public-link{width:100%}
 }
+
+
+/* Admin view: one seller request with per-feature decisions */
+.admin-feature-groups{display:grid;gap:16px}
+.admin-feature-group{overflow:hidden;border:1px solid #e8ddd6;border-radius:18px;background:#fffefa}
+.admin-feature-group-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 18px;background:#fbf4ef}
+.admin-feature-group-head>div{display:grid;gap:4px}
+.admin-feature-group-head strong{color:#51232c;font-size:16px}
+.admin-feature-group-head small{color:#746b65;font-size:12px}
+.admin-feature-group-head .primary-button{white-space:nowrap}
+.admin-feature-group-rows .admin-feature-row{border:0;border-top:1px solid #eee7e1;border-radius:0;background:transparent}
+@media(max-width:680px){
+ .admin-feature-group-head{align-items:stretch;flex-direction:column}
+ .admin-feature-group-head .primary-button{width:100%}
+ .admin-feature-group-rows .admin-feature-row{align-items:stretch;flex-direction:column}
+}

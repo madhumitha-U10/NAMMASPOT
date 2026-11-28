@@ -40,7 +40,7 @@ export async function getMicrosite(slug) {
     supabase.from("seller_website_settings").select("*").eq("seller_id",seller.id).maybeSingle(),
     supabase.from("seller_business_hours").select("*").eq("seller_id",seller.id).order("day_of_week"),
     supabase.from("seller_special_dates").select("*").eq("seller_id",seller.id).order("special_date"),
-    supabase.from("products").select("id,seller_id,name,product_name,description,price,image_url,available,availability,category_id,featured,created_at,category:categories(id,name)").eq("seller_id",seller.id).eq("availability",true).order("featured",{ascending:false}).order("created_at",{ascending:false}).limit(100)
+    supabase.from("products").select("id,seller_id,name,product_name,description,price,image_url,available,availability,category_id,subcategory_id,featured,created_at,category:categories(id,name)").eq("seller_id",seller.id).eq("availability",true).order("featured",{ascending:false}).order("created_at",{ascending:false}).limit(100)
   ]);
   if (se || he || de || pe) throw se || he || de || pe;
   const ids=(products||[]).map(p=>p.id);

@@ -5265,3 +5265,75 @@ input, select, textarea { max-width: 100%; }
  .admin-feature-group-head .primary-button{width:100%}
  .admin-feature-group-rows .admin-feature-row{align-items:stretch;flex-direction:column}
 }
+
+
+/* Seller-first Growth Tools: compact cards, clear activation controls */
+.seller-growth-title{align-items:flex-end;gap:14px}
+.seller-growth-title h2{margin:5px 0}
+.seller-growth-title p{margin:5px 0 0;color:#706b63}
+.seller-growth-count{padding:8px 12px;border-radius:999px;background:#f4e8e2;color:#742b38;font-size:12px;font-weight:800;white-space:nowrap}
+.seller-growth-request-card{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:18px 0;padding:18px 20px;border:1px solid #e8d9d2;border-radius:18px;background:#fffaf6}
+.seller-growth-request-card strong{display:block;color:#51232c;font-size:16px}
+.seller-growth-request-card p{margin:5px 0 0;color:#716960;font-size:13px;line-height:1.5}
+.seller-growth-request-card .primary-button{flex:none;white-space:nowrap}
+.seller-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0 26px}
+.seller-feature-toggle-card{display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding:17px;border:1px solid #e8e1d9;border-radius:17px;background:#fffefa}
+.seller-feature-card-head{display:flex;align-items:center;justify-content:space-between;width:100%;gap:10px}
+.seller-feature-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#f7eee8;color:#742b38;flex:none}
+.seller-feature-toggle-card>strong{font-size:16px;color:#2c2724}
+.seller-feature-toggle-card>p{margin:0;color:#716b64;font-size:13px;line-height:1.45;min-height:38px}
+.seller-feature-switch{display:inline-flex;align-items:center;gap:9px;border:0;background:transparent;padding:5px 0;color:#5f2832;font-size:13px;font-weight:800}
+.seller-feature-switch:disabled{opacity:.6;cursor:wait}
+.seller-feature-switch-track{width:40px;height:23px;padding:3px;border-radius:999px;background:#d7d0c9;transition:background .18s ease}
+.seller-feature-switch-track span{display:block;width:17px;height:17px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0002;transition:transform .18s ease}
+.seller-feature-switch.is-on .seller-feature-switch-track{background:#742b38}
+.seller-feature-switch.is-on .seller-feature-switch-track span{transform:translateX(17px)}
+.seller-feature-wait{display:flex;align-items:center;gap:7px;padding:5px 0;color:#746b64;font-size:12px;font-weight:700}
+.seller-feature-note{color:#75685e;font-size:12px;line-height:1.4}
+.seller-feature-editor{margin-top:24px;padding:20px;border:1px solid #e8e1d9;border-radius:18px;background:#fffefa}
+.seller-feature-editor .dashboard-section-head{margin-bottom:14px}
+.seller-feature-editor .dashboard-section-head h3{display:flex;align-items:center;gap:8px;margin:0;color:#51232c}
+.seller-feature-editor .dashboard-section-head p{margin:5px 0 0;color:#716b64;font-size:13px}
+.seller-feature-inline-form{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px}
+.seller-feature-submissions{display:grid;gap:8px;margin-top:16px}
+.seller-feature-submissions>div{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid #eee7e0;border-radius:12px;background:#fff}
+.seller-feature-submissions>div>span{display:grid;gap:3px;min-width:0}
+.seller-feature-submissions small{color:#777069;font-size:12px}
+.seller-growth-footnote{display:flex;align-items:flex-start;gap:7px;margin-top:18px;line-height:1.45}
+.dashboard-page .dashboard-head h1{font-size:clamp(30px,4vw,44px);letter-spacing:-.045em}
+.dashboard-page .dashboard-head p{margin-top:6px;color:#716b64}
+.dashboard-page .dashboard-tabs{position:sticky;top:78px;z-index:15}
+.featured-product-active{color:#742b38;border-color:#d8b9b2;background:#fbf0ec}
+.admin-growth-toolbar{display:flex;align-items:center;gap:12px;margin:18px 0}
+.admin-growth-toolbar>select{min-width:150px}
+.admin-growth-search{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:0 12px;border:1px solid #dedbd0;border-radius:12px;background:#fffefa}
+.admin-growth-search svg{color:#82776f;flex:none}
+.admin-growth-search input{width:100%;min-width:0;border:0;outline:0;background:transparent;padding:12px 0}
+.admin-feature-groups{display:grid;gap:14px}
+.admin-feature-group{overflow:hidden;border:1px solid #e7ded6;border-radius:17px;background:#fffefa}
+.admin-feature-group-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 17px;background:#fbf4ef}
+.admin-feature-seller{display:flex;align-items:center;gap:11px;min-width:0}
+.admin-feature-seller>span:last-child{display:grid;gap:3px;min-width:0}
+.admin-feature-seller strong{color:#51232c;font-size:15px}
+.admin-feature-seller small{color:#756b64;font-size:12px;overflow-wrap:anywhere}
+.admin-feature-group-rows{display:grid}
+.admin-feature-group-rows .admin-feature-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 17px;border:0;border-top:1px solid #eee7e1;border-radius:0;background:transparent}
+.admin-feature-group-rows .admin-feature-row>strong{font-size:13px;color:#39322d}
+.admin-feature-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.admin-feature-actions .button-row{gap:6px}
+.admin-feature-actions .secondary-button,.admin-feature-actions .danger-button{padding:7px 10px;font-size:12px}
+.admin-feature-note{display:grid;gap:6px;margin:12px 0;color:#5d534d;font-size:13px;font-weight:700}
+.admin-feature-note input{width:100%;padding:11px 12px;border:1px solid #dedbd0;border-radius:11px;background:#fffefa}
+@media(max-width:760px){
+ .seller-feature-grid{grid-template-columns:1fr}
+ .seller-growth-request-card{align-items:stretch;flex-direction:column}
+ .seller-growth-request-card .primary-button{width:100%}
+ .seller-feature-inline-form{grid-template-columns:1fr}
+ .seller-feature-inline-form .primary-button{width:100%}
+ .dashboard-page .dashboard-tabs{top:68px}
+ .admin-growth-toolbar{align-items:stretch;flex-direction:column}
+ .admin-feature-group-head{align-items:stretch;flex-direction:column}
+ .admin-feature-group-head .primary-button{width:100%}
+ .admin-feature-group-rows .admin-feature-row{align-items:stretch;flex-direction:column}
+ .admin-feature-actions{justify-content:space-between}
+}

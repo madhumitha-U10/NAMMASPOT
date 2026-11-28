@@ -69,7 +69,10 @@ import {
   adminListReviews,
   adminUpdateReviewStatus,
   uploadSellerMedia,
-  getSellerStorageUsage
+  getSellerStorageUsage,
+  getSellerGrowthFeatureAccess,
+  getSellerGrowthSubcategories,
+  setProductFeatured
 } from "./lib/api";
 import { categoryNames } from "./lib/seed";
 import CategoryIcon from "./components/brand/CategoryIcon.jsx";
@@ -1129,6 +1132,8 @@ function DashboardPage({ go }) {
   const [analytics,setAnalytics] = useState(null);
   const [sellerLikeCount,setSellerLikeCount] = useState(0);
   const [notifications,setNotifications] = useState([]);
+  const [growthAccess,setGrowthAccess] = useState({});
+  const [catalogueSections,setCatalogueSections] = useState([]);
 
   const load = async () => {
     try {
@@ -1136,12 +1141,14 @@ function DashboardPage({ go }) {
       if (!profile || profile.role !== "seller") { go("/login"); return; }
       const [mySeller,cats] = await Promise.all([getMySeller(),getCategories()]);
       if (!mySeller) throw new Error("Seller profile not found.");
-      const [myProducts,myEnquiries,myAnalytics,myNotifications] = await Promise.all([listMyProducts(mySeller.id),getMyEnquiries(mySeller.id),getSellerPageAnalytics(mySeller.id,30).catch(()=>null),getMySellerNotifications(mySeller.id).catch(()=>[])]);
+      const [myProducts,myEnquiries,myAnalytics,myNotifications,myGrowthAccess,mySections] = await Promise.all([listMyProducts(mySeller.id),getMyEnquiries(mySeller.id),getSellerPageAnalytics(mySeller.id,30).catch(()=>null),getMySellerNotifications(mySeller.id).catch(()=>[]),getSellerGrowthFeatureAccess(mySeller.id).catch(()=>({})),getSellerGrowthSubcategories(mySeller.id).catch(()=>[])]);
       const myLikeStats = await getSellerLikeStats(mySeller.id,myProducts.map(product=>product.id)).catch(()=>({sellerLikes:0,productLikes:{}}));
       setSeller(mySeller);
       setProducts(myProducts.map(product=>({...product,like_count:Number(myLikeStats.productLikes[product.id]||0)})));
       setSellerLikeCount(myLikeStats.sellerLikes);
       setNotifications(myNotifications);
+      setGrowthAccess(myGrowthAccess);
+      setCatalogueSections(mySections);
       setEnquiries(myEnquiries);
       setAnalytics(myAnalytics);
       setCategories(cats);
@@ -1160,11 +1167,11 @@ function DashboardPage({ go }) {
   return (
     <main className="page dashboard-page">
       <div className="dashboard-head">
-        <div><div className="eyebrow">SELLER DASHBOARD</div><h1>Your spot, your catalogue.</h1><p>{seller.verification_status === "approved" ? "Your public page is live." : "Your profile is " + seller.verification_status + "."}</p></div>
+        <div><div className="eyebrow">YOUR SHOP</div><h1>Welcome, {seller.owner_name || seller.business_name}.</h1><p>{seller.verification_status === "approved" ? "Manage your shop and customer messages." : "Your profile is " + seller.verification_status + "."}</p></div>
         <div className="dashboard-head-actions"><span className={"status-pill status-"+seller.verification_status}>{seller.verification_status}</span><a className="secondary-button dashboard-public-link" href={"/s/"+seller.slug} target="_blank" rel="noreferrer"><ExternalLink size={16}/> View public page</a></div>
       </div>
 
-      <section className="seller-likes-overview"><div className="seller-likes-main"><span className="seller-likes-heart"><Heart size={20} fill="currentColor"/></span><div><strong>{sellerLikeCount.toLocaleString("en-IN")}</strong><span>People who like your shop</span></div></div><div className="seller-likes-products"><strong>Most liked products</strong>{products.filter(p=>p.like_count>0).sort((a,b)=>b.like_count-a.like_count).slice(0,3).map(p=><div key={p.id}><span>{p.name}</span><b>♥ {p.like_count}</b></div>)}{!products.some(p=>p.like_count>0)&&<small>Your product likes will appear here.</small>}</div></section>
+      
       <nav className="dashboard-tabs" aria-label="Seller dashboard sections">
         {[
           ["overview","Overview"],
@@ -1179,11 +1186,11 @@ function DashboardPage({ go }) {
       {tab==="overview" && <Suspense fallback={<p className="muted">Loading overview…</p>}><SellerGrowthHub seller={seller} products={products} enquiries={enquiries} analytics={analytics} sellerLikes={sellerLikeCount} onNavigate={setTab}/></Suspense>}
       {tab==="notifications" && <Suspense fallback={<p className="muted">Loading notifications…</p>}><SellerNotifications notifications={notifications} onRead={async(id)=>{try{await markSellerNotificationRead(id);setNotifications(items=>items.map(item=>item.id===id?{...item,read_at:new Date().toISOString()}:item));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onReadAll={async()=>{try{await markAllSellerNotificationsRead(seller.id);setNotifications(items=>items.map(item=>({...item,read_at:item.read_at||new Date().toISOString()})));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onNavigate={()=>setTab("enquiries")}/></Suspense>} 
       {tab==="profile" && <ProfileEditor seller={seller} categories={categories} onSaved={(next)=>setSeller((current)=>({...current,...next}))}/>}
-      {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} storageUsage={storageUsage} onStorageUsageChange={setStorageUsage} onChange={setProducts}/>}
+      {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} storageUsage={storageUsage} onStorageUsageChange={setStorageUsage} onChange={setProducts} advancedCatalogueEnabled={growthAccess.advanced_catalogue?.status==="approved"&&growthAccess.advanced_catalogue?.enabled} subcategories={catalogueSections} subcategoriesEnabled={growthAccess.subcategories?.status==="approved"&&growthAccess.subcategories?.enabled}/>}
       {tab==="enquiries" && <EnquiryManager enquiries={enquiries} onChange={setEnquiries} seller={seller}/>}
       {tab==="growth" && <section className="dashboard-growth-stack">
         <Suspense fallback={<p className="muted">Loading growth tools…</p>}><SellerGrowthSharing seller={seller} analytics={analytics}/></Suspense>
-        <Suspense fallback={<p className="muted">Loading feature access…</p>}><SellerFeatureAccess seller={seller}/></Suspense>
+        <Suspense fallback={<p className="muted">Loading feature access…</p>}><SellerFeatureAccess seller={seller} onAccessChange={setGrowthAccess} onSubcategoriesChange={setCatalogueSections}/></Suspense>
       </section>}
     </main>
   );
@@ -1328,8 +1335,8 @@ function ImageCropDialog({ file, onCancel, onConfirm, busy, squareOnly = false, 
   </section></div>;
 }
 
-function ProductManager({ seller, products, categories, storageUsage, onStorageUsageChange, onChange }) {
-  const blank={product_name:"",description:"",price:"",availability:true,image_url:"",category_id:""};
+function ProductManager({ seller, products, categories, storageUsage, onStorageUsageChange, onChange, advancedCatalogueEnabled = false, subcategories = [], subcategoriesEnabled = false }) {
+  const blank={product_name:"",description:"",price:"",availability:true,image_url:"",category_id:"",subcategory_id:""};
   const [form,setForm]=useState(blank);
   const [editing,setEditing]=useState(null);
   const [state,setState]=useState({loading:false,error:""});
@@ -1356,7 +1363,7 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
 
   const edit=(product)=>{
     setEditing(product.id);
-    setForm({product_name:product.name,description:product.description,price:product.price,availability:product.available,image_url:product.image_url || "",category_id:product.category_id || ""});
+    setForm({product_name:product.name,description:product.description,price:product.price,availability:product.available,image_url:product.image_url || "",category_id:product.category_id || "",subcategory_id:product.subcategory_id || ""});
   };
 
   const uploadGallery = (event) => {
@@ -1422,7 +1429,7 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
         <div className="form-grid">
           <label>Product name *<input value={form.product_name} onChange={(e)=>setForm({...form,product_name:e.target.value})} maxLength={160} required/></label>
           <label>Price ₹ *<input type="number" min="0" step="0.01" value={form.price} onChange={(e)=>setForm({...form,price:e.target.value})} required/></label>
-          <label>Category<select value={form.category_id} onChange={(e)=>setForm({...form,category_id:e.target.value})}><option value="">Optional</option>{categories.map((c)=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+          <label>Category<select value={form.category_id} onChange={(e)=>setForm({...form,category_id:e.target.value})}><option value="">Optional</option>{categories.map((c)=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>{subcategoriesEnabled&&<label>Catalogue section<select value={form.subcategory_id} onChange={e=>setForm({...form,subcategory_id:e.target.value})}><option value="">No section</option>{subcategories.map(section=><option key={section.id} value={section.id}>{section.name}</option>)}</select></label>}
           <label>Image URL<input type="url" value={form.image_url} onChange={(e)=>setForm({...form,image_url:e.target.value})} placeholder="https://…"/></label>
           <label>Upload primary image<input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={upload} disabled={primaryImageBusy||galleryBusy}/><small className="field-help">{primaryImageBusy ? "Uploading and optimizing your image…" : "This is the main catalogue image. JPG, PNG or WebP · selected file up to 10 MB · optimized to your assigned per-image limit."}</small></label>
         </div>
@@ -1442,7 +1449,7 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
         {products.length ? products.map((product)=>
           <article className="dashboard-item" key={product.id}>
             <div className="dashboard-product-row">{product.image_url?<img className="dashboard-product-thumb" src={product.image_url} alt="" />:<div className="dashboard-product-thumb placeholder-thumb"><Store size={20}/></div>}<div><strong>{product.name}</strong><p>₹{product.price} · ♥ {Number(product.like_count||0)} likes · {product.available?"Available":"Unavailable"} · {(product.images||[]).length+ (product.image_url?1:0)} image{((product.images||[]).length+ (product.image_url?1:0))===1?"":"s"}</p><small>{product.description}</small></div></div>
-            <div className="button-row"><button className="secondary-button" onClick={()=>edit(product)}><Pencil size={15}/> Edit</button><button className="danger-button" onClick={()=>remove(product.id)}><Trash2 size={15}/> Delete</button></div>
+            <div className="button-row">{advancedCatalogueEnabled&&<button type="button" className={product.featured?"secondary-button featured-product-active":"secondary-button"} disabled={Boolean(state.featureBusy)} onClick={async()=>{setState(s=>({...s,featureBusy:product.id,error:""}));try{await setProductFeatured(product.id,!product.featured);onChange(products.map(p=>p.id===product.id?{...p,featured:!product.featured}:p));}catch(error){setState(s=>({...s,featureBusy:"",error:friendlyError(error)}));return;}setState(s=>({...s,featureBusy:"",error:""}));}}><Star size={15} fill={product.featured?"currentColor":"none"}/>{state.featureBusy===product.id?"Saving…":product.featured?"Featured":"Feature product"}</button>}<button className="secondary-button" onClick={()=>edit(product)}><Pencil size={15}/> Edit</button><button className="danger-button" onClick={()=>remove(product.id)}><Trash2 size={15}/> Delete</button></div>
           </article>
         ) : <Empty title="No products added" text="Add your first product to publish your catalogue."/>}
       </div>
@@ -1737,7 +1744,7 @@ function AdminPage() {
             <button className={tab==="reviews"?"active":""} onClick={()=>setTab("reviews")}><CheckCircle size={17}/><span><strong>Reviews & reports</strong><small>{reviews.filter(item=>item.status==="pending").length} awaiting review</small></span></button>
             <button className={tab==="categories"?"active":""} onClick={()=>setTab("categories")}><Grid2X2 size={17}/><span><strong>Categories</strong><small>Organise seller categories</small></span></button>
             <button className={tab==="storage"?"active":""} onClick={()=>setTab("storage")}><ShieldCheck size={17}/><span><strong>Storage management</strong><small>Usage, limits and cleanup</small></span></button>
-            <button className={tab==="features"?"active":""} onClick={()=>setTab("features")}><SlidersHorizontal size={17}/><span><strong>Feature approvals</strong><small>Seller-specific access control</small></span></button>
+            <button className={tab==="features"?"active":""} onClick={()=>setTab("features")}><SlidersHorizontal size={17}/><span><strong>Growth Tools</strong><small>Review seller requests</small></span></button>
           </div>
           <div className="admin-console-sidebar-bottom">
             <button onClick={load} disabled={loading}>↻ Refresh data</button>
@@ -1764,8 +1771,8 @@ function AdminPage() {
       <div className="dashboard-head">
         <div>
           <div className="eyebrow">CURRENT SECTION</div>
-          <h1>{tab==="sellers" ? "Seller management" : tab==="storage" ? "Storage management" : tab==="reviews" ? "Reviews & reports" : tab==="features" ? "Feature approvals" : "Category management"}</h1>
-          <p>{tab==="sellers" ? "Review new sellers first, then manage approved or restricted accounts." : tab==="storage" ? "Set limits and remove failed or unused uploads safely." : tab==="reviews" ? "Review customer feedback before it appears publicly." : tab==="features" ? "Approve offers, polls and advanced catalogue tools for selected sellers only." : "Keep seller categories organised and easy to browse."}</p>
+          <h1>{tab==="sellers" ? "Seller management" : tab==="storage" ? "Storage management" : tab==="reviews" ? "Reviews & reports" : tab==="features" ? "Growth Tools" : "Category management"}</h1>
+          <p>{tab==="sellers" ? "Review new sellers first, then manage approved or restricted accounts." : tab==="storage" ? "Set limits and remove failed or unused uploads safely." : tab==="reviews" ? "Review customer feedback before it appears publicly." : tab==="features" ? "Review one Growth Tools request per seller." : "Keep seller categories organised and easy to browse."}</p>
           {adminProfile?.email && <small>Signed in as {adminProfile.email}</small>}
         </div>
         <div className="button-row">

@@ -994,3 +994,11 @@
   .seller-microsite button.ns-like-button.ns-profile-stat-like{transition:none}
   .seller-microsite button.ns-like-button.ns-profile-stat-like svg{transition:none}
 }
+
+
+/* Customer-facing seller catalogue section filters */
+.seller-microsite .ns-growth-subcategories{display:grid;gap:10px;margin:0 0 15px;padding:0}
+.seller-microsite .ns-growth-subcategories>strong{font-size:13px;color:#4d3732}
+.seller-microsite .ns-growth-subcategories>div{display:flex;gap:8px;overflow-x:auto;padding:2px 0 5px;scrollbar-width:thin}
+.seller-microsite .ns-growth-subcategories button{flex:none;min-height:34px;padding:7px 13px;border:1px solid #e4d7cf;border-radius:999px;background:#fffdfa;color:#6d625c;font-size:12px;font-weight:750;white-space:nowrap}
+.seller-microsite .ns-growth-subcategories button.active{border-color:#742b38;background:#742b38;color:#fffaf5}

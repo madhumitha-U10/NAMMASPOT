@@ -122,6 +122,8 @@ function productsOf(rows = []) {
     category_id: p.category_id ?? null,
     created_at: p.created_at ?? null,
     seller_id: p.seller_id,
+    featured: Boolean(p.featured),
+    subcategory_id: p.subcategory_id ?? null,
   }));
 }
 
@@ -752,13 +754,13 @@ export async function updateMySeller(sellerId, values) {
 export async function listMyProducts(sellerId) {
   if (!supabase) return productsOf(demoState().products.filter((p) => p.seller_id === sellerId));
   const client = needBackend();
-  const { data,error } = await client.from("products").select("id,seller_id,product_name,description,price,availability,image_url,category_id,created_at").eq("seller_id",sellerId).order("created_at",{ascending:false});
+  const { data,error } = await client.from("products").select("id,seller_id,product_name,description,price,availability,image_url,category_id,featured,subcategory_id,created_at").eq("seller_id",sellerId).order("created_at",{ascending:false});
   if (error) throw error; return productsOf(data ?? []);
 }
 
 export async function createProduct(values) {
   if (!supabase) {
-    const state=demoState(); const product={id:uid("product"),seller_id:values.seller_id,product_name:text(values.product_name,160),name:text(values.product_name,160),description:text(values.description,1000),price:Number(values.price),availability:Boolean(values.availability),available:Boolean(values.availability),image_url:text(values.image_url,800),category_id:values.category_id || null,created_at:new Date().toISOString()};
+    const state=demoState(); const product={id:uid("product"),seller_id:values.seller_id,product_name:text(values.product_name,160),name:text(values.product_name,160),description:text(values.description,1000),price:Number(values.price),availability:Boolean(values.availability),available:Boolean(values.availability),image_url:text(values.image_url,800),category_id:values.category_id || null,subcategory_id:values.subcategory_id || null,created_at:new Date().toISOString()};
     state.products.unshift(product); saveDemo(state); return productsOf([product])[0];
   }
   const client = needBackend();
@@ -774,8 +776,9 @@ export async function createProduct(values) {
     available:Boolean(values.availability),
     availability:Boolean(values.availability),
     image_url:imageUrl,
-    category_id:values.category_id || null
-  }).select("id,seller_id,name,product_name,description,price,available,availability,image_url,category_id,created_at").single();
+    category_id:values.category_id || null,
+    subcategory_id:values.subcategory_id || null
+  }).select("id,seller_id,name,product_name,description,price,available,availability,image_url,category_id,featured,subcategory_id,created_at").single();
   if (error) { if (imageUrl) { try { await removeMediaIfUnreferenced(imageUrl); } catch {} } throw error; }
   return productsOf([data])[0];
 }
@@ -784,7 +787,7 @@ export async function updateProduct(productId,values) {
   if (!supabase) {
     const state=demoState(); const index=state.products.findIndex((p)=>p.id===productId);
     if(index<0) throw new Error("Product not found.");
-    state.products[index]={...state.products[index],product_name:text(values.product_name,160),name:text(values.product_name,160),description:text(values.description,1000),price:Number(values.price),availability:Boolean(values.availability),available:Boolean(values.availability),image_url:text(values.image_url,800),category_id:values.category_id || null};
+    state.products[index]={...state.products[index],product_name:text(values.product_name,160),name:text(values.product_name,160),description:text(values.description,1000),price:Number(values.price),availability:Boolean(values.availability),available:Boolean(values.availability),image_url:text(values.image_url,800),category_id:values.category_id || null,subcategory_id:values.subcategory_id || null};
     saveDemo(state); return productsOf([state.products[index]])[0];
   }
   const client=needBackend();
@@ -801,8 +804,9 @@ export async function updateProduct(productId,values) {
     available:Boolean(values.availability),
     availability:Boolean(values.availability),
     image_url:nextImage,
-    category_id:values.category_id||null
-  }).eq("id",productId).select("id,seller_id,name,product_name,description,price,available,availability,image_url,category_id,created_at").single();
+    category_id:values.category_id||null,
+    subcategory_id:values.subcategory_id||null
+  }).eq("id",productId).select("id,seller_id,name,product_name,description,price,available,availability,image_url,category_id,featured,subcategory_id,created_at").single();
   if(error) {
     if (nextImage && nextImage !== before?.image_url) { try { await removeMediaIfUnreferenced(nextImage); } catch {} }
     throw error;
@@ -812,6 +816,38 @@ export async function updateProduct(productId,values) {
     catch (cleanupError) { throw new Error("Product updated, but the old image could not be fully deleted from storage. Please contact NammaSpot support."); }
   }
   return productsOf([data])[0];
+}
+
+export async function getSellerGrowthFeatureAccess(sellerId) {
+  if (!supabase) return {};
+  const client = needBackend();
+  const { data, error } = await client.from("seller_feature_access")
+    .select("feature_key,status,enabled")
+    .eq("seller_id", sellerId);
+  if (error) throw error;
+  return Object.fromEntries((data || []).map(row => [row.feature_key, row]));
+}
+
+export async function getSellerGrowthSubcategories(sellerId) {
+  if (!supabase) return [];
+  const client = needBackend();
+  const { data, error } = await client.from("seller_catalogue_subcategories")
+    .select("id,name")
+    .eq("seller_id", sellerId)
+    .eq("status", "approved")
+    .order("sort_order");
+  if (error) throw error;
+  return data || [];
+}
+
+export async function setProductFeatured(productId, featured) {
+  const client = needBackend();
+  const { error } = await client.rpc("seller_set_product_featured", {
+    p_product_id: productId,
+    p_featured: Boolean(featured),
+  });
+  if (error) throw error;
+  return Boolean(featured);
 }
 
 function sellerMediaPathFromUrl(url, userId) {

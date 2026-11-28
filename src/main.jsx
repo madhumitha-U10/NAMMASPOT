@@ -69,7 +69,9 @@ import {
   adminListReviews,
   adminUpdateReviewStatus,
   uploadSellerMedia,
-  getSellerStorageUsage
+  getSellerStorageUsage,
+  getSellerGrowthFeatureAccess,
+  setProductFeatured
 } from "./lib/api";
 import { categoryNames } from "./lib/seed";
 import CategoryIcon from "./components/brand/CategoryIcon.jsx";
@@ -1129,6 +1131,7 @@ function DashboardPage({ go }) {
   const [analytics,setAnalytics] = useState(null);
   const [sellerLikeCount,setSellerLikeCount] = useState(0);
   const [notifications,setNotifications] = useState([]);
+  const [growthAccess,setGrowthAccess] = useState({});
 
   const load = async () => {
     try {
@@ -1136,12 +1139,13 @@ function DashboardPage({ go }) {
       if (!profile || profile.role !== "seller") { go("/login"); return; }
       const [mySeller,cats] = await Promise.all([getMySeller(),getCategories()]);
       if (!mySeller) throw new Error("Seller profile not found.");
-      const [myProducts,myEnquiries,myAnalytics,myNotifications] = await Promise.all([listMyProducts(mySeller.id),getMyEnquiries(mySeller.id),getSellerPageAnalytics(mySeller.id,30).catch(()=>null),getMySellerNotifications(mySeller.id).catch(()=>[])]);
+      const [myProducts,myEnquiries,myAnalytics,myNotifications,myGrowthAccess] = await Promise.all([listMyProducts(mySeller.id),getMyEnquiries(mySeller.id),getSellerPageAnalytics(mySeller.id,30).catch(()=>null),getMySellerNotifications(mySeller.id).catch(()=>[]),getSellerGrowthFeatureAccess(mySeller.id).catch(()=>({}))]);
       const myLikeStats = await getSellerLikeStats(mySeller.id,myProducts.map(product=>product.id)).catch(()=>({sellerLikes:0,productLikes:{}}));
       setSeller(mySeller);
       setProducts(myProducts.map(product=>({...product,like_count:Number(myLikeStats.productLikes[product.id]||0)})));
       setSellerLikeCount(myLikeStats.sellerLikes);
       setNotifications(myNotifications);
+      setGrowthAccess(myGrowthAccess);
       setEnquiries(myEnquiries);
       setAnalytics(myAnalytics);
       setCategories(cats);
@@ -1160,11 +1164,11 @@ function DashboardPage({ go }) {
   return (
     <main className="page dashboard-page">
       <div className="dashboard-head">
-        <div><div className="eyebrow">SELLER DASHBOARD</div><h1>Your spot, your catalogue.</h1><p>{seller.verification_status === "approved" ? "Your public page is live." : "Your profile is " + seller.verification_status + "."}</p></div>
+        <div><div className="eyebrow">YOUR SHOP</div><h1>Welcome, {seller.owner_name || seller.business_name}.</h1><p>{seller.verification_status === "approved" ? "Manage your shop and customer messages." : "Your profile is " + seller.verification_status + "."}</p></div>
         <div className="dashboard-head-actions"><span className={"status-pill status-"+seller.verification_status}>{seller.verification_status}</span><a className="secondary-button dashboard-public-link" href={"/s/"+seller.slug} target="_blank" rel="noreferrer"><ExternalLink size={16}/> View public page</a></div>
       </div>
 
-      <section className="seller-likes-overview"><div className="seller-likes-main"><span className="seller-likes-heart"><Heart size={20} fill="currentColor"/></span><div><strong>{sellerLikeCount.toLocaleString("en-IN")}</strong><span>People who like your shop</span></div></div><div className="seller-likes-products"><strong>Most liked products</strong>{products.filter(p=>p.like_count>0).sort((a,b)=>b.like_count-a.like_count).slice(0,3).map(p=><div key={p.id}><span>{p.name}</span><b>♥ {p.like_count}</b></div>)}{!products.some(p=>p.like_count>0)&&<small>Your product likes will appear here.</small>}</div></section>
+      
       <nav className="dashboard-tabs" aria-label="Seller dashboard sections">
         {[
           ["overview","Overview"],
@@ -1179,11 +1183,11 @@ function DashboardPage({ go }) {
       {tab==="overview" && <Suspense fallback={<p className="muted">Loading overview…</p>}><SellerGrowthHub seller={seller} products={products} enquiries={enquiries} analytics={analytics} sellerLikes={sellerLikeCount} onNavigate={setTab}/></Suspense>}
       {tab==="notifications" && <Suspense fallback={<p className="muted">Loading notifications…</p>}><SellerNotifications notifications={notifications} onRead={async(id)=>{try{await markSellerNotificationRead(id);setNotifications(items=>items.map(item=>item.id===id?{...item,read_at:new Date().toISOString()}:item));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onReadAll={async()=>{try{await markAllSellerNotificationsRead(seller.id);setNotifications(items=>items.map(item=>({...item,read_at:item.read_at||new Date().toISOString()})));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onNavigate={()=>setTab("enquiries")}/></Suspense>} 
       {tab==="profile" && <ProfileEditor seller={seller} categories={categories} onSaved={(next)=>setSeller((current)=>({...current,...next}))}/>}
-      {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} storageUsage={storageUsage} onStorageUsageChange={setStorageUsage} onChange={setProducts}/>}
+      {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} storageUsage={storageUsage} onStorageUsageChange={setStorageUsage} onChange={setProducts} advancedCatalogueEnabled={growthAccess.advanced_catalogue?.status==="approved"&&growthAccess.advanced_catalogue?.enabled}/>}
       {tab==="enquiries" && <EnquiryManager enquiries={enquiries} onChange={setEnquiries} seller={seller}/>}
       {tab==="growth" && <section className="dashboard-growth-stack">
         <Suspense fallback={<p className="muted">Loading growth tools…</p>}><SellerGrowthSharing seller={seller} analytics={analytics}/></Suspense>
-        <Suspense fallback={<p className="muted">Loading feature access…</p>}><SellerFeatureAccess seller={seller}/></Suspense>
+        <Suspense fallback={<p className="muted">Loading feature access…</p>}><SellerFeatureAccess seller={seller} onAccessChange={setGrowthAccess}/></Suspense>
       </section>}
     </main>
   );
@@ -1328,7 +1332,7 @@ function ImageCropDialog({ file, onCancel, onConfirm, busy, squareOnly = false, 
   </section></div>;
 }
 
-function ProductManager({ seller, products, categories, storageUsage, onStorageUsageChange, onChange }) {
+function ProductManager({ seller, products, categories, storageUsage, onStorageUsageChange, onChange, advancedCatalogueEnabled = false }) {
   const blank={product_name:"",description:"",price:"",availability:true,image_url:"",category_id:""};
   const [form,setForm]=useState(blank);
   const [editing,setEditing]=useState(null);
@@ -1442,7 +1446,7 @@ function ProductManager({ seller, products, categories, storageUsage, onStorageU
         {products.length ? products.map((product)=>
           <article className="dashboard-item" key={product.id}>
             <div className="dashboard-product-row">{product.image_url?<img className="dashboard-product-thumb" src={product.image_url} alt="" />:<div className="dashboard-product-thumb placeholder-thumb"><Store size={20}/></div>}<div><strong>{product.name}</strong><p>₹{product.price} · ♥ {Number(product.like_count||0)} likes · {product.available?"Available":"Unavailable"} · {(product.images||[]).length+ (product.image_url?1:0)} image{((product.images||[]).length+ (product.image_url?1:0))===1?"":"s"}</p><small>{product.description}</small></div></div>
-            <div className="button-row"><button className="secondary-button" onClick={()=>edit(product)}><Pencil size={15}/> Edit</button><button className="danger-button" onClick={()=>remove(product.id)}><Trash2 size={15}/> Delete</button></div>
+            <div className="button-row">{advancedCatalogueEnabled&&<button type="button" className={product.featured?"secondary-button featured-product-active":"secondary-button"} disabled={Boolean(state.featureBusy)} onClick={async()=>{setState(s=>({...s,featureBusy:product.id,error:""}));try{await setProductFeatured(product.id,!product.featured);onChange(products.map(p=>p.id===product.id?{...p,featured:!product.featured}:p));}catch(error){setState(s=>({...s,featureBusy:"",error:friendlyError(error)}));return;}setState(s=>({...s,featureBusy:"",error:""}));}}><Star size={15} fill={product.featured?"currentColor":"none"}/>{state.featureBusy===product.id?"Saving…":product.featured?"Featured":"Feature product"}</button>}<button className="secondary-button" onClick={()=>edit(product)}><Pencil size={15}/> Edit</button><button className="danger-button" onClick={()=>remove(product.id)}><Trash2 size={15}/> Delete</button></div>
           </article>
         ) : <Empty title="No products added" text="Add your first product to publish your catalogue."/>}
       </div>

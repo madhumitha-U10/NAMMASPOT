@@ -1171,33 +1171,39 @@ function DashboardPage({ go }) {
   if (state.error) return <main className="page"><ErrorState message={state.error} retry={load}/></main>;
 
   return (
-    <main className="page dashboard-page">
-      <div className="dashboard-head">
-        <div><div className="eyebrow">SELLER WORKSPACE</div><h1>Welcome, {seller.owner_name || seller.business_name}.</h1><p>{seller.verification_status === "approved" ? "Your shop at a glance." : "Your profile is " + seller.verification_status + "."}</p></div>
-        <div className="dashboard-head-actions"><span className={"status-pill status-"+seller.verification_status}>{seller.verification_status}</span><a className="secondary-button dashboard-public-link" href={"/s/"+seller.slug} target="_blank" rel="noreferrer"><ExternalLink size={16}/> View public page</a></div>
+    <main className="page dashboard-page seller-workspace-page">
+      <div className="seller-workspace-shell">
+        <aside className="seller-workspace-sidebar" aria-label="Seller dashboard navigation">
+          <div className="seller-workspace-brand"><span className="seller-workspace-brand-mark">N</span><span><strong>NammaSpot</strong><small>Seller workspace</small></span></div>
+          <nav className="seller-workspace-nav">
+            <button type="button" className={tab==="overview"?"active":""} aria-current={tab==="overview"?"page":undefined} onClick={()=>setTab("overview")}><Home size={17}/><span>Overview</span></button>
+            <button type="button" className={tab==="products"?"active":""} aria-current={tab==="products"?"page":undefined} onClick={()=>setTab("products")}><Grid2X2 size={17}/><span>My Catalogue</span></button>
+            <button type="button" className={tab==="enquiries"?"active":""} aria-current={tab==="enquiries"?"page":undefined} onClick={()=>setTab("enquiries")}><MessageCircle size={17}/><span>Enquiries</span>{enquiries.filter(item=>item.status==="new"||item.status==="pending").length>0&&<b>{enquiries.filter(item=>item.status==="new"||item.status==="pending").length}</b>}</button>
+            <button type="button" className={tab==="growth"?"active":""} aria-current={tab==="growth"?"page":undefined} onClick={()=>setTab("growth")}><Sparkles size={17}/><span>Growth Tools</span></button>
+            <button type="button" className={tab==="profile"?"active":""} aria-current={tab==="profile"?"page":undefined} onClick={()=>setTab("profile")}><Store size={17}/><span>My Profile</span></button>
+            <button type="button" className={tab==="notifications"?"active":""} aria-current={tab==="notifications"?"page":undefined} onClick={()=>setTab("notifications")}><AlertCircle size={17}/><span>Notifications</span>{notifications.filter(n=>!n.read_at).length>0&&<b>{notifications.filter(n=>!n.read_at).length}</b>}</button>
+          </nav>
+          <div className="seller-workspace-sidebar-footer"><a href={"/s/"+seller.slug} target="_blank" rel="noreferrer"><ExternalLink size={15}/> View public shop</a><button type="button" onClick={()=>{signOut().then(()=>location.href="/");}}><LogOut size={15}/> Sign out</button></div>
+        </aside>
+        <section className="seller-workspace-content">
+          <div className="seller-workspace-topbar">
+            <div><span className="seller-workspace-kicker">YOUR BUSINESS</span><strong>{seller.business_name}</strong></div>
+            <div className="seller-workspace-top-actions"><span className={"status-pill status-"+seller.verification_status}>{seller.verification_status}</span><a className="secondary-button dashboard-public-link" href={"/s/"+seller.slug} target="_blank" rel="noreferrer"><ExternalLink size={15}/> View shop</a></div>
+          </div>
+          <div className="dashboard-head">
+            <div><div className="eyebrow">SELLER WORKSPACE</div><h1>Welcome, {seller.owner_name || seller.business_name}.</h1><p>{seller.verification_status === "approved" ? "Here’s what’s happening with your shop today." : "Your profile is " + seller.verification_status + "."}</p></div>
+          </div>
+          {tab==="overview" && <Suspense fallback={<p className="muted">Loading overview…</p>}><SellerGrowthHub seller={seller} products={products} enquiries={enquiries} analytics={analytics} sellerLikes={sellerLikeCount} onNavigate={setTab}/></Suspense>}
+          {tab==="notifications" && <Suspense fallback={<p className="muted">Loading notifications…</p>}><SellerNotifications notifications={notifications} onRead={async(id)=>{try{await markSellerNotificationRead(id);setNotifications(items=>items.map(item=>item.id===id?{...item,read_at:new Date().toISOString()}:item));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onReadAll={async()=>{try{await markAllSellerNotificationsRead(seller.id);setNotifications(items=>items.map(item=>({...item,read_at:item.read_at||new Date().toISOString()})));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onNavigate={()=>setTab("enquiries")}/></Suspense>}
+          {tab==="profile" && <ProfileEditor seller={seller} categories={categories} onSaved={(next)=>setSeller((current)=>({...current,...next}))}/>}
+          {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} storageUsage={storageUsage} onStorageUsageChange={setStorageUsage} onChange={setProducts} advancedCatalogueEnabled={growthAccess.advanced_catalogue?.status==="approved"&&growthAccess.advanced_catalogue?.enabled} subcategories={catalogueSections} subcategoriesEnabled={growthAccess.subcategories?.status==="approved"&&growthAccess.subcategories?.enabled}/>}
+          {tab==="enquiries" && <EnquiryManager enquiries={enquiries} onChange={setEnquiries} seller={seller}/>}
+          {tab==="growth" && <section className="dashboard-growth-stack">
+            <Suspense fallback={<p className="muted">Loading growth tools…</p>}><SellerGrowthSharing seller={seller} analytics={analytics}/></Suspense>
+            <Suspense fallback={<p className="muted">Loading feature access…</p>}><SellerFeatureAccess seller={seller} onAccessChange={setGrowthAccess} onSubcategoriesChange={setCatalogueSections}/></Suspense>
+          </section>}
+        </section>
       </div>
-
-      
-      <nav className="dashboard-tabs" aria-label="Seller dashboard sections">
-        {[
-          ["overview","Overview"],
-          ["products","Catalogue"],
-          ["enquiries","Enquiries"],
-          ["growth","Growth tools"],
-          ["profile","Profile"],
-          ["notifications","Notifications"+(notifications.filter(n=>!n.read_at).length?" · "+notifications.filter(n=>!n.read_at).length:"")]
-        ].map(([item,label])=><button type="button" key={item} className={tab===item?"active":""} aria-current={tab===item?"page":undefined} onClick={()=>setTab(item)}>{label}</button>)}
-      </nav>
-
-      {tab==="overview" && <Suspense fallback={<p className="muted">Loading overview…</p>}><SellerGrowthHub seller={seller} products={products} enquiries={enquiries} analytics={analytics} sellerLikes={sellerLikeCount} onNavigate={setTab}/></Suspense>}
-      {tab==="notifications" && <Suspense fallback={<p className="muted">Loading notifications…</p>}><SellerNotifications notifications={notifications} onRead={async(id)=>{try{await markSellerNotificationRead(id);setNotifications(items=>items.map(item=>item.id===id?{...item,read_at:new Date().toISOString()}:item));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onReadAll={async()=>{try{await markAllSellerNotificationsRead(seller.id);setNotifications(items=>items.map(item=>({...item,read_at:item.read_at||new Date().toISOString()})));}catch(error){setState(current=>({...current,error:friendlyError(error)}));}}} onNavigate={()=>setTab("enquiries")}/></Suspense>} 
-      {tab==="profile" && <ProfileEditor seller={seller} categories={categories} onSaved={(next)=>setSeller((current)=>({...current,...next}))}/>}
-      {tab==="products" && <ProductManager seller={seller} products={products} categories={categories} storageUsage={storageUsage} onStorageUsageChange={setStorageUsage} onChange={setProducts} advancedCatalogueEnabled={growthAccess.advanced_catalogue?.status==="approved"&&growthAccess.advanced_catalogue?.enabled} subcategories={catalogueSections} subcategoriesEnabled={growthAccess.subcategories?.status==="approved"&&growthAccess.subcategories?.enabled}/>}
-      {tab==="enquiries" && <EnquiryManager enquiries={enquiries} onChange={setEnquiries} seller={seller}/>}
-      {tab==="growth" && <section className="dashboard-growth-stack">
-        <Suspense fallback={<p className="muted">Loading growth tools…</p>}><SellerGrowthSharing seller={seller} analytics={analytics}/></Suspense>
-        <Suspense fallback={<p className="muted">Loading feature access…</p>}><SellerFeatureAccess seller={seller} onAccessChange={setGrowthAccess} onSubcategoriesChange={setCatalogueSections}/></Suspense>
-      </section>}
     </main>
   );
 }
@@ -1744,7 +1750,7 @@ function AdminPage() {
     <main className="page admin-page admin-console-page">
       <div className="admin-console-shell">
         <aside className="admin-console-sidebar" aria-label="Admin console navigation">
-          <div className="admin-console-brand"><ShieldCheck size={22}/><div><strong>NammaSpot</strong><span>Admin Console</span></div></div>
+          <div className="admin-console-brand"><span className="admin-console-brand-mark">N</span><div><strong>NammaSpot</strong><span>Admin workspace</span></div></div>
           <div className="admin-console-nav">
             <button className={tab==="overview"?"active":""} onClick={()=>setTab("overview")}><Home size={17}/><span><strong>Overview</strong></span></button>
             <button className={tab==="sellers"?"active":""} onClick={()=>setTab("sellers")}><Store size={17}/><span><strong>Sellers</strong></span></button>
@@ -1760,9 +1766,9 @@ function AdminPage() {
           </div>
         </aside>
         <section className="admin-console-content">
-      <div className="admin-welcome">
-        <div><div className="eyebrow">NAMMASPOT CONTROL CENTRE</div><h1>Platform overview</h1></div>
-        <span className="admin-live-label"><i/> Live platform data</span>
+      <div className="admin-workspace-topbar">
+        <div><span className="admin-workspace-kicker">NAMMASPOT CONTROL CENTRE</span><strong>Platform overview</strong></div>
+        <div className="admin-workspace-top-actions"><span className="admin-live-label"><i/> Live platform data</span><button className="secondary-button" onClick={load} disabled={loading}>{loading?"Refreshing…":"Refresh"}</button></div>
       </div>
       <div className="admin-summary-grid" aria-label="Platform summary">
         <article className="admin-summary-card"><span>Total sellers</span><strong>{sellers.length}</strong></article>

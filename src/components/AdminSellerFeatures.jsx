@@ -38,6 +38,34 @@ export default function AdminSellerFeatures({ sellers = [] }) {
   const pending = rows.filter((r) => r.status === "pending").length;
   const pendingContent = contentQueue.length;
   const filtered = useMemo(() => rows.filter((r) => filter === "all" || r.status === filter), [rows, filter]);
+  const groupedFiltered = useMemo(() => {
+    const groups = new Map();
+    for (const row of filtered) {
+      if (!groups.has(row.seller_id)) groups.set(row.seller_id, { seller_id: row.seller_id, business_name: row.business_name, owner_name: row.owner_name, rows: [] });
+      groups.get(row.seller_id).rows.push(row);
+    }
+    return Array.from(groups.values());
+  }, [filtered]);
+  const decideGroup = async (group) => {
+    const pendingRows = group.rows.filter((row) => row.status === "pending");
+    if (!pendingRows.length) return;
+    setBusy(true); setError(""); setSuccess("");
+    try {
+      for (const row of pendingRows) {
+        const { error: rpcError } = await supabase.rpc("admin_set_seller_feature_access", {
+          p_seller_id: row.seller_id, p_feature_key: row.feature_key, p_status: "approved",
+          p_enabled: true, p_note: note.trim() || "Approved as part of the seller Growth Tools request"
+        });
+        if (rpcError) throw rpcError;
+      }
+      await load();
+      setSuccess(group.business_name + " · " + pendingRows.length + " growth features approved.");
+      setNote("");
+    } catch (e) {
+      await load().catch(() => {});
+      setError(e.message || "Could not approve the complete feature request. Check each feature status before retrying.");
+    } finally { setBusy(false); }
+  };
   const decide = async (row, status, enabled = status === "approved") => {
     setBusy(true); setError(""); setSuccess("");
     try {
@@ -116,19 +144,27 @@ export default function AdminSellerFeatures({ sellers = [] }) {
         {!contentQueue.length&&<div className="empty-state"><CheckCircle2 size={22}/><strong>No content waiting for review</strong><p>Seller-submitted content will appear here.</p></div>}
       </div>
     </section>
-    <div className="admin-feature-list">
-      {filtered.map(row=><article className="admin-feature-row" key={row.access_id}>
-        <div className="admin-feature-main"><div className="admin-feature-icon"><Store size={19}/></div><div><strong>{row.business_name}</strong><small>{row.owner_name || "Seller"} · {row.slug}</small><span>{FEATURES.find(f=>f.key===row.feature_key)?.label || row.feature_key}</span>{row.review_note && <small>Admin note: {row.review_note}</small>}</div></div>
-        <div className="admin-feature-actions"><span className={"status-pill "+statusClass(row.status)}>{statusLabel(row.status)}{row.enabled&&row.status==="approved"?" · Active":""}</span>
-          <div className="button-row">
-            {row.status!=="approved"&&<button className="primary-button" disabled={busy} onClick={()=>decide(row,"approved",true)}><CheckCircle2 size={15}/>Approve</button>}
-            {row.status==="approved"&&row.enabled&&<button className="secondary-button" disabled={busy} onClick={()=>decide(row,"suspended",false)}>Pause access</button>}
-            {row.status!=="rejected"&&<button className="secondary-button" disabled={busy} onClick={()=>decide(row,"rejected",false)}><XCircle size={15}/>Reject</button>}
-            {row.status==="suspended"&&<button className="secondary-button" disabled={busy} onClick={()=>decide(row,"approved",true)}>Restore</button>}
-          </div>
+    <div className="admin-feature-list admin-feature-groups">
+      {groupedFiltered.map(group=><section className="admin-feature-group" key={group.seller_id}>
+        <div className="admin-feature-group-head">
+          <div><strong>{group.business_name}</strong><small>{group.owner_name || "Seller"} · {group.rows.length} feature permissions in one seller request</small></div>
+          {group.rows.some(row=>row.status==="pending")&&<button className="primary-button" disabled={busy} onClick={()=>decideGroup(group)}><CheckCircle2 size={15}/>{busy?"Saving…":"Approve all pending"}</button>}
         </div>
-      </article>)}
-      {!filtered.length&&<div className="empty-state"><Clock3 size={22}/><strong>No feature requests in this view</strong><p>Seller requests and admin-granted permissions will appear here.</p></div>}
+        <div className="admin-feature-group-rows">
+          {group.rows.map(row=><article className="admin-feature-row" key={row.access_id}>
+            <div className="admin-feature-main"><div className="admin-feature-icon"><Store size={19}/></div><div><strong>{FEATURES.find(f=>f.key===row.feature_key)?.label || row.feature_key}</strong><small>{row.slug}</small>{row.review_note && <small>Admin note: {row.review_note}</small>}</div></div>
+            <div className="admin-feature-actions"><span className={"status-pill "+statusClass(row.status)}>{statusLabel(row.status)}{row.enabled&&row.status==="approved"?" · Active":""}</span>
+              <div className="button-row">
+                {row.status!=="approved"&&<button className="primary-button" disabled={busy} onClick={()=>decide(row,"approved",true)}><CheckCircle2 size={15}/>Approve</button>}
+                {row.status==="approved"&&row.enabled&&<button className="secondary-button" disabled={busy} onClick={()=>decide(row,"suspended",false)}>Pause access</button>}
+                {row.status!=="rejected"&&<button className="secondary-button" disabled={busy} onClick={()=>decide(row,"rejected",false)}><XCircle size={15}/>Reject</button>}
+                {row.status==="suspended"&&<button className="secondary-button" disabled={busy} onClick={()=>decide(row,"approved",true)}>Restore</button>}
+              </div>
+            </div>
+          </article>)}
+        </div>
+      </section>)}
+      {!groupedFiltered.length&&<div className="empty-state"><Clock3 size={22}/><strong>No feature requests in this view</strong><p>Seller requests and admin-granted permissions will appear here.</p></div>}
     </div>
     <p className="muted-note">Permissions are checked by the database as well as the interface. Disabling a feature here prevents new content from being published for that seller.</p>
   </section>;

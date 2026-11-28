@@ -12,7 +12,7 @@ const statusLabel = (value) => ({ pending: "Awaiting review", approved: "Approve
 const statusClass = (value) => value === "approved" ? "status-ok" : value === "pending" ? "status-warning" : value === "suspended" ? "status-danger" : "";
 
 export default function AdminSellerFeatures({ sellers = [] }) {
-  const [rows, setRows] = useState([]);
+  const [rows, setRows] = useState([]);\n  const [contentQueue, setContentQueue] = useState([]);
   const [sellerId, setSellerId] = useState("");
   const [featureKey, setFeatureKey] = useState("offers");
   const [note, setNote] = useState("");
@@ -23,9 +23,15 @@ export default function AdminSellerFeatures({ sellers = [] }) {
 
   const load = async () => {
     if (!supabase) { setError("Feature approvals need the connected production database."); return; }
-    const { data, error: queryError } = await supabase.rpc("admin_list_seller_feature_access");
-    if (queryError) throw queryError;
-    setRows(data || []);
+    const [access, offers, polls, subcategories] = await Promise.all([
+      supabase.rpc("admin_list_seller_feature_access"),
+      supabase.from("seller_offers").select("id,seller_id,title,description,starts_at,ends_at,status,admin_note").eq("status","pending").order("created_at",{ascending:false}),
+      supabase.from("seller_polls").select("id,seller_id,question,options,ends_at,status,admin_note").eq("status","pending").order("created_at",{ascending:false}),
+      supabase.from("seller_catalogue_subcategories").select("id,seller_id,name,status").eq("status","pending").order("created_at",{ascending:false})
+    ]);
+    for (const result of [access, offers, polls, subcategories]) if (result.error) throw result.error;
+    setRows(access.data || []);
+    setContentQueue([...(offers.data||[]).map(x=>({...x,kind:"offer",label:x.title})),...(polls.data||[]).map(x=>({...x,kind:"poll",label:x.question})),...(subcategories.data||[]).map(x=>({...x,kind:"subcategory",label:x.name}))]);
   };
   useEffect(() => { load().catch((e) => setError(e.message || "Could not load feature requests.")); }, []);
   const pending = rows.filter((r) => r.status === "pending").length;
@@ -42,6 +48,17 @@ export default function AdminSellerFeatures({ sellers = [] }) {
       setSuccess(row.business_name + " · " + row.feature_key + " updated.");
       setNote("");
     } catch (e) { setError(e.message || "Could not update feature access."); }
+    finally { setBusy(false); }
+  };
+  const moderateContent = async (item, status) => {
+    setBusy(true); setError(""); setSuccess("");
+    try {
+      const table = item.kind === "offer" ? "seller_offers" : item.kind === "poll" ? "seller_polls" : "seller_catalogue_subcategories";
+      const payload = item.kind === "subcategory" ? { status } : { status, admin_note: note.trim() };
+      const { error: updateError } = await supabase.from(table).update(payload).eq("id", item.id);
+      if (updateError) throw updateError;
+      await load(); setSuccess("Content " + status + " successfully."); setNote("");
+    } catch (e) { setError(e.message || "Could not moderate content."); }
     finally { setBusy(false); }
   };
   const grant = async (event) => {
@@ -86,6 +103,17 @@ export default function AdminSellerFeatures({ sellers = [] }) {
     </div>
     {error && <div className="inline-error" role="alert">{error}</div>}
     {success && <div className="form-status" role="status">{success}</div>}
+    <section className="admin-feature-editor">
+      <div className="admin-feature-toolbar"><div><h3>Content moderation queue</h3><p>Review seller offers, catalogue polls and subcategories before they appear publicly.</p></div><span className="status-pill status-warning">{contentQueue.length} pending</span></div>
+      <label className="admin-feature-note">Decision note (offers and polls)<input value={note} onChange={e=>setNote(e.target.value)} maxLength={500} placeholder="Optional reason or approval condition"/></label>
+      <div className="admin-feature-list">
+        {contentQueue.map(item=><article className="admin-feature-row" key={item.kind+item.id}>
+          <div className="admin-feature-main"><div className="admin-feature-icon"><Store size={19}/></div><div><strong>{item.label}</strong><small>{sellers.find(s=>s.id===item.seller_id)?.business_name || "Seller"} · {item.kind}</small>{item.description&&<small>{item.description}</small>}{item.options&&<small>{item.options.join(" · ")}</small>}{item.ends_at&&<small>Ends {new Date(item.ends_at).toLocaleString("en-IN")}</small>}</div></div>
+          <div className="admin-feature-actions"><span className="status-pill status-warning">Pending review</span><div className="button-row"><button className="primary-button" disabled={busy} onClick={()=>moderateContent(item,"approved")}><CheckCircle2 size={15}/>Approve</button><button className="secondary-button" disabled={busy} onClick={()=>moderateContent(item,"rejected")}><XCircle size={15}/>Reject</button></div></div>
+        </article>)}
+        {!contentQueue.length&&<div className="empty-state"><CheckCircle2 size={22}/><strong>No content waiting for review</strong><p>Seller-submitted content will appear here.</p></div>}
+      </div>
+    </section>
     <div className="admin-feature-list">
       {filtered.map(row=><article className="admin-feature-row" key={row.access_id}>
         <div className="admin-feature-main"><div className="admin-feature-icon"><Store size={19}/></div><div><strong>{row.business_name}</strong><small>{row.owner_name || "Seller"} · {row.slug}</small><span>{FEATURES.find(f=>f.key===row.feature_key)?.label || row.feature_key}</span>{row.review_note && <small>Admin note: {row.review_note}</small>}</div></div>
